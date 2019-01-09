@@ -1,0 +1,86 @@
+<div class="example-container mat-elevation-z8">
+  <div class="example-loading-shade"
+       *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
+      It will be reset in one minute.
+    </div>
+  </div>
+  <mat-table #table [dataSource]="dataSource" class="intab-table"
+             matSort matSortActive="RequisitionDate" matSortDisableClear matSortDirection="asc">
+    <!-- Note that these columns can be defined in any order.
+  The actual rendered columns are set as a property on the row definition" -->
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <!-- SparePartName Column -->
+    <ng-container matColumnDef="SparePartName">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        SparePart
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.SparePartName }}</mat-cell>
+    </ng-container>
+    <!-- Quantity Column -->
+    <ng-container matColumnDef="Quantity">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Quantity
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ (row.Quantity | number) || '-' }}</mat-cell>
+    </ng-container>
+    <!-- RequisitionDate Column -->
+    <ng-container matColumnDef="RequisitionDate">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Date
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ (row.RequisitionDate | date:'dd/MM/yy') || '-' }}</mat-cell>
+    </ng-container>
+
+    <!-- TotalPrice Column -->
+    <ng-container matColumnDef="TotalPrice">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        TotalPrice
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ (row.TotalPrice | currency:'THB':'symbol') || '-' }}</mat-cell>
+    </ng-container>
+
+    <!-- edit Column -->
+    <ng-container matColumnDef="edit">
+      <mat-header-cell *matHeaderCellDef>
+
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <button mat-button color="primary" (click)="onActionClick(row,1)" [disabled]="readOnly">
+          <strong>Edit</strong>
+        </button>
+        <button mat-button color="primary" (click)="onActionClick(row,0)" [disabled]="readOnly">
+          <strong>Remove</strong>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [ngClass]="{'mat-row-highlight': selectedRow === row}"
+             (click)="selection.toggle(row)"></mat-row>
+  </mat-table>
+
+  <!--<mat-paginator [length]="resultsLength" [pageSize]="30">
+  </mat-paginator>-->
+
+  <mat-paginator #paginator
+                 [pageSize]="50"
+                 [pageSizeOptions]="[10, 50, 100]"
+                 [length]="resultsLength"
+                 [showFirstLastButtons]="true">
+  </mat-paginator>
+</div>
+

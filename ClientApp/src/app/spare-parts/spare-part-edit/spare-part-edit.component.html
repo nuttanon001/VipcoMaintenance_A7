@@ -1,0 +1,130 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Item infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <!--Row1-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="*Required and max 50 characters">
+                <input matInput placeholder="Code spare part"
+                       required maxlength="50"
+                       id="Code" formControlName="Code">
+                <mat-hint [align]="end">{{editValueForm.controls.Code.value?.length || 0}}/50</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.Code.hasError('required')">
+                  Code is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field hintLabel="*Required and max 200 characters">
+                <input matInput placeholder="Name spare part"
+                       required maxlength="200"
+                       id="Name" formControlName="Name">
+                <mat-hint [align]="end">{{editValueForm.controls.Name.value?.length || 0}}/200</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.Name.hasError('required')">
+                  Name is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row2-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Model spare part" maxlength="200"
+                       id="Model" formControlName="Model">
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Property spare part" maxlength="200"
+                       id="Property" formControlName="Property">
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row3-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="Max 250 characters">
+                <textarea matInput placeholder="Description spare part" rows="3"
+                          id="Description" formControlName="Description"></textarea>
+                <mat-hint [align]="end">{{editValueForm.controls.Description.value?.length || 0}}/250</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Size spare part" maxlength="200"
+                       id="Size" formControlName="Size">
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row4-->
+          <div class="row-form">
+            <div class="left-content">
+              <div class="row-form w-75">
+                <div class="left-content">
+                  <mat-form-field>
+                    <input matInput type="number" placeholder="Minimum stock"
+                           id="MinStock" formControlName="MinStock">
+                  </mat-form-field>
+                </div>
+
+                <div class="right-content">
+                  <mat-form-field>
+                    <input matInput type="number" placeholder="Maximum stock"
+                           id="MaxStock" formControlName="MaxStock">
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput type="number" placeholder="Unit Price"
+                       id="UnitPrice" formControlName="UnitPrice">
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row5-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <textarea matInput placeholder="Remark spare part"
+                          maxlength="250" rows="3"
+                          id="Remark" formControlName="Remark"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+                &nbsp;
+            </div>
+          </div>
+
+          <!--Row6-->
+          <div class="row-form">
+            <div class="left-content">
+              <input type="file" accept="image/*" id="ImageFile" #ImageFile
+                     (change)="onFileUploadChange($event)">
+            </div>
+
+            <div class="right-content">
+              <img [src]="editValueForm.controls.SparePartImage.value" class="size-img" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

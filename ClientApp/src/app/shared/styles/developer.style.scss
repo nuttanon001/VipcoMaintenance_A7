@@ -1,0 +1,19 @@
+﻿:host /deep/ .disabled-row {
+    /* TODO: first try this without '!important', but you might need it */
+    color: white;
+    background-color: red !important;
+}
+
+:host /deep/ .enabled-row {
+    /* TODO: first try this without '!important', but you might need it */
+    color: white;
+    background-color: steelblue !important;
+}
+
+:host /deep/ .col-class {
+    padding: 2px;
+    margin: 2px;
+    background-color: lightsteelblue;
+    color:maroon;
+    font-size:large;
+}

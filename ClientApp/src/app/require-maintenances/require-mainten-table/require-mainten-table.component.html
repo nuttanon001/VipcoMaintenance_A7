@@ -1,0 +1,76 @@
+<div class="example-container mat-elevation-z8">
+  <div class="example-loading-shade"
+       *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
+      It will be reset in one minute.
+    </div>
+  </div>
+  <div class="mx-2">
+    <search-box [isDisabled]="isDisabled" [isOnlyCreate]="isOnlyCreate"></search-box>
+  </div>
+  <mat-table #table [dataSource]="dataSource" class="example-table"
+             matSort matSortActive="RequireNo" matSortDisableClear matSortDirection="asc">
+    <!--- Note that these columns can be defined in any order.
+    The actual rendered columns are set as a property on the row definition" -->
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <!-- RequireNo Column -->
+    <ng-container matColumnDef="RequireNo">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        RequireNo
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.RequireNo }}</mat-cell>
+    </ng-container>
+    <!-- ItemCode Column -->
+    <ng-container matColumnDef="ItemCode">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        ItemCode
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.ItemCode }}</mat-cell>
+    </ng-container>
+    <!-- RequireDate Column -->
+    <ng-container matColumnDef="RequireDate">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        RequireDate
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row"
+                [ngClass]="{'is-require': row.RequireStatus === 1,
+                'is-wait': row.RequireStatus === 2,
+                'is-complate' : row.RequireStatus === 3,
+                'is-cancel' : row.RequireStatus === 4}">
+        {{(row?.RequireDate | date:'dd/MM/yyyy') || "-"}}
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <!-- [ngClass]="{'mat-row-highlight': selectedRow === row}"  -->
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [ngClass]="{'is-require': row.RequireStatus === 1,
+                'is-wait': row.RequireStatus === 2 || row.RequireStatus === 5,
+                'is-complate' : row.RequireStatus === 3,
+                'is-cancel' : row.RequireStatus === 4}"
+             (click)="selection.toggle(row)"></mat-row>
+  </mat-table>
+
+  <!--<mat-paginator [length]="resultsLength" [pageSize]="30">
+  </mat-paginator>-->
+
+  <mat-paginator #paginator
+                 [pageSize]="15"
+                 [pageSizeOptions]="[15, 20, 50]"
+                 [length]="resultsLength"
+                 [showFirstLastButtons]="true">
+  </mat-paginator>
+</div>
+

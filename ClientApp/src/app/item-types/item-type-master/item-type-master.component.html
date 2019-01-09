@@ -1,0 +1,66 @@
+<div class="master-container">
+  <as-split direction="horizontal" [gutterSize]="7" [useTransition]="true">
+    <as-split-area [size]="30" [visible]="hideleft" [order]="1">
+      <div class="child-left-container">
+        <!--
+        <data-table (selected)="onDetailView($event)" [columns]="columns"
+            [isDisabled]="true" [(onlyCre)]="onlyCre">
+        </data-table>
+        -->
+        <app-item-type-table (returnSelected)="onDetailView($event)"></app-item-type-table>
+      </div>
+    </as-split-area>
+    <as-split-area [size]="70" [order]="2">
+      <div class="child-container">
+        <!--Left-->
+        <div class="left-content">
+          <div class="hide-table my-2" (click)="hideleft = !hideleft" matTooltip="Hide/Show Table" matTooltipPosition="right">
+          </div>
+        </div>
+        <!--Center-->
+        <div class="center-content">
+          <div class="card-body">
+            <!--Component-->
+            <div *ngIf="displayValue || ShowEdit; else elseBlock">
+              <div *ngIf="!ShowEdit; else detailEdit">
+                <app-item-type-view [displayValue]="displayValue"></app-item-type-view>
+              </div>
+              <ng-template #detailEdit>
+                <app-item-type-edit></app-item-type-edit>
+              </ng-template>
+            </div>
+            <ng-template #elseBlock>
+              <!--Title-->
+              <h4 class="card-title text-info">
+                Type of item information.
+              </h4>
+              <h5 class="text-muted">
+                Selected data from list to show information or new data.
+              </h5>
+            </ng-template>
+          </div>
+        </div>
+        <!--Right-->
+        <div class="right-content" >
+          <button type="button" mat-icon-button color="accent" (click)="onDetailEdit()"
+                  [disabled]="ShowEdit" matTooltip="Create new" matTooltipPosition="left">
+            <i class="fa fa-2x fa-plus" aria-hidden="true"></i>
+          </button>
+          <button type="button" mat-icon-button color="accent" (click)="onDetailEdit(displayValue)"
+                  [disabled]="ShowEdit || DisplayDataNull" matTooltip="Edit" matTooltipPosition="left">
+            <i class="fa fa-2x fa-pencil" aria-hidden="true"></i>
+          </button>
+          <hr />
+          <button type="button" mat-icon-button color="warn" (click)="onCancelEdit()"
+                  [disabled]="!ShowEdit" matTooltip="Cancel" matTooltipPosition="left">
+            <i class="fa fa-2x fa-minus" aria-hidden="true"></i>
+          </button>
+          <button type="button" mat-icon-button color="primary" (click)="onSubmit()"
+                  [disabled]="!canSave" matTooltip="Save" matTooltipPosition="left">
+            <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </as-split-area>
+  </as-split>
+</div>

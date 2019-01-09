@@ -1,0 +1,188 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Item infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="*Required and max 50 characters">
+                <input matInput placeholder="Code"
+                       required maxlength="50"
+                       id="ItemCode" formControlName="ItemCode">
+                <mat-hint [align]="end">{{editValueForm.controls.ItemCode.value?.length || 0}}/50</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.ItemCode.hasError('required')">
+                  Code is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <mat-select placeholder="Selected Type" required
+                            id="ItemTypeId" formControlName="ItemTypeId">
+                  <mat-option *ngFor="let item of itemTypes" [value]="item.ItemTypeId">
+                    {{ item.Name }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="editValueForm.controls.ItemTypeId.hasError('required')">
+                  ItemType is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="*Required and max 50 characters">
+                <input matInput placeholder="Name"
+                       required maxlength="50"
+                       id="Name" formControlName="Name">
+                <mat-hint [align]="end">{{editValueForm.controls.Name.value?.length || 0}}/50</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.Name.hasError('required')">
+                  Name is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Description"
+                       maxlength="200"
+                       id="Description" formControlName="Description">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <div class="row-form w-75">
+                <div class="left-content">
+                  <mat-form-field>
+                    <input matInput placeholder="Selected responsible" class="click-input"
+                           (click)="openDialog('Employee')" readonly 
+                           id="EmpResposibleString" formControlName="EmpResposibleString">
+                  </mat-form-field>
+                </div>
+                <div class="right-content">
+                  <mat-form-field>
+                    <input matInput placeholder="Selected group of work" class="click-input"
+                           (click)="openDialog('GroupOfWork')" readonly required
+                           id="GroupMisString" formControlName="GroupMisString">
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <mat-select placeholder="Branch"
+                            id="BranchId" formControlName="BranchId">
+                  <mat-option *ngFor="let branch of branchs" [value]="branch.BranchId">
+                    {{ branch.Name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Model"
+                       maxlength="200"
+                       id="Model" formControlName="Model">
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field >
+                <input matInput placeholder="Brand"
+                       maxlength="200"
+                       id="Brand" formControlName="Brand">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput [matDatepicker]="RegisterDate" placeholder="RegisterDate"
+                       id="RegisterDate" formControlName="RegisterDate">
+                <mat-datepicker-toggle matSuffix [for]="RegisterDate"></mat-datepicker-toggle>
+                <mat-datepicker #RegisterDate readonly></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput [matDatepicker]="CancelDate" placeholder="CancelDate"
+                       id="CancelDate" formControlName="CancelDate">
+                <mat-datepicker-toggle matSuffix [for]="CancelDate"></mat-datepicker-toggle>
+                <mat-datepicker #CancelDate readonly></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="S/N"
+                       maxlength="200"
+                       id="Property" formControlName="Property">
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Property/1"
+                       maxlength="200"
+                       id="Property2" formControlName="Property2">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Property/2"
+                       maxlength="200"
+                       id="Property3" formControlName="Property3">
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <mat-select placeholder="Selected Status"
+                            id="ItemStatus" formControlName="ItemStatus">
+                  <mat-option *ngFor="let status of itemStatus" [value]="status.Value">
+                    {{ status.Label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="row-form">
+            <div class="left-content">
+                <input type="file" accept="image/*" id="ImageFile" #ImageFile
+                       (change)="onFileUploadChange($event)">
+            </div>
+
+            <div class="right-content">
+              <img [src]="editValueForm.controls.ItemImage.value" class="size-img" />
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

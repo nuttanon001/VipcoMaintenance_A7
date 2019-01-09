@@ -1,0 +1,40 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Item owned by group</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <!--Row1-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected group of work" class="click-input"
+                       (click)="openDialog('GroupOfWork')" readonly required 
+                       id="GroupMisString" formControlName="GroupMisString">
+              </mat-form-field>
+            </div>
+            <div class="right-content" *ngIf="!ReadOnly">
+              <button mat-mini-fab color="primary" (click)="openDialog('Item')"
+                      matTooltip="Add item to group of work" [disabled]="!editValueForm.controls.GroupMisString.value">
+                <mat-icon aria-hidden="true">add_circle_outline</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+      <div>
+        <app-item-by-group-detail-table [items]="editValue.Items"
+                                        [readOnly]="ReadOnly"
+                                        (returnSelected)="onItemRemove($event)">
+        </app-item-by-group-detail-table>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

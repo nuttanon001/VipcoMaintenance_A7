@@ -1,0 +1,70 @@
+<div class="edit-container">
+  <div class="mb-3 mx-5">
+    <h4 *ngIf="!UpdateProfile;else HeaderElse">
+      Register new user.
+    </h4>
+    <ng-template #HeaderElse>
+      <h4>
+        Update user profile.
+      </h4>
+    </ng-template>
+    <p>
+      Please fill out this form completely and save it.
+    </p>
+  </div>
+
+
+  <form [formGroup]="userForm">
+    <div class="my-form">
+      <label for="UserName" class="my-label">Username:</label>
+      <div class="col-sm-4">
+        <input type="text" class="my-input" placeholder="Insert username here"
+               id="UserName" formControlName="UserName" required [readonly]="UpdateProfile">
+      </div>
+
+      <label for="PassWord" class="my-label">Password:</label>
+      <div class="col-sm-4">
+        <input type="password" class="my-input" placeholder="Insert password here"
+               id="PassWord" formControlName="PassWord" required [readonly]="UpdateProfile">
+      </div>
+    </div>
+
+    <div class="my-form">
+      <label for="MailAddress" class="my-label">Mail address:</label>
+      <div class="col-sm-4">
+        <input type="text" class="my-input" placeholder="Insert mail address here"
+               id="MailAddress" formControlName="MailAddress">
+      </div>
+    </div>
+
+    <div class="my-form">
+      <label for="EmpCode" class="my-label">Employee Number:</label>
+      <div class="col-sm-4">
+        <input type="text" class="my-input" placeholder="Insert employee number here"
+               id="EmpCode" formControlName="EmpCode" required [readonly]="UpdateProfile">
+      </div>
+
+      <label for="NameThai" class="my-label">Employee Name:</label>
+      <div class="col-sm-4">
+        <input type="text" class="my-input" placeholder="Name display after you insert employee number."
+               id="NameThai" formControlName="NameThai" readonly required>
+      </div>
+    </div>
+  </form>
+
+  <div class="chlid-edit-container-center m-5">
+    <button type="button" mat-raised-button color="primary" [disabled]="!userForm.valid" (click)="onSubmit()">
+      <mat-icon aria-label="add icon">person_add</mat-icon>
+      <span *ngIf="!UpdateProfile;else CmdElse">
+        Register User
+      </span>
+      <ng-template #CmdElse>
+        Update Profile
+      </ng-template>
+    </button>
+    <button type="button" class="mx-2" mat-raised-button color="warn" (click)="onGoBack()">
+      <mat-icon aria-label="clear icon">clear</mat-icon>
+      Cencel
+    </button>
+  </div>
+</div>

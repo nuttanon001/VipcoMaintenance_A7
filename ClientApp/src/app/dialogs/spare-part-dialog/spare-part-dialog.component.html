@@ -1,0 +1,19 @@
+<div class="master-dialog-vh">
+  <H5 style="color:cadetblue">Selected spare part</H5>
+  <div class="child-container">
+    <div class="center-content ">
+      <spare-part-table-dialog (returnSelected)="onSelectedValue($event)"
+                         [isDialog]="true"></spare-part-table-dialog>
+    </div>
+    <div class="right-content">
+      <button type="button" mat-icon-button color="primary" (click)="onSelectedClick()"
+              [disabled]="!getValue" matTooltip="Selected" matTooltipPosition="left">
+        <i class="fa fa-2x fa-hand-pointer-o" aria-hidden="true"></i>
+      </button>
+      <button type="button" mat-icon-button color="warn" (click)="onCancelClick()"
+              matTooltip="Cancel" matTooltipPosition="left">
+        <i class="fa fa-2x fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</div>

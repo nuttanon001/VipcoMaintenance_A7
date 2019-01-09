@@ -1,0 +1,20 @@
+<div class="master-container">
+  <div class="child-col-container">
+    <h4 class="text-primary">Item Histories</h4>
+    <form [formGroup]="itemOptionForm" class="form-content m-0">
+      <div>
+        <i class="fa fa-product-hunt" aria-hidden="true"></i>
+        <mat-form-field>
+          <input matInput placeholder="Select item name" class="click-input"
+                 (click)="onOpenDialog('Item')" readonly
+                 id="ItemName" formControlName="ItemName">
+        </mat-form-field>
+      </div>
+    </form>
+  </div>
+  <div class="bottom-container m-1">
+    <app-item-histories-table [dataRows]="itemHistories" [isLoaded]="isLoaded"
+                              (returnSelected)="onSelectHistores($event)">
+    </app-item-histories-table>
+  </div>
+</div>

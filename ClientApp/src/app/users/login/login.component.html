@@ -1,0 +1,52 @@
+<div class="row justify-content-md-center h-100">
+  <div class="col col-lg-2">
+  </div>
+  <div class="col-mat-auto">
+    <div *ngIf="user" class="card" style="width: 30rem;">
+      <form [formGroup]="loginForm" id="loginForm">
+
+        <div class="card-header text-success">
+          <h4 class="card-title">Login</h4>
+          <h6 class="card-subtitle mb-2 text-muted">this vipco application need authentication user.</h6>
+        </div>
+        <div class="card-body">
+          <!-- Row 1 -->
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text alert-primary">
+                <mat-icon>perm_identity</mat-icon>
+              </span>
+            </div>
+            <input class="form-control" type="text" name="username" placeholder="username" required autofocus
+                   id="UserName" formControlName="UserName" />
+          </div>
+          <!--<validation-messages [control]="loginForm.controls.UserName"></validation-messages>-->
+          <br>
+          <!-- Row 2 -->
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text alert-primary">
+                <mat-icon>vpn_key</mat-icon>
+              </span>
+            </div>
+            <input class="form-control" type="password" name="password" placeholder="password"
+                   id="PassWord" formControlName="PassWord" />
+          </div>
+          <!--<validation-messages [control]="loginForm.controls.PassWord"></validation-messages>-->
+        </div>
+        <div class="card-footer chlid-edit-container-center">
+          <button mat-raised-button type="submit" class="btn btn-success" [disabled]="!loginForm.valid" (click)="onLogin()">
+            <mat-icon aria-label="account icon">account_circle</mat-icon>
+            Login
+          </button>
+          <button mat-raised-button type="button" class="btn btn-info mx-2" [routerLink]="['/register']" routerLinkActive="active">
+            <mat-icon aria-label="add icon">person_add</mat-icon>
+            Register
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col col-lg-2">
+  </div>
+</div>

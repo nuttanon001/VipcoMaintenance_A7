@@ -1,0 +1,81 @@
+<div class="example-container mat-elevation-z8">
+  <div class="example-loading-shade"
+       *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
+      It will be reset in one minute.
+    </div>
+  </div>
+  <div class="mx-2">
+    <mat-form-field class="mr-2">
+      <mat-select placeholder="Type of item">
+        <mat-option *ngFor="let itemType of itemTypes" [value]="itemType.ItemTypeId">
+          {{ itemType.Name }}-{{itemType.Description}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <search-box [isDisabled]="isDisabled"></search-box>
+  </div>
+
+  <mat-table #table [dataSource]="dataSource" [ngClass]="isDialog ? 'dialog-table' : 'example-table'"
+             matSort matSortActive="ItemCode" matSortDisableClear matSortDirection="asc">
+    <!--- Note that these columns can be defined in any order.
+  The actual rendered columns are set as a property on the row definition" -->
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <!-- ItemCode Column -->
+    <ng-container matColumnDef="ItemCode">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Code
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.ItemCode }}</mat-cell>
+    </ng-container>
+    <!-- Name Column -->
+    <ng-container matColumnDef="Name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Name
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.Name }}</mat-cell>
+    </ng-container>
+    <!-- ItemTypeString Column -->
+    <ng-container matColumnDef="Model">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Model
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.Model || '-' }}</mat-cell>
+    </ng-container>
+    <!-- GroupMisString Column-->
+    <ng-container matColumnDef="GroupMisString">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Owner by
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.GroupMisString || '-' }}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [ngClass]="{'mat-row-highlight': selectedRow === row}"
+             (click)="selection.toggle(row)"></mat-row>
+  </mat-table>
+
+  <!--<mat-paginator [length]="resultsLength" [pageSize]="30">
+  </mat-paginator>-->
+
+  <mat-paginator #paginator
+                 [pageSize]="15"
+                 [pageSizeOptions]="[15, 20, 50]"
+                 [length]="resultsLength"
+                 [showFirstLastButtons]="true">
+  </mat-paginator>
+</div>
+

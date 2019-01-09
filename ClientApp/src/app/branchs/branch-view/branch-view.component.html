@@ -1,0 +1,31 @@
+<div *ngIf="displayValue,else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Branch Infomation View</b>
+      </ng-template>
+      <div class="view-container">
+        <div class="row my-1">
+          <div class="my-label">
+            Name :
+          </div>
+          <div class="my-value">
+            {{displayValue.Name || "-"}}
+          </div>
+
+          <div class="my-label">
+            Address :
+          </div>
+          <div class="my-value">
+            {{displayValue.Address || "-"}}
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

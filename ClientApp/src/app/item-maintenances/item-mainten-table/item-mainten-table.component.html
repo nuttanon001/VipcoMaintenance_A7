@@ -1,0 +1,67 @@
+<div class="example-container mat-elevation-z8">
+  <div class="example-loading-shade"
+       *ngIf="isLoadingResults || isRateLimitReached">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
+      It will be reset in one minute.
+    </div>
+  </div>
+  <div class="mx-2">
+    <search-box [isDisabled]="isDisabled" [isOnlyCreate]="isOnlyCreate"></search-box>
+  </div>
+
+  <mat-table #table [dataSource]="dataSource" class="example-table"
+             matSort matSortActive="RequireNo" matSortDisableClear matSortDirection="asc">
+    <!--- Note that these columns can be defined in any order.
+  The actual rendered columns are set as a property on the row definition" -->
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <!-- ItemCode Column -->
+    <ng-container matColumnDef="ItemCode">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        ItemCode
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.ItemCode }}</mat-cell>
+    </ng-container>
+    <!-- TypeMaintenanceString Column -->
+    <ng-container matColumnDef="TypeMaintenanceString">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        TypeMaintenance
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.TypeMaintenanceString }}</mat-cell>
+    </ng-container>
+    <!-- StatusMaintenance Column -->
+    <ng-container matColumnDef="StatusMaintenanceString">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        StatusMaintenance
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.StatusMaintenanceString }}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [ngClass]="{'mat-row-highlight': selectedRow === row}"
+             (click)="selection.toggle(row)"></mat-row>
+  </mat-table>
+
+  <!--<mat-paginator [length]="resultsLength" [pageSize]="30">
+  </mat-paginator>-->
+
+  <mat-paginator #paginator
+                 [pageSize]="15"
+                 [pageSizeOptions]="[15, 20, 50]"
+                 [length]="resultsLength"
+                 [showFirstLastButtons]="true">
+  </mat-paginator>
+</div>
+

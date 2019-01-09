@@ -1,0 +1,70 @@
+<div *ngIf="requisition; else elseBlock" class="my-2">
+  <b class="text-info">Requisition infomation edit</b>
+  <div class="m-2">
+    <button mat-mini-fab color="primary" (click)="onReturnRequisition(true)"
+            [disabled]="!editValueForm.valid" matTooltip="Done">
+      <mat-icon>exposure_plus_1</mat-icon>
+    </button>
+    <button mat-mini-fab color="warn" (click)="onReturnRequisition(false)"
+            matTooltip="Cancel">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  <hr class="w-75" />
+  <div>
+    <form [formGroup]="editValueForm">
+      <div class="form-container-column">
+        <!--Row1-->
+        <div class="row-form">
+          <div class="left-content">
+            <mat-form-field>
+              <input matInput placeholder="Selected spare part" class="click-input"
+                     (click)="openDialog('SparePart')" readonly required
+                     id="SparePartName" formControlName="SparePartName">
+              <mat-error *ngIf="editValueForm.controls.SparePartName.hasError('required')">
+                Spare part is <strong>required</strong>
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="right-content">
+            <mat-form-field>
+              <input matInput placeholder="Requisition quantity"
+                     type="number" min="0" required
+                     id="Quantity" formControlName="Quantity">
+              <mat-error *ngIf="editValueForm.controls.Quantity.hasError('required')">
+                Requisition quantity is <strong>required</strong>
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <!--Row2-->
+        <div class="row-form">
+          <div class="left-content">
+            <mat-form-field>
+              <input matInput [matDatepicker]="RequisitionDate" placeholder="Choose a date requisition"
+                     id="RequisitionDate" formControlName="RequisitionDate" required>
+              <mat-datepicker-toggle matSuffix [for]="RequisitionDate"></mat-datepicker-toggle>
+              <mat-datepicker #RequisitionDate></mat-datepicker>
+              <mat-error *ngIf="editValueForm.controls.RequisitionDate.hasError('required')">
+                Requisition date is <strong>required</strong>
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="right-content">
+            <mat-form-field>
+              <textarea matInput placeholder="Requisition remark" rows="3"
+                        id="Remark" formControlName="Remark"></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

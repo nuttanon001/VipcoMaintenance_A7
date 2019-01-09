@@ -1,0 +1,66 @@
+<div class="master-container">
+  <h4>Require maintenance schedule </h4>
+
+  <form [formGroup]="reportForm" class="header">
+    <div>
+      <i class="fa fa-search" aria-hidden="true"></i>
+      <mat-form-field>
+        <input matInput placeholder="Filter By Text"
+               formControlName="Filter">
+      </mat-form-field>
+    </div>
+    <div>
+      <i class="fa fa-product-hunt" aria-hidden="true"></i>
+      <mat-form-field style="width:250px;">
+        <input matInput placeholder="Filter By JobNumber" class="click-input"
+               (click)="openDialog('Project')" readonly
+               formControlName="ProjectString">
+      </mat-form-field>
+    </div>
+    <div>
+      <button mat-mini-fab color="warn" (click)="resetFilter()"
+              matTooltipPosition="left" matTooltip="Reset all filter">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </form>
+  <div class="detail">
+    <table *ngIf="!needReset" id="table1">
+      <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
+               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]"
+               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
+          </colgroup>
+        </ng-template>
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.field" [ngStyle]="{'width.px':col.width}"
+                class="PrHeader">
+              {{col.header}}
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+          <tr>
+            <td *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
+              <span *ngIf="col.type !== 2;else elseBlock" [innerHtml]="rowData[col.field] || '-'"></span>
+              <ng-template #elseBlock>
+                <ol type="I">
+                  <li *ngFor="let data of rowData[col.field];index as i;"
+                      [ngClass]="{'text-success': data.RequireStatus === 5,
+                          'text-warning' : data.RequireStatus === 2 ,
+                          'text-danger' : data.RequireStatus === 1}"
+                      style="cursor:pointer;" (click)="onSelectRow(data)">
+                    {{data.ItemCode}} by {{data.RequireEmpString}}
+                  </li>
+                </ol>
+              </ng-template>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </table>
+  </div>
+</div>

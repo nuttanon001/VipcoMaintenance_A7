@@ -1,0 +1,120 @@
+@import "../../../sass/styles.scss";
+/* Structure */
+.master-container {
+  display: flex;
+  flex-direction: column;
+  height: $master-vh;
+  width: $master-vw;
+}
+
+.master-dialog {
+    display: flex;
+    flex-direction: column;
+    width: 885px;
+    height: 460px;
+}
+
+.master-dialog-vh {
+  display: flex;
+  flex-direction: column;
+  width: $dialog-vw;
+  height: $dialog-vh;
+}
+
+.child-left-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.child-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.left-content {
+    display: flex;
+    flex-grow: 0;
+    order: 1;
+    //align-content: flex-start | flex-end | center | space-between | space-around | stretch;
+    align-content: flex-start;
+}
+
+.center-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    order: 2;
+}
+
+.center-content-scroll {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  order: 2;
+  height: 85vh;
+  overflow: scroll;
+}
+
+
+.center-content-nogrow {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+    order: 1;
+}
+
+.master-form-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-top: solid 1px lightsteelblue;
+    border-bottom: solid 1px lightsteelblue;
+
+    i {
+        margin-left: 15px;
+    }
+}
+
+.center-page {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.center-page-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.right-content {
+    /* We first create a flex layout context */
+    display: flex;
+    /* flex direction */
+    flex-direction: column;
+    /* flex grow 0 is upper item have container size */
+    flex-grow: 0;
+    /* flex order of position container */
+    order: 3;
+    margin-top: 15px;
+}
+
+.hide-table {
+    cursor: pointer;
+    height: -webkit-calc(100vh - 105px); /* google, safari */
+    height: calc(100vh - 105px);
+    width: 10px;
+    background-clip: padding-box;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+    box-shadow: inset -1px -1px 0px rgba(0, 0, 0, 0.05), inset 1px 1px 0px rgba(0, 0, 0, 0.05);
+    /*-webkit-border-radius: 3px;
+    -webkit-box-shadow: inset -1px -1px 0px rgba(0, 0, 0, 0.05), inset 1px 1px 0px rgba(0, 0, 0, 0.05);*/
+}
+
+// Style For Primeng
+/*:host /deep/ .ui-inputtext {
+    width: 85%;
+}*/

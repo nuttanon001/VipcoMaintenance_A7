@@ -1,0 +1,50 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Group maintenance infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="Max 50 characters">
+                <input matInput placeholder="Name of group maintenance"
+                       required maxlength="50"
+                       id="Name" formControlName="Name">
+                <mat-hint [align]="end">{{editValueForm.controls.Name.value?.length || 0}}/50</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field hintLabel="Max 200 characters">
+                <input matInput placeholder="Description of group maintenance"
+                       maxlength="200"
+                       id="Description" formControlName="Description">
+                <mat-hint [align]="end">{{editValueForm.controls.Description.value?.length || 0}}/200</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="Max 200 characters">
+                <textarea matInput placeholder="Remark of group maintenance"
+                          id="Remark" formControlName="Remark"></textarea>
+                <mat-hint [align]="end">{{editValueForm.controls.Remark.value?.length || 0}}/200</mat-hint>
+              </mat-form-field>
+            </div>
+            <div class="right-content">
+              &nbsp;
+            </div>
+          </div>
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

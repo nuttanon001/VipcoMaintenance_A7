@@ -1,0 +1,12 @@
+@import "../../shared/custom-mat-table/custom-mat-table.component.scss";
+
+.my-mat-cell,
+.my-mat-header-cell {
+  flex: 0 0 20%;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

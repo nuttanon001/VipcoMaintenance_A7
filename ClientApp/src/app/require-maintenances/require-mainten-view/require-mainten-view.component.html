@@ -1,0 +1,122 @@
+<div *ngIf="displayValue,else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Require maintenance infomation view.</b>
+      </ng-template>
+      <div class="view-container">
+        <div class="row my-1">
+          <div class="my-label">
+            Response Date :
+          </div>
+          <div class="my-value">
+            {{(displayValue.MaintenanceApply | date:'dd/MM/yyyy')|| "-"}}
+          </div>
+        </div>
+        <hr class="w-100 my-0" />
+        <!--Row1-->
+        <div class="row my-1">
+          <div class="my-label">
+            RequireNo :
+          </div>
+          <div class="my-value">
+            {{displayValue.RequireNo || "-"}}
+          </div>
+
+          <div class="my-label">
+            Date :
+          </div>
+          <div class="my-value">
+            {{(displayValue.RequireDate | date:'dd/MM/yyyy')|| "-"}} {{(displayValue.RequireDateTime || "")}}
+          </div>
+        </div>
+        <!--Row2-->
+        <div class="row my-1">
+          <div class="my-label">
+            RequireBy :
+          </div>
+          <div class="my-value">
+            {{displayValue.RequireEmpString || "-"}}
+          </div>
+
+          <div class="my-label">
+            Group :
+          </div>
+          <div class="my-value">
+            {{displayValue.GroupMISString || "-"}}
+          </div>
+        </div>
+        <!--Row3-->
+        <div class="row my-1">
+          <div class="my-label">
+            Branch :
+          </div>
+          <div class="my-value">
+            {{displayValue.BranchString || "-"}}
+          </div>
+
+          <div class="my-label">
+            JobNumber :
+          </div>
+          <div class="my-value">
+            {{displayValue.ProjectCodeMasterString || "-"}}
+          </div>
+        </div>
+        <!--Row4-->
+        <div class="row my-1">
+          <div class="my-label">
+            Item :
+          </div>
+          <div class="my-value">
+            {{displayValue.ItemCode || "-"}}
+          </div>
+
+          <div class="my-label">
+            ReplyMail :
+          </div>
+          <div class="my-value">
+            {{displayValue.MailApply || "-"}}
+          </div>
+        </div>
+        <!--Row5-->
+        <div class="row my-1">
+          <div class="my-label">
+            Description :
+          </div>
+          <textarea [value]="displayValue.Description" rows="3" readonly class="my-value">
+          </textarea>
+
+          <div class="my-label">
+            Remark :
+          </div>
+          <textarea [value]="displayValue.Remark" rows="3" readonly class="my-value">
+          </textarea>
+        </div>
+        <!--Row6-->
+        <div class="row my-1">
+          <div class="my-label">
+            Status :
+          </div>
+          <div class="my-value">
+            {{displayValue.RequireStatusString || "-"}}
+          </div>
+        </div>
+        <!--Row7-->
+        <div class="row my-1" *ngIf="attachFiles">
+          <div class="my-label">
+            Attach File :
+          </div>
+          <div class="col-sm-4" style="padding:2px;">
+            <app-attach-file-view [attachFiles]="attachFiles">
+            </app-attach-file-view>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

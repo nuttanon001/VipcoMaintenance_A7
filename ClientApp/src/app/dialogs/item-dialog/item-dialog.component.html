@@ -1,0 +1,26 @@
+<div class="master-dialog-vh">
+  <H5 style="color:cadetblue">Selected Item</H5>
+  <div class="child-container">
+    <div class="center-content">
+      <div *ngIf="mode === 0;else ElseItems">
+        <dialog-item-table (returnSelected)="onSelectedValue($event)"
+                           [isDialog]="true" class="my-1"></dialog-item-table>
+      </div>
+      <!--Can return multiple item-->
+      <ng-template #ElseItems>
+        <dialog-item-table (returnSelectesd)="onSelectedValue($event)"
+                           [isDialog]="true" class="my-1" [isMultiple]="true"></dialog-item-table>
+      </ng-template>
+    </div>
+    <div class="right-content">
+      <button type="button" mat-icon-button color="primary" (click)="onSelectedClick()" cdkFocusInitial
+              [disabled]="!getValue && !getValues" matTooltip="Selected" matTooltipPosition="left">
+        <i class="fa fa-2x fa-hand-pointer-o" aria-hidden="true"></i>
+      </button>
+      <button type="button" mat-icon-button color="warn" (click)="onCancelClick()"
+              matTooltip="Cancel" matTooltipPosition="left">
+        <i class="fa fa-2x fa-close" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</div>

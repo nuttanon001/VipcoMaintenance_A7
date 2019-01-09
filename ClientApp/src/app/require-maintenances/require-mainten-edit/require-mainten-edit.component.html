@@ -1,0 +1,177 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Require maintenance infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <!--Row1-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="Code will automatically generated.">
+                <input matInput placeholder="Require No" readonly
+                       id="RequireNo" formControlName="RequireNo">
+              </mat-form-field>
+            </div>
+            <div class="right-content">
+              <span>-</span>
+            </div>
+          
+          </div>
+
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput [matDatepicker]="RequireDate" placeholder="Choose a date"
+                       id="RequireDate" formControlName="RequireDate" required readonly>
+                <mat-datepicker-toggle matSuffix [for]="RequireDate" disabled></mat-datepicker-toggle>
+                <mat-datepicker #RequireDate readonly></mat-datepicker>
+                <mat-error *ngIf="editValueForm.controls.RequireDate.hasError('required')">
+                  Date is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field hintLabel="Time">
+                <input matInput type="time" placeholder="RequireDateTime"
+                       id="RequireDateTime" formControlName="RequireDateTime">
+                <mat-error *ngIf="editValueForm.controls.RequireDateTime.hasError('required')">
+                  Time is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row2-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected employee require" class="click-input"
+                       (click)="openDialog('Employee')" readonly required
+                       id="RequireEmpString" formControlName="RequireEmpString">
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected group" class="click-input"
+                       (click)="openDialog('GroupMis')" readonly required
+                       id="GroupMISString" formControlName="GroupMISString">
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row3-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <mat-select placeholder="Branch"
+                            id="BranchId" formControlName="BranchId">
+                  <mat-option *ngFor="let branch of branchs" [value]="branch.BranchId">
+                    {{ branch.Name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected job number" class="click-input"
+                       (click)="openDialog('Project')" readonly
+                       id="ProjectCodeMasterString" formControlName="ProjectCodeMasterString">
+              </mat-form-field>
+            </div>
+
+          </div>
+          <!--Row4-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="*Required">
+                <input matInput placeholder="Selected item" class="click-input"
+                       (click)="openDialog('Item')" readonly [required]="true"
+                       id="ItemCode" formControlName="ItemCode">
+                <mat-error *ngIf="editValueForm.controls.ItemCode.hasError('required')">
+                  Item is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Email" type="email"
+                       id="MailApply" formControlName="MailApply">
+                <mat-hint>Reply mail.</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.MailApply.hasError('email')">
+                  Please enter a valid email address
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row5-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field hintLabel="*Required and max 250 characters">
+                <textarea matInput placeholder="Description of require maintenance" rows="3"
+                          id="Description" formControlName="Description" required></textarea>
+                <mat-hint [align]="end">{{editValueForm.controls.Description.value?.length || 0}}/250</mat-hint>
+                <mat-error *ngIf="editValueForm.controls.Description.hasError('required')">
+                  Description is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <textarea matInput placeholder="Remark"
+                          maxlength="250" rows="3"
+                          id="Remark" formControlName="Remark"></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row6-->
+          <div class="row-form">
+            <div class="left-content">
+              <app-attach-file id="AttactFile" (results)="onUpdateAttachResults($event)">
+              </app-attach-file>
+            </div>
+
+            <div class="right-content">
+              <div *ngIf="attachFiles && attachFiles.length > 0">
+                <table class="table table-hover table-sm small">
+                  <colgroup>
+                    <col span="1" style="width: 80%;">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>File Name</th>
+                      <th>Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let file of attachFiles; let num2 = index">
+                      <td (click)="onOpenNewLink(file.FileAddress)" style="cursor:pointer;">
+                        {{num2 + 1}}. {{file.FileName}}
+                      </td>
+                      <td>
+                        <div>
+                          <a class="btn btn-sm btn-danger" matTooltip="Remove Attach File" (click)="onDeleteAttachFile(file)">
+                            <em class="fa fa-remove"></em>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

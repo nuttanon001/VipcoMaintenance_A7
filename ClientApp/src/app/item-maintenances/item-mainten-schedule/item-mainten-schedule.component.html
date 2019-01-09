@@ -1,0 +1,160 @@
+<div class="master-container" *ngIf="!ItemMaintenanceEdit;else EditBlock">
+  <form [formGroup]="reportForm" class="header" *ngIf="!isLinkMail">
+    <div style="display:flex;justify-content: center;align-items:center;">
+      <span style="color:forestgreen;">
+        <i class="fa fa-square" aria-hidden="true">Plan &nbsp;</i>
+      </span>
+      <span style="color:steelblue;">
+        <i class="fa fa-square" aria-hidden="true">Actual &nbsp;</i>
+      </span>
+      <span style="color:red;">
+        <i class="fa fa-circle" aria-hidden="true">Response &nbsp;</i>
+      </span>
+    </div>
+   
+    <div>
+      <i class="fa fa-search" aria-hidden="true"></i>
+      <mat-form-field>
+        <input matInput placeholder="Filter By Text"
+               formControlName="Filter">
+      </mat-form-field>
+    </div>
+    <div>
+      <i class="fa fa-product-hunt" aria-hidden="true"></i>
+      <mat-form-field style="width:250px;">
+        <input matInput placeholder="Filter By JobNumber" class="click-input"
+               (click)="onShowDialog('Project')" readonly
+               formControlName="ProjectMasterString">
+      </mat-form-field>
+    </div>
+    <div>
+      <i class="fa fa-user-circle-o" aria-hidden="true"></i>
+      <mat-form-field style="width:250px;">
+        <input matInput placeholder="Filter By Employee" class="click-input"
+               (click)="onShowDialog('Employee')" readonly
+               formControlName="CreatorName">
+      </mat-form-field>
+    </div>
+    <div>
+      <button mat-mini-fab color="warn" (click)="resetFilter()"
+              matTooltipPosition="left" matTooltip="Reset all filter">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </form>
+  <div class="detail">
+    <table *ngIf="!needReset" id="table1">
+      <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
+               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]"
+               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
+          </colgroup>
+        </ng-template>
+
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let colUpper of columnUppers" [attr.colspan]="colUpper.colspan"
+                [attr.rowspan]="colUpper.rowspan" [ngStyle]="{'width.px':colUpper.width}"
+                [ngClass]="{'PoHeader' : colUpper.type !== 3}">
+              {{colUpper.header}}
+            </th>
+          </tr>
+          <tr>
+            <th *ngFor="let colLower of columnLowers" [ngStyle]="{'width.px':colLower.width}">
+              {{colLower.header}}
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+          <tr>
+            <td *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
+              <ng-container *ngIf="col.type !== 2;else elseBlock">
+                <ng-container *ngIf="col.field === 'Item';else elseBlock2">
+                  <span (click)="onSelectItemMaintenanceId(rowData['ItemMaintenanceId'])"
+                        style="cursor:pointer;color:steelblue;" [innerHtml]="rowData[col.field] || '-'">
+                  </span>
+                </ng-container>
+                <ng-template #elseBlock2>
+                  <span [innerHtml]="rowData[col.field] || '-'"></span>
+                </ng-template>
+              </ng-container>
+              <ng-template #elseBlock>
+                <ng-container [ngSwitch]="rowData[col.field]">
+                  <!-- 1 -->
+                  <div *ngSwitchCase="1">
+                    <div class="plan-col">
+                      <i class="fa fa-circle text-danger" *ngIf="rowData['Response'] == col.field" aria-hidden="true"></i>
+                    </div>
+                    <div class="empty-col">
+                    </div>
+                  </div>
+                  <!-- 2 -->
+                  <div *ngSwitchCase="2">
+                    <div class="empty-col">
+                      <i class="fa fa-circle text-danger" *ngIf="rowData['Response'] == col.field" aria-hidden="true"></i>
+                    </div>
+                    <div class="actual-col">
+                    </div>
+                  </div>
+                  <!-- 3 -->
+                  <div *ngSwitchCase="3">
+                    <div class="plan-col my-border">
+                      <i class="fa fa-circle text-danger" *ngIf="rowData['Response'] == col.field" aria-hidden="true"></i>
+                    </div>
+                    <div class="actual-col">
+                    </div>
+                  </div>
+                  <!-- Default -->
+                  <div *ngSwitchDefault>
+                    <div class="empty-col">
+                      <i class="fa fa-circle text-danger" *ngIf="rowData['Response'] == col.field" aria-hidden="true"></i>
+                    </div>
+                    <div class="empty-col">
+                    </div>
+                  </div>
+                </ng-container>
+              </ng-template>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </table>
+
+    <!--<ng-template *ngIf="column.field === 'Progress'" let-col let-data1="rowData" pTemplate="body">
+      <div class="m-0 b-0" [ngClass]="{'is-require': data1['ItemMainStatus'] === 1,
+                'is-wait' : data1['ItemMainStatus'] === 2 || data1['ItemMainStatus'] === 3,
+                'is-complate' : data1['ItemMainStatus'] === 4 || data1['ItemMainStatus'] === 5,
+                'is-cancel' : data1['ItemMainStatus'] === 6}" style="text-align:center;">
+        {{data1[col.field]}}
+      </div>
+    </ng-template>-->
+
+  </div>
+</div>
+
+<ng-template #EditBlock>
+  <div class="master-container">
+    <div class="child-container" *ngIf="!loadReport;else LoadReportBlock">
+      <!--Center-->
+      <div class="center-content">
+        <div *ngIf="ItemMaintenanceEdit">
+          <app-item-mainten-edit></app-item-mainten-edit>
+        </div>
+      </div>
+      <!--Right-->
+      <div class="right-content">
+        <button type="button" mat-icon-button color="warn" (click)="onCancelEdit()"
+                matTooltip="Cancel" matTooltipPosition="left">
+          <i class="fa fa-2x fa-minus" aria-hidden="true"></i>
+        </button>
+        <button type="button" mat-icon-button color="primary" (click)="onUpdateToDataBase()"
+                [disabled]="!canSave" matTooltip="Save" matTooltipPosition="left">
+          <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

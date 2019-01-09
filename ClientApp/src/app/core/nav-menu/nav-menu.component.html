@@ -1,0 +1,144 @@
+<nav class="navbar navbar-expand navbar-dark bg-bar">
+  <!--<a class="navbar-brand" href="#">Always expand</a>-->
+  <a class="navbar-brand" href="http://192.168.2.31/">
+    <img src="/maintenance/images/logoVIPCO.png" width="36" height="36" class="d-inline-block align-top">
+    Vipco Maintenance System (To apps page)
+  </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#Mynavbars"
+          aria-controls="Mynavbars" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse pl-4" id="Mynavbars">
+    <ul class="navbar-nav mr-auto size-24">
+      <li class="nav-item">
+        <a class="nav-link" [routerLink]="['/maintenance/schedule','1']" routerLinkActive="active">
+          <span>Schedule</span>
+        </a>
+      </li>
+      <li class="nav-item mx-1" *ngIf="GetLevel1">
+        <!--(mouseover)="menuOnOpenMenu(1)"-->
+        <!--  #mainMenu="matMenuTrigger" [matMenuTriggerFor]="menu1"
+              (mouseover)="menuOnOpenMenu(1)" -->
+        <a class="nav-link" [routerLink]="['/require-mainten']" routerLinkActive="active">
+          <span>Require</span>
+        </a>
+        <!--initial-painting-->
+        <!--<mat-menu class="mouseleave" #menu1="matMenu" [overlapTrigger]="true">
+    <div (mouseleave)="menuOnCloseMenu(1)" style="padding-top:20px;">
+      <button mat-menu-item [routerLink]="['/require-mainten']" routerLinkActive="active">
+        <mat-icon>style</mat-icon>
+        <span>&nbsp;Require-Maintenance&nbsp;</span>
+      </button>
+    </div>
+  </mat-menu>-->
+      </li>
+      <li class="nav-item mx-1" *ngIf="GetLevel2">
+        <!--*ngIf="GetLevel2"-->
+        <!--(mouseenter)="menuOnOpenMenu(2)"-->
+        <a #subMenu="matMenuTrigger" [matMenuTriggerFor]="menu2"
+           (mouseenter)="menuOnOpenMenu(2)"
+           class="nav-link">
+          For Maintenance
+        </a>
+        <mat-menu class="mouseleave" #menu2="matMenu" [overlapTrigger]="true">
+          <div (mouseleave)="menuOnCloseMenu(2)" style="padding-top:20px;">
+            <button mat-menu-item [routerLink]="['/require-mainten/require-schedule']" routerLinkActive="active">
+              <mat-icon>date_range</mat-icon>
+              <span>&nbsp;Require-Schedule&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/maintenance/schedule','2']" routerLinkActive="active">
+              <mat-icon class="rotate-90">equalizer</mat-icon>
+              <span>&nbsp;Maintenance Progress&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/maintenance']" routerLinkActive="active">
+              <mat-icon>build</mat-icon>
+              <span>&nbsp;Maintenance&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/maintenance/history1']">
+              <mat-icon>history</mat-icon>
+              <span>&nbsp;Maintenance-Histories&nbsp;</span>
+            </button>
+            <hr />
+            <button mat-menu-item [routerLink]="['/work-group-mainten']" routerLinkActive="active">
+              <mat-icon>group_work</mat-icon>
+              <span>&nbsp;Group Maintenance&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/type-mainten']" routerLinkActive="active">
+              <mat-icon>slow_motion_video</mat-icon>
+              <span>&nbsp;Type-Maintenance&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/item']" routerLinkActive="active">
+              <mat-icon>perm_data_setting</mat-icon>
+              <span>&nbsp;Item&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/item/item-history']" routerLinkActive="active">
+              <mat-icon>event_note</mat-icon>
+              <span>&nbsp;Item-Histories&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/item/item-by-group']" routerLinkActive="active">
+              <mat-icon>tune</mat-icon>
+              <span>&nbsp;Group owned item&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/item-type']" routerLinkActive="active">
+              <mat-icon>text_fields</mat-icon>
+              <span>&nbsp;Type-Item&nbsp;</span>
+            </button>
+            <hr />
+            <button mat-menu-item [routerLink]="['/spare-part']" routerLinkActive="active">
+              <mat-icon>highlight</mat-icon>
+              <span>&nbsp;Spare-Part&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/inventories/receive']" routerLinkActive="active">
+              <mat-icon>store</mat-icon>
+              <span>&nbsp;Receive spare part&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/inventories/adjust']" routerLinkActive="active">
+              <mat-icon>autorenew</mat-icon>
+              <span>&nbsp;Adjust spare part&nbsp;</span>
+            </button>
+          </div>
+        </mat-menu>
+      </li>
+
+      <li class="nav-item mx-1" *ngIf="GetLevel3">
+        <!--(mouseover)="menuOnOpenMenu(3)"-->
+        <a #subMenu2="matMenuTrigger" [matMenuTriggerFor]="menu3"
+           (mouseover)="menuOnOpenMenu(3)"
+           class="nav-link">
+          For Admin
+        </a>
+        <mat-menu class="mouseleave" #menu3="matMenu" [overlapTrigger]="true">
+          <div (mouseleave)="menuOnCloseMenu(3)" style="padding-top:20px;">
+            <button mat-menu-item [routerLink]="['/work-group']" routerLinkActive="active">
+              <mat-icon>view_quilt</mat-icon>
+              <span>&nbsp;Work-Group&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/branch']" routerLinkActive="active">
+              <mat-icon>room</mat-icon>
+              <span>&nbsp;Branch&nbsp;</span>
+            </button>
+          </div>
+        </mat-menu>
+      </li>
+    </ul>
+
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a *ngIf="showLogin; else elseBlock" [routerLink]="['/login']">
+          <i class="fa fa-sign-in" aria-hidden="true"></i>
+          Login
+        </a>
+        <ng-template #elseBlock>
+          <a class="mx-1" [routerLink]="['/register','1']" routerLinkActive="active">
+            Welcome <i>{{userName}}</i>
+          </a>
+          <a (click)="onLogOut()">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            Logout
+          </a>
+        </ng-template>
+      </li>
+    </ul>
+  </div>
+</nav>

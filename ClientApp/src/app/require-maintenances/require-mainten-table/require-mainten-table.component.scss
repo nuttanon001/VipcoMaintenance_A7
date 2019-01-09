@@ -1,0 +1,21 @@
+@import "../../shared/custom-mat-table/custom-mat-table.component.scss";
+
+.is-cancel {
+  background-color: red;
+  // color: red !important;
+}
+
+.is-require {
+  background-color: darksalmon;
+  // color: red !important;
+}
+
+.is-wait {
+  background-color: gold;
+  // color: gold !important;
+}
+
+.is-complate {
+  background-color: lightgreen;
+  // color: lightgreen !important;
+}

@@ -1,0 +1,85 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Receive infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <!--Row1-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected spare part" class="click-input"
+                       (click)="openDialog('SparePart')" readonly required
+                       id="SparePartName" formControlName="SparePartName">
+                <mat-error *ngIf="editValueForm.controls.SparePartName.hasError('required')">
+                  Spare part is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Receive quantity" 
+                       type="number" min="0" required
+                       id="Quantity" formControlName="Quantity">
+                <mat-error *ngIf="editValueForm.controls.Quantity.hasError('required')">
+                  Receive quantity is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row2-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput [matDatepicker]="ReceiveDate" placeholder="Choose a date receive"
+                       id="ReceiveDate" formControlName="ReceiveDate" required>
+                <mat-datepicker-toggle matSuffix [for]="ReceiveDate"></mat-datepicker-toggle>
+                <mat-datepicker #ReceiveDate></mat-datepicker>
+                <mat-error *ngIf="editValueForm.controls.ReceiveDate.hasError('required')">
+                  Receive date is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="PO-No reference"
+                       maxlength="50"
+                       id="PurchaseOrder" formControlName="PurchaseOrder">
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row3-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Receive by employee" class="click-input"
+                       (click)="openDialog('Employee')" readonly required
+                       id="ReceiveEmpString" formControlName="ReceiveEmpString">
+                <mat-error *ngIf="editValueForm.controls.ReceiveEmpString.hasError('required')">
+                  Receive by is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <textarea matInput placeholder="Receive remark" rows="3"
+                          id="Remark" formControlName="Remark"></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+        
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

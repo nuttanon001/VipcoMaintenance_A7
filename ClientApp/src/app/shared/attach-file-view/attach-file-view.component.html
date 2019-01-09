@@ -1,0 +1,28 @@
+<!--<fieldset>AttachFile</fieldset>-->
+<div>
+  <div *ngIf="attachFiles && attachFiles.length > 0,else elseAttact">
+    <table class="table table-hover table-sm small">
+      <colgroup>
+        <col span="1" style="width: 80%;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>File Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let file of attachFiles;let num = index">
+          <td>
+            <a [href]="file.FileAddress" arget="_self" download>
+              <i class="fa fa-download text-primary" aria-hidden="true"></i>
+              {{num + 1}}. {{file.FileName}}
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ng-template #elseAttact>
+    <p>No attach file !</p>
+  </ng-template>
+</div>

@@ -1,0 +1,67 @@
+<div *ngIf="displayValue,else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Adjust infomation view.</b>
+      </ng-template>
+      <div class="view-container">
+
+        <!--Row1-->
+        <div class="row my-1">
+          <div class="my-label">
+            SparePartName :
+          </div>
+          <div class="my-value">
+            {{displayValue.SparePartName || "-"}}
+          </div>
+
+          <div class="my-label">
+            Quantity :
+          </div>
+          <div class="my-value">
+            {{(displayValue.Quantity | number) || "-"}}
+          </div>
+        </div>
+
+        <!--Row2-->
+        <div class="row my-1">
+          <div class="my-label">
+            Date :
+          </div>
+          <div class="my-value">
+            {{(displayValue.AdjustDate | date:'dd/MM/yyyy')|| "-"}}
+          </div>
+
+          <div class="my-label">
+            AdjustBy :
+          </div>
+          <div class="my-value">
+            {{displayValue.AdjustEmpString || "-"}}
+          </div>
+        
+        </div>
+
+        <!--Row3-->
+        <div class="row my-1">
+          <div class="my-label">
+            Description :
+          </div>
+          <textarea [value]="displayValue.Description" rows="3" readonly class="my-value">
+          </textarea>
+
+          <div class="my-label">
+            Remark :
+          </div>
+          <textarea [value]="displayValue.Remark" rows="3" readonly class="my-value">
+          </textarea>
+        </div>
+
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

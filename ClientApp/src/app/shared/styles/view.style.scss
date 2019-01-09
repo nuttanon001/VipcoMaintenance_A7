@@ -1,0 +1,102 @@
+@import "~bootstrap/scss/bootstrap";
+
+.view-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0 5px 0;
+
+    @extend .mx-3;
+}
+
+.chlid-view-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.chlid-center-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+}
+
+.display-label {
+    margin-top:2px;
+    text-align: right;
+    font-weight: bold;
+    border: none;
+}
+
+.value-box {
+    border: solid 1px GAINSBORO;
+    padding: 2px;
+    background-color: whitesmoke;
+    color: darkblue;
+}
+
+.size-img {
+    height: auto;
+    max-width: 400px;
+}
+
+:host /deep/ .disabled-row {
+    /* TODO: first try this without '!important', but you might need it */
+    color:white;
+    background-color: red !important;
+}
+
+:host /deep/ .enabled-row {
+    /* TODO: first try this without '!important', but you might need it */
+    color: white;
+    background-color: steelblue !important;
+}
+
+:host /deep/ .wait-row {
+    /* TODO: first try this without '!important', but you might need it */
+    color: black;
+    background-color: goldenrod !important;
+}
+
+.my-label {
+    @extend .display-label;
+    @extend .col-sm-2;
+    @extend .small;
+}
+
+.my-value {
+    @extend .value-box;
+    @extend .col-sm-4;
+    @extend .small;
+}
+
+/*:host /deep/ .ngx-datatable.material .datatable-header .datatable-header-cell {
+    text-align: left;
+    padding: .9rem 1.2rem;
+    color: rgba(0, 0, 0, 0.54);
+    vertical-align: bottom;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+:host /deep/ .ngx-datatable.material .datatable-body-row .datatable-body-cell {
+    text-align: left;
+    padding: .9rem 1.2rem;
+    color: rgba(0, 0, 0, 0.54);
+    vertical-align: bottom;
+    font-size: 12px;
+}*/
+
+.my-scrolling {
+    height: calc(100vh - 190px);
+}
+
+:host /deep/ .is-cancel {
+    background-color: red;
+}
+
+:host /deep/ .is-wait {
+    background-color: gold;
+}
+
+:host /deep/ .is-complate {
+    background-color: lightgreen;
+}

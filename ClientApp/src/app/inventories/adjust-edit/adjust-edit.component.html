@@ -1,0 +1,86 @@
+<div *ngIf="editValue; else elseBlock">
+  <mat-tab-group>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <b>Adjust infomation edit</b>
+      </ng-template>
+      <form [formGroup]="editValueForm">
+        <div class="form-container-column">
+          <!--Row1-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput placeholder="Selected spare part" class="click-input"
+                       (click)="openDialog('SparePart')" readonly required
+                       id="SparePartName" formControlName="SparePartName">
+                <mat-error *ngIf="editValueForm.controls.SparePartName.hasError('required')">
+                  Spare part is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Adjust quantity"
+                       type="number" min="0" required
+                       id="Quantity" formControlName="Quantity">
+                <mat-error *ngIf="editValueForm.controls.Quantity.hasError('required')">
+                  Adjust quantity is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row2-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <input matInput [matDatepicker]="AdjustDate" placeholder="Choose a date adjust"
+                       id="AdjustDate" formControlName="AdjustDate" required>
+                <mat-datepicker-toggle matSuffix [for]="AdjustDate"></mat-datepicker-toggle>
+                <mat-datepicker #AdjustDate></mat-datepicker>
+                <mat-error *ngIf="editValueForm.controls.AdjustDate.hasError('required')">
+                  Adjust date is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <input matInput placeholder="Adjust by employee" class="click-input"
+                       (click)="openDialog('Employee')" readonly required
+                       id="AdjustEmpString" formControlName="AdjustEmpString">
+                <mat-error *ngIf="editValueForm.controls.AdjustEmpString.hasError('required')">
+                  Adjust by is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+          <!--Row3-->
+          <div class="row-form">
+            <div class="left-content">
+              <mat-form-field>
+                <textarea matInput placeholder="Description reference"
+                          maxlength="200" rows="3"
+                          id="Description" formControlName="Description"></textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="right-content">
+              <mat-form-field>
+                <textarea matInput placeholder="Adjust remark"
+                          maxlength="200" rows="3"
+                          id="Remark" formControlName="Remark"></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>
