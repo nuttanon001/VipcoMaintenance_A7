@@ -6,6 +6,7 @@ export interface MyPrimengColumn {
   type?: ColumnType;
   colspan?: number;
   rowspan?: number;
+  canSort?: boolean;
 }
 
 export enum ColumnType {

@@ -5,6 +5,7 @@ import { ItemCenterComponent } from "./item-center.component";
 import { ItemMasterComponent } from "./item-master/item-master.component";
 import { ItemByGroupMasterComponent } from './item-by-group-master/item-by-group-master.component';
 import { ItemHistoriesComponent } from './item-histories/item-histories.component';
+import { ItemMasterListComponent } from './item-master-list/item-master-list.component';
 
 const routes: Routes = [
   {
@@ -18,6 +19,10 @@ const routes: Routes = [
       {
         path: "item-by-group",
         component: ItemByGroupMasterComponent,
+      },
+      {
+        path: "item-list",
+        component: ItemMasterListComponent,
       },
       {
         path: "item-history/:condition",

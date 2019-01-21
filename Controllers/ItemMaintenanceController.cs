@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ using VipcoMaintenance.ViewModels;
 
 namespace VipcoMaintenance.Controllers
 {
+    [Authorize]
     [Produces("application/json")]
     [Route("api/[controller]")]
     public class ItemMaintenanceController : GenericController<ItemMaintenance>
@@ -63,7 +65,7 @@ namespace VipcoMaintenance.Controllers
             // Host
             this.hosting = hosting;
         }
-
+       
         /// <summary>
         /// Change status of require maintenance and send email if not yet send.
         /// </summary>
@@ -350,6 +352,111 @@ namespace VipcoMaintenance.Controllers
             return new JsonResult(new ScrollDataViewModel<ItemMaintenanceViewModel>(Scroll, mapDatas), this.DefaultJsonSettings);
         }
 
+        [HttpPost("GetListMaintenance")]
+        public async Task<IActionResult> GetListMaintenance([FromBody] ScrollViewModel Scroll)
+        {
+            var message = "Data not been found.";
+            try
+            {
+                if (Scroll != null)
+                {
+                    // Filter
+                    var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                                        : Scroll.Filter.Split(null);
+
+                    var predicate = PredicateBuilder.False<ItemMaintenance>();
+
+                    foreach (string temp in filters)
+                    {
+                        string keyword = temp;
+                        predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
+                                                    x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
+                                                    x.Remark.ToLower().Contains(keyword) ||
+                                                    x.RequireMaintenance.Item.Name.ToLower().Contains(keyword) ||
+                                                    x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
+                                                    x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
+                                                    x.TypeMaintenance.Description.ToLower().Contains(keyword));
+                    }
+
+                    if (!string.IsNullOrEmpty(Scroll.Where))
+                        predicate = predicate.And(x => x.Creator == Scroll.Where);
+
+                    if (Scroll.WhereId.HasValue)
+                        predicate = predicate.And(x => x.WorkGroupMaintenanceId == Scroll.WhereId);
+
+                    //Order by
+                    Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
+                    // Order
+                    switch (Scroll.SortField)
+                    {
+                        case "ItemCode":
+                            if (Scroll.SortOrder == -1)
+                                order = o => o.OrderByDescending(x => x.RequireMaintenance.Item.ItemCode);
+                            else
+                                order = o => o.OrderBy(x => x.RequireMaintenance.Item.ItemCode);
+                            break;
+
+                        case "MainGroupName":
+                            if (Scroll.SortOrder == -1)
+                                order = o => o.OrderByDescending(x => x.WorkGroupMaintenance.Name);
+                            else
+                                order = o => o.OrderBy(x => x.WorkGroupMaintenance.Name);
+                            break;
+
+                        case "MainTypeName":
+                            if (Scroll.SortOrder == -1)
+                                order = o => o.OrderByDescending(x => x.TypeMaintenance.Name);
+                            else
+                                order = o => o.OrderBy(x => x.TypeMaintenance.Name);
+                            break;
+
+                        default:
+                            order = o => o.OrderByDescending(x => x.CreateDate);
+                            break;
+                    }
+
+                    var QueryData = await this.repository.GetToListAsync(
+                                            selector: x => new ItemMainV2ViewModel
+                                            {
+                                                ItemCode = x.RequireMaintenance.Item.ItemCode,
+                                                ItemMaintenanceId = x.ItemMaintenanceId,
+                                                ItemName = x.RequireMaintenance.Item.Name,
+                                                MainGroupName = x.WorkGroupMaintenance.Name,
+                                                MainTypeName = x.TypeMaintenance.Name,
+                                                RequireDate = x.RequireMaintenance.RequireDate,
+                                                RequireEmpCode = x.RequireMaintenance.RequireEmp,
+                                            },  // Selected
+                                            predicate: predicate, // Where
+                                            orderBy: order, // Order
+                                            include: x => x.Include(z => z.RequireMaintenance.Item)
+                                                           .Include(z => z.WorkGroupMaintenance)
+                                                           .Include(z => z.TypeMaintenance), // Include
+                                            skip: Scroll.Skip ?? 0, // Skip
+                                            take: Scroll.Take ?? 50); // Take
+
+                    // Get TotalRow
+                    Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
+
+                    var listEmps = QueryData.Select(z => z.RequireEmpCode).Distinct().ToList();
+                    var emps = await this.repositoryEmp.GetToListAsync(x => new { x.EmpCode, x.NameThai }, x => listEmps.Contains(x.EmpCode));
+
+                    foreach (var item in QueryData)
+                    {
+                        if (!string.IsNullOrEmpty(item.RequireEmpCode))
+                            item.RequireEmpName = emps.FirstOrDefault(x => x.EmpCode == item.RequireEmpCode)?.NameThai ?? "-";
+                    }
+
+                    return new JsonResult(new ScrollDataViewModel<ItemMainV2ViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
+                }
+            }
+            catch(Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return BadRequest(new { message });
+        }
+
         // POST: api/ItemMaintenance/
         [HttpPost]
         public override async Task<IActionResult> Create([FromBody] ItemMaintenance record)
@@ -424,6 +531,184 @@ namespace VipcoMaintenance.Controllers
             RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
                 (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
             // Update Status RequireMaintenance
+            await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
+
+            if (record.StatusMaintenance == StatusMaintenance.Complate &&
+                record.RequireMaintenanceId != null)
+                await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
+
+            if (record.RequireMaintenance != null)
+                record.RequireMaintenance = null;
+            if (record.ItemMainHasEmployees != null)
+                record.ItemMainHasEmployees = null;
+            if (record.RequisitionStockSps != null)
+                record.RequisitionStockSps = null;
+
+            return new JsonResult(record, this.DefaultJsonSettings);
+        }
+
+        // PUT: api/ItemMaintenance/
+        [HttpPut]
+        public override async Task<IActionResult> Update(int key, [FromBody] ItemMaintenance record)
+        {
+            if (key < 1)
+                return BadRequest();
+            if (record == null)
+                return BadRequest();
+
+            // Set date for CrateDate Entity
+            record.ModifyDate = DateTime.Now;
+            record.StatusMaintenance = this.ChangeStatus(record);
+            // +7 Hour
+            record = this.helper.AddHourMethod(record);
+            // Actual Start DateTime
+            if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
+            {
+                if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+                    record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
+            }
+            // Actual End DateTime
+            if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
+            {
+                if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+                    record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
+            }
+
+            foreach (var item in record.ItemMainHasEmployees)
+            {
+                if (item == null)
+                    continue;
+
+                if (item.ItemMainHasEmployeeId > 0)
+                {
+                    item.ModifyDate = record.ModifyDate;
+                    item.Modifyer = record.Modifyer;
+                }
+                else
+                {
+                    item.CreateDate = record.ModifyDate;
+                    item.Creator = record.Modifyer;
+                }
+            }
+            // Update Requisiton
+            foreach (var item in record.RequisitionStockSps)
+            {
+                if (item == null)
+                    continue;
+                // If Already have in database
+                if (item.RequisitionStockSpId > 0)
+                {
+                    item.ModifyDate = record.ModifyDate;
+                    item.Modifyer = record.Modifyer;
+                    item.RequisitionEmp = record.MaintenanceEmp;
+                }
+                else // if do't have add new to database
+                {
+                    item.CreateDate = item.ModifyDate;
+                    item.Creator = item.Modifyer;
+                    item.RequisitionEmp = record.MaintenanceEmp;
+                    item.PaperNo = record.ItemMaintenanceNo;
+                }
+            }
+
+            if (await this.repository.UpdateAsync(record, key) == null)
+                return BadRequest();
+            else
+            {
+                // Find requisition of item maintenance
+                var dbRequisition = await this.repositoryRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
+                var dbItemMainHasEmp = await this.repositoryItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
+
+                //Remove requisition if edit remove it
+                foreach (var item in dbRequisition)
+                {
+                    if (!record.RequisitionStockSps.Any(x => x.RequisitionStockSpId == item.RequisitionStockSpId))
+                    {
+                        if (item.MovementStockSpId.HasValue)
+                        {
+                            var hasMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
+                            if (hasMovement != null)
+                            {
+                                // Cancel Status
+                                hasMovement.MovementStatus = MovementStatus.Cancel;
+                                hasMovement.ModifyDate = record.ModifyDate;
+                                hasMovement.Modifyer = record.Modifyer;
+                                // Update
+                                await this.repositoryMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
+                            }
+                        }
+                        await this.repositoryRequisition.DeleteAsync(item.RequisitionStockSpId);
+                    }
+                }
+
+                foreach (var item in dbItemMainHasEmp)
+                {
+                    if (!record.ItemMainHasEmployees.Any(x => x.ItemMainHasEmployeeId == item.ItemMainHasEmployeeId))
+                        await this.repositoryItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
+                }
+
+                //Update ItemMainHasEmployee or New ItemMainHasEmployee
+                foreach (var item in record.ItemMainHasEmployees)
+                {
+                    if (item == null)
+                        continue;
+
+                    if (item.ItemMainHasEmployeeId > 0)
+                        await this.repositoryItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
+                    else
+                    {
+                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
+                            item.ItemMaintenanceId = record.ItemMaintenanceId;
+
+                        await this.repositoryItemMainEmp.AddAsync(item);
+                    }
+                }
+
+                //Update RequisitionStockSps or New RequisitionStockSps
+                foreach (var item in record.RequisitionStockSps)
+                {
+                    if (item == null)
+                        continue;
+
+                    if (item.RequisitionStockSpId > 0)
+                    {
+                        // Update movement
+                        var editMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
+                        if (editMovement != null)
+                        {
+                            editMovement.ModifyDate = item.ModifyDate;
+                            editMovement.Modifyer = item.Modifyer;
+                            editMovement.MovementDate = item.RequisitionDate;
+                            editMovement.Quantity = item.Quantity;
+                            editMovement.SparePartId = item.SparePartId;
+
+                            await this.repositoryMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
+                        }
+                        await this.repositoryRequisition.UpdateAsync(item, item.RequisitionStockSpId);
+                    }
+                    else
+                    {
+                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
+                            item.ItemMaintenanceId = record.ItemMaintenanceId;
+
+                        item.MovementStockSp = new MovementStockSp()
+                        {
+                            CreateDate = item.CreateDate,
+                            Creator = item.Creator,
+                            MovementDate = item.RequisitionDate,
+                            MovementStatus = MovementStatus.RequisitionStock,
+                            Quantity = item.Quantity,
+                            SparePartId = item.SparePartId,
+                        };
+                        await this.repositoryRequisition.AddAsync(item);
+                    }
+                }
+            }
+
+            // Update Status RequireMaintenance
+            RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
+                (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
+
             await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
 
             if (record.StatusMaintenance == StatusMaintenance.Complate &&
@@ -682,184 +967,6 @@ namespace VipcoMaintenance.Controllers
             return BadRequest(new { Error = message });
         }
 
-        // PUT: api/ItemMaintenance/
-        [HttpPut]
-        public override async Task<IActionResult> Update(int key, [FromBody] ItemMaintenance record)
-        {
-            if (key < 1)
-                return BadRequest();
-            if (record == null)
-                return BadRequest();
-
-            // Set date for CrateDate Entity
-            record.ModifyDate = DateTime.Now;
-            record.StatusMaintenance = this.ChangeStatus(record);
-            // +7 Hour
-            record = this.helper.AddHourMethod(record);
-            // Actual Start DateTime
-            if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
-            {
-                if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
-            }
-            // Actual End DateTime
-            if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
-            {
-                if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
-            }
-
-            foreach (var item in record.ItemMainHasEmployees)
-            {
-                if (item == null)
-                    continue;
-
-                if (item.ItemMainHasEmployeeId > 0)
-                {
-                    item.ModifyDate = record.ModifyDate;
-                    item.Modifyer = record.Modifyer;
-                }
-                else
-                {
-                    item.CreateDate = record.ModifyDate;
-                    item.Creator = record.Modifyer;
-                }
-            }
-            // Update Requisiton
-            foreach (var item in record.RequisitionStockSps)
-            {
-                if (item == null)
-                    continue;
-                // If Already have in database
-                if (item.RequisitionStockSpId > 0)
-                {
-                    item.ModifyDate = record.ModifyDate;
-                    item.Modifyer = record.Modifyer;
-                    item.RequisitionEmp = record.MaintenanceEmp;
-                }
-                else // if do't have add new to database
-                {
-                    item.CreateDate = item.ModifyDate;
-                    item.Creator = item.Modifyer;
-                    item.RequisitionEmp = record.MaintenanceEmp;
-                    item.PaperNo = record.ItemMaintenanceNo;
-                }
-            }
-
-            if (await this.repository.UpdateAsync(record, key) == null)
-                return BadRequest();
-            else
-            {
-                // Find requisition of item maintenance
-                var dbRequisition = await this.repositoryRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
-                var dbItemMainHasEmp = await this.repositoryItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
-
-                //Remove requisition if edit remove it
-                foreach (var item in dbRequisition)
-                {
-                    if (!record.RequisitionStockSps.Any(x => x.RequisitionStockSpId == item.RequisitionStockSpId))
-                    {
-                        if (item.MovementStockSpId.HasValue)
-                        {
-                            var hasMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
-                            if (hasMovement != null)
-                            {
-                                // Cancel Status
-                                hasMovement.MovementStatus = MovementStatus.Cancel;
-                                hasMovement.ModifyDate = record.ModifyDate;
-                                hasMovement.Modifyer = record.Modifyer;
-                                // Update
-                                await this.repositoryMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
-                            }
-                        }
-                        await this.repositoryRequisition.DeleteAsync(item.RequisitionStockSpId);
-                    }
-                }
-
-                foreach (var item in dbItemMainHasEmp)
-                {
-                    if (!record.ItemMainHasEmployees.Any(x => x.ItemMainHasEmployeeId == item.ItemMainHasEmployeeId))
-                        await this.repositoryItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
-                }
-
-                //Update ItemMainHasEmployee or New ItemMainHasEmployee
-                foreach (var item in record.ItemMainHasEmployees)
-                {
-                    if (item == null)
-                        continue;
-
-                    if (item.ItemMainHasEmployeeId > 0)
-                        await this.repositoryItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
-                    else
-                    {
-                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
-                            item.ItemMaintenanceId = record.ItemMaintenanceId;
-
-                        await this.repositoryItemMainEmp.AddAsync(item);
-                    }
-                }
-
-                //Update RequisitionStockSps or New RequisitionStockSps
-                foreach (var item in record.RequisitionStockSps)
-                {
-                    if (item == null)
-                        continue;
-
-                    if (item.RequisitionStockSpId > 0)
-                    {
-                        // Update movement
-                        var editMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
-                        if (editMovement != null)
-                        {
-                            editMovement.ModifyDate = item.ModifyDate;
-                            editMovement.Modifyer = item.Modifyer;
-                            editMovement.MovementDate = item.RequisitionDate;
-                            editMovement.Quantity = item.Quantity;
-                            editMovement.SparePartId = item.SparePartId;
-
-                            await this.repositoryMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
-                        }
-                        await this.repositoryRequisition.UpdateAsync(item, item.RequisitionStockSpId);
-                    }
-                    else
-                    {
-                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
-                            item.ItemMaintenanceId = record.ItemMaintenanceId;
-
-                        item.MovementStockSp = new MovementStockSp()
-                        {
-                            CreateDate = item.CreateDate,
-                            Creator = item.Creator,
-                            MovementDate = item.RequisitionDate,
-                            MovementStatus = MovementStatus.RequisitionStock,
-                            Quantity = item.Quantity,
-                            SparePartId = item.SparePartId,
-                        };
-                        await this.repositoryRequisition.AddAsync(item);
-                    }
-                }
-            }
-
-            // Update Status RequireMaintenance
-            RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
-                (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
-
-            await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
-
-            if (record.StatusMaintenance == StatusMaintenance.Complate &&
-                record.RequireMaintenanceId != null)
-                await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
-
-            if (record.RequireMaintenance != null)
-                record.RequireMaintenance = null;
-            if (record.ItemMainHasEmployees != null)
-                record.ItemMainHasEmployees = null;
-            if (record.RequisitionStockSps != null)
-                record.RequisitionStockSps = null;
-
-            return new JsonResult(record, this.DefaultJsonSettings);
-        }
-
         // POST: api/ItemMaintenance/ReportList
         [HttpPost("ReportList")]
         public async Task<IActionResult> ReportList([FromBody] ScrollViewModel option, string mode = "")
@@ -966,5 +1073,7 @@ namespace VipcoMaintenance.Controllers
 
             return BadRequest(new { Error = Message });
         }
+
+
     }
 }

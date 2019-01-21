@@ -32,7 +32,7 @@
     <!-- Fail Column -->
     <ng-container matColumnDef="Fail">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
-       Item-Fail
+        Item-Fail
       </mat-header-cell>
       <mat-cell *matCellDef="let row">{{ row.Fail || '-' }}</mat-cell>
     </ng-container>
@@ -42,6 +42,12 @@
         Item-Fix
       </mat-header-cell>
       <mat-cell *matCellDef="let row">{{ row.Fix || '-' }}</mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="Remark">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Remark
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.Remark || '-' }}</mat-cell>
     </ng-container>
     <!-- edit Column -->
     <ng-container matColumnDef="edit" class="my-mat-cell">

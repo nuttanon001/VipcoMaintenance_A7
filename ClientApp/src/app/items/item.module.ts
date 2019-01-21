@@ -22,6 +22,7 @@ import { ItemByGroupTableComponent } from './item-by-group-table/item-by-group-t
 import { EmployeeGroupMisService } from '../employees/shared/employee-group-mis.service';
 import { ItemHistoriesComponent } from './item-histories/item-histories.component';
 import { ItemHistoriesTableComponent } from './item-histories-table/item-histories-table.component';
+import { ItemMasterListComponent } from './item-master-list/item-master-list.component';
 
 
 @NgModule({
@@ -42,7 +43,8 @@ import { ItemHistoriesTableComponent } from './item-histories-table/item-histori
     ItemByGroupDetailComponent,
     ItemByGroupTableComponent,
     ItemHistoriesComponent,
-    ItemHistoriesTableComponent
+    ItemHistoriesTableComponent,
+    ItemMasterListComponent
   ],
   providers: [
     ItemService,

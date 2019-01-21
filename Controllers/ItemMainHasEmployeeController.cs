@@ -14,9 +14,11 @@ using VipcoMaintenance.Models.Maintenances;
 
 using AutoMapper;
 using VipcoMaintenance.Models.Machines;
+using Microsoft.AspNetCore.Authorization;
 
 namespace VipcoMaintenance.Controllers
 {
+    [Authorize]
     [Produces("application/json")]
     [Route("api/[controller]")]
     public class ItemMainHasEmployeeController : GenericController<ItemMainHasEmployee>

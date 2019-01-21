@@ -15,7 +15,7 @@ export class ItemHistoriesTableComponent extends BaseTableFontData<ItemHistories
   /** custom-mat-table ctor */
   constructor() {
     super();
-    this.displayedColumns = ["select", "Date", "Fail", "Fix", "edit"]
+    this.displayedColumns = ["select", "Date", "Fail", "Fix","Remark", "edit"]
   }
   @Input() isLoaded: boolean;
   // Angular on changes

@@ -113,6 +113,11 @@ export class ItemHistoriesComponent implements OnInit {
               ItemId: dialogItem.ItemId,
               ItemName: `${dialogItem.ItemCode}/${dialogItem.Name}` 
             });
+
+            this.service.getOneKeyNumber(dialogItem)
+              .subscribe(dbitem => {
+                this.item = dbitem || undefined;
+              });
             //Debug here
             // console.log(JSON.stringify(this.itemOptionForm.value));
           } else {
@@ -120,6 +125,8 @@ export class ItemHistoriesComponent implements OnInit {
               ItemId: 0,
               ItemName: ""
             });
+
+            this.item = undefined;
           }
         });
     }
@@ -132,6 +139,16 @@ export class ItemHistoriesComponent implements OnInit {
         .subscribe();
     } else {
       this.serviceDialog.error("Warning Message", "This maintenance not plan yet.", this.viewContainerRef);
+    }
+  }
+
+  onReport(itemOption: ItemHistoriesOption): void {
+    if (itemOption) {
+      this.isLoaded = true;
+      this.service.getXlsx(itemOption).subscribe(data => {
+        console.log(data);
+        this.isLoaded = false;
+      }, (error) => this.isLoaded = false, () => this.isLoaded = false);
     }
   }
 }

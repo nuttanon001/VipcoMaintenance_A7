@@ -9,11 +9,16 @@ import { ItemManitenLinkMailComponent } from './item-maniten-link-mail/item-mani
 // Services
 import { AuthGuard } from '../core/auth/auth-guard.service';
 import { ItemMaintenHistoryComponent } from './item-mainten-history/item-mainten-history.component';
+import { ItemMaintenanceListComponent } from './item-maintenance-list/item-maintenance-list.component';
 
 const routes: Routes = [{
   path: "",
   component: ItemMaintenCenterComponent,
   children: [
+    {
+      path: "item-mainlist",
+      component: ItemMaintenanceListComponent,
+    },
     {
       path: "schedule",
       component: ItemMaintenScheduleComponent,

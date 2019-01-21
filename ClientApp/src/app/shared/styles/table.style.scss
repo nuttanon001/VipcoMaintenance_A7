@@ -1,0 +1,58 @@
+@import "../../../sass/styles.scss";
+
+.mat-table {
+  overflow: auto;
+  height: calc(#{$master-vh} - 190px);
+  width: calc(#{$master-vw} - 50px);
+}
+
+.header-table {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  padding-left: 24px;
+  font-size: 20px;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 56px;
+  right: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rate-limit-reached {
+  color: #980000;
+  max-width: 360px;
+  text-align: center;
+}
+
+.mat-row-highlight {
+  background-color: lightgray; /* green */
+}
+
+.mat-row-highlight-light {
+  background-color: lightsalmon; /* green */
+}
+
+.mat-row-highlight-green {
+  background-color: darkseagreen; /* green */
+}
+
+.mat-column-created {
+  max-width: 124px;
+}
+
+.mat-column-select {
+  /*overflow: initial;
+  white-space: unset !important;
+  flex: 0 0 35px !important;*/
+  /*width: 35px !important;*/
+  max-width: 70px;
+}

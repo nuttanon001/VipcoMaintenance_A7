@@ -14,5 +14,10 @@ namespace VipcoMaintenance.Services.ExcelExportServices
         {
             return new XLWorkbook();
         }
+
+        public XLWorkbook Create(string fileExists)
+        {
+            return new XLWorkbook(fileExists);
+        }
     }
 }

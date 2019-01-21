@@ -8,8 +8,8 @@ import { Item } from "../../items/shared/item.model";
 import { BaseRestService } from "../../shared/base-rest.service";
 import { BaseCommunicateService } from "../../shared/base-communicate.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { catchError } from "rxjs/operators";
+import { Observable } from "rxjs";
+import { catchError,map } from "rxjs/operators";
 import { Scroll } from "../../shared/scroll.model";
 import { ItemByGroup } from "./item-by-group.model";
 import { ItemHistoriesOption } from "./item-histories-option.model";
@@ -47,6 +47,34 @@ export class ItemService extends BaseRestService<Item> {
       }),
       params: new HttpParams().set("Group", Group).set("ByEmp", ByEmp)
     }).pipe(catchError(this.handleError(this.serviceName + "/put update change group of item",<any>{})));
+  }
+  /**
+   * Get Excel File
+   * @param key
+   */
+  getXlsx(itemOption?: ItemHistoriesOption): Observable<any> {
+    let url: string = this.baseUrl + "ItemHistoriesExport/";
+
+    return this.http.get(url, {
+      params: new HttpParams().set("key", itemOption.ItemId.toString()),
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }),
+      responseType: 'blob' // <-- changed to blob 
+    }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
+  }
+
+  getXlsxScroll(scroll: Scroll): Observable<any> {
+    let url: string = this.baseUrl + "GetReport/";
+
+    return this.http.post(url, JSON.stringify(scroll), {
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }),
+      responseType: 'blob' // <-- changed to blob 
+    }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }
 }
 

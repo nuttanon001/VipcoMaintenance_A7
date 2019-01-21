@@ -1,13 +1,1 @@
-@import "../../shared/styles/master.style.scss";
-
-
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  :host /deep/ .intab-table {
-    overflow: visible !important;
-    min-height: initial !important;
-  }
-}
+@import "../../shared/styles/schedule.style.scss";

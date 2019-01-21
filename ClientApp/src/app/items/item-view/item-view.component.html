@@ -1,135 +1,136 @@
 <div *ngIf="displayValue,else elseBlock">
-  <mat-tab-group>
+  <div class="view-container">
+
+    <div class="row my-1">
+      <div class="my-label">
+        Code :
+      </div>
+      <div class="my-value">
+        {{displayValue.ItemCode || "-"}}
+      </div>
+
+      <div class="my-label">
+        Type :
+      </div>
+      <div class="my-value">
+        {{displayValue.ItemTypeString || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        Name :
+      </div>
+      <div class="my-value">
+        {{displayValue.Name || "-"}}
+      </div>
+
+      <div class="my-label">
+        Description :
+      </div>
+      <div class="my-value">
+        {{displayValue.Description || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        Employee :
+      </div>
+      <div class="my-value">
+        {{displayValue.EmpResposibleString || "-"}} / {{displayValue.GroupMisString || "-"}}
+      </div>
+
+      <div class="my-label">
+        Branch :
+      </div>
+      <div class="my-value">
+        {{displayValue.BranchString || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        Model :
+      </div>
+      <div class="my-value">
+        {{displayValue.Model || "-"}}
+      </div>
+
+      <div class="my-label">
+        Brand :
+      </div>
+      <div class="my-value">
+        {{displayValue.Brand || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        RegisterDate :
+      </div>
+      <div class="my-value">
+        {{(displayValue?.RegisterDate | date:'dd/MM/yyyy')|| "-"}}
+      </div>
+
+      <div class="my-label">
+        CancelDate :
+      </div>
+      <div class="my-value">
+        {{(displayValue?.CancelDate| date:'dd/MM/yyyy') || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        S/N :
+      </div>
+      <div class="my-value">
+        {{displayValue.Property || "-"}}
+      </div>
+
+      <div class="my-label">
+        Property :
+      </div>
+      <div class="my-value">
+        {{displayValue.Property2 || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        Property-2 :
+      </div>
+      <div class="my-value">
+        {{displayValue.Property3 || "-"}}
+      </div>
+
+      <div class="my-label">
+        Status :
+      </div>
+      <div class="my-value">
+        {{displayValue.ItemStatusString || "-"}}
+      </div>
+    </div>
+
+    <div class="row my-1">
+      <div class="my-label">
+        Image :
+      </div>
+      <div class="my-value" *ngIf="displayValue.ItemImage">
+        <img [src]="displayValue.ItemImage" class="size-img" />
+      </div>
+    </div>
+
+  </div>
+  <!--<mat-tab-group>
     <mat-tab>
       <ng-template mat-tab-label>
         <b>Item infomation view</b>
       </ng-template>
-      <div class="view-container">
 
-        <div class="row my-1">
-          <div class="my-label">
-            Code :
-          </div>
-          <div class="my-value">
-            {{displayValue.ItemCode || "-"}}
-          </div>
-
-          <div class="my-label">
-            Type :
-          </div>
-          <div class="my-value">
-            {{displayValue.ItemTypeString || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            Name :
-          </div>
-          <div class="my-value">
-            {{displayValue.Name || "-"}}
-          </div>
-
-          <div class="my-label">
-            Description :
-          </div>
-          <div class="my-value">
-            {{displayValue.Description || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            Employee :
-          </div>
-          <div class="my-value">
-            {{displayValue.EmpResposibleString || "-"}} / {{displayValue.GroupMisString || "-"}}
-          </div>
-
-          <div class="my-label">
-            Branch :
-          </div>
-          <div class="my-value">
-            {{displayValue.BranchString || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            Model :
-          </div>
-          <div class="my-value">
-            {{displayValue.Model || "-"}}
-          </div>
-
-          <div class="my-label">
-            Brand :
-          </div>
-          <div class="my-value">
-            {{displayValue.Brand || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            RegisterDate :
-          </div>
-          <div class="my-value">
-            {{(displayValue?.RegisterDate | date:'dd/MM/yyyy')|| "-"}}
-          </div>
-
-          <div class="my-label">
-            CancelDate :
-          </div>
-          <div class="my-value">
-            {{(displayValue?.CancelDate| date:'dd/MM/yyyy') || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            S/N :
-          </div>
-          <div class="my-value">
-            {{displayValue.Property || "-"}}
-          </div>
-
-          <div class="my-label">
-            Property :
-          </div>
-          <div class="my-value">
-            {{displayValue.Property2 || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            Property-2 :
-          </div>
-          <div class="my-value">
-            {{displayValue.Property3 || "-"}}
-          </div>
-
-          <div class="my-label">
-            Status :
-          </div>
-          <div class="my-value">
-            {{displayValue.ItemStatusString || "-"}}
-          </div>
-        </div>
-
-        <div class="row my-1">
-          <div class="my-label">
-            Image :
-          </div>
-          <div class="my-value" *ngIf="displayValue.ItemImage">
-            <img [src]="displayValue.ItemImage" class="size-img" />
-          </div>
-        </div>
-
-      </div>
     </mat-tab>
-  </mat-tab-group>
+  </mat-tab-group>-->
 </div>
 
 <ng-template #elseBlock>

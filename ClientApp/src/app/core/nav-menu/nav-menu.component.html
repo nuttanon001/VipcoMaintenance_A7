@@ -59,6 +59,10 @@
               <mat-icon>history</mat-icon>
               <span>&nbsp;Maintenance-Histories&nbsp;</span>
             </button>
+            <button mat-menu-item [routerLink]="['/maintenance/item-mainlist']">
+              <mat-icon>assignment</mat-icon>
+              <span>&nbsp;Maintenance-List&nbsp;</span>
+            </button>
             <hr />
             <button mat-menu-item [routerLink]="['/work-group-mainten']" routerLinkActive="active">
               <mat-icon>group_work</mat-icon>
@@ -71,6 +75,10 @@
             <button mat-menu-item [routerLink]="['/item']" routerLinkActive="active">
               <mat-icon>perm_data_setting</mat-icon>
               <span>&nbsp;Item&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/item/item-list']" routerLinkActive="active">
+              <mat-icon>apps_black</mat-icon>
+              <span>&nbsp;Item-List&nbsp;</span>
             </button>
             <button mat-menu-item [routerLink]="['/item/item-history']" routerLinkActive="active">
               <mat-icon>event_note</mat-icon>
@@ -126,17 +134,29 @@
     <ul class="navbar-nav">
       <li class="nav-item">
         <a *ngIf="showLogin; else elseBlock" [routerLink]="['/login']">
-          <i class="fa fa-sign-in" aria-hidden="true"></i>
-          Login
+          <span class="icon-content">
+            &nbsp;Login&nbsp;
+          </span>
         </a>
         <ng-template #elseBlock>
-          <a class="mx-1" [routerLink]="['/register','1']" routerLinkActive="active">
+          <!-- (mouseenter)="menuOnOpenMenu(2)"  -->
+          <a class="mx-1" #userMenu="matMenuTrigger"
+             [matMenuTriggerFor]="userMenu1" (mouseenter)="menuOnOpenMenu(4)">
             Welcome <i>{{userName}}</i>
           </a>
-          <a (click)="onLogOut()">
-            <i class="fa fa-sign-out" aria-hidden="true"></i>
-            Logout
-          </a>
+          <!-- (mouseleave)="menuOnCloseMenu(2)" -->
+          <mat-menu class="mouseleave" #userMenu1="matMenu" [overlapTrigger]="true">
+            <div style="padding-top:20px;" (mouseleave)="menuOnCloseMenu(4)">
+              <button mat-menu-item [routerLink]="['/register','1']" routerLinkActive="active">
+                <mat-icon>account_circle</mat-icon>
+                <span>&nbsp;Edit user info&nbsp;</span>
+              </button>
+              <button mat-menu-item (click)="onLogOut()">
+                <mat-icon>exit_to_app</mat-icon>
+                <span>&nbsp;Logout&nbsp;</span>
+              </button>
+            </div>
+          </mat-menu>
         </ng-template>
       </li>
     </ul>

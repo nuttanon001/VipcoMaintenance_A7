@@ -1,0 +1,7 @@
+@import "../../shared/styles/table.style.scss";
+
+.mat-table {
+  overflow: auto;
+  max-width: calc(100vw - 65vw);
+  height: calc(100vh - 230px);
+}

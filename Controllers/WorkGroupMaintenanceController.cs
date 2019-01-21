@@ -13,9 +13,11 @@ using VipcoMaintenance.ViewModels;
 using VipcoMaintenance.Models.Maintenances;
 using AutoMapper;
 using VipcoMaintenance.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace VipcoMaintenance.Controllers
 {
+    [Authorize]
     [Produces("application/json")]
     [Route("api/[controller]")]
     public class WorkGroupMaintenanceController : GenericController<WorkGroupMaintenance>

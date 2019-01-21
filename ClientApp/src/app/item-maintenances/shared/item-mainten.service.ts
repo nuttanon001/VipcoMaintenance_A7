@@ -8,12 +8,14 @@ import { ItemMaintenance } from "../shared/item-maintenance.model";
 import { BaseRestService } from "../../shared/base-rest.service";
 import { BaseCommunicateService } from "../../shared/base-communicate.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { catchError } from "rxjs/operators";
+import { Observable } from "rxjs";
+import { catchError,map } from "rxjs/operators";
 import { OptionItemMaintenSchedule } from "./option-item-mainten-schedule.model";
-import { retry } from "rxjs/operator/retry";
 import { ItemMaintenExport } from "./item-mainten-export.model";
 import { ScrollData } from "../../shared/scroll-data.model";
+
+import { ItemMaintenList } from './item-mainten-list.model';
+import { Scroll } from 'src/app/shared/scroll.model';
 
 @Injectable()
 export class ItemMaintenService extends BaseRestService<ItemMaintenance> {
@@ -42,6 +44,7 @@ export class ItemMaintenService extends BaseRestService<ItemMaintenance> {
   }
 
   // ===================== Item Maintenance Schedule ===========================\\
+
   /**
    * Item Maintenance Schedule
    * @param option = option for schedul item maintenance
@@ -53,6 +56,19 @@ export class ItemMaintenService extends BaseRestService<ItemMaintenance> {
       })
     }).pipe(catchError(
       this.handleError(this.serviceName + "/get item maintenance schedule", new Array<any>())));
+  }
+
+  /**
+   * getListMaintenance
+   * @param option
+   */
+  getListMaintenance(option: Scroll): Observable<ScrollData<ItemMaintenList>> {
+    return this.http.post<ScrollData<ItemMaintenList>>(this.baseUrl + "GetListMaintenance/", JSON.stringify(option), {
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+      })
+    }).pipe(catchError(
+      this.handleError(this.serviceName + "/get list maintenance", <ScrollData<ItemMaintenList>>{})));
   }
 
   getExportData(option: OptionItemMaintenSchedule): Observable<ScrollData<ItemMaintenExport>> {
@@ -76,6 +92,18 @@ export class ItemMaintenService extends BaseRestService<ItemMaintenance> {
       }),
       responseType: 'blob' // <-- changed to blob 
     }).map(res => this.downloadFile(res, 'application/xlsx', 'MaintenHistories.xlsx'));
+  }
+
+  getXlsxScroll(scroll: Scroll): Observable<any> {
+    let url: string = this.baseUrl + "GetReport/";
+
+    return this.http.post(url, JSON.stringify(scroll), {
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }),
+      responseType: 'blob' // <-- changed to blob 
+    }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }
 }
 

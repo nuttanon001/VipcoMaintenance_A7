@@ -10,7 +10,7 @@ import { ItemTypeService } from "../../item-types/shared/item-type.service";
 @Component({
   selector: "dialog-item-table",
   templateUrl: "../../items/item-table/item-table.component.html",
-  styleUrls: ["../../shared/custom-mat-table/custom-mat-table.component.scss"]
+  styleUrls: ["./item-table-dialog.component.scss"]
 })
 
 export class ItemTableDialogComponent extends ItemTableComponent{

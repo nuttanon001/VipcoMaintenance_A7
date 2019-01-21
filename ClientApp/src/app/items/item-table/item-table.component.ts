@@ -4,13 +4,11 @@ import { SelectionModel } from '@angular/cdk/collections';
 // Components
 import { CustomMatTableComponent } from "../../shared/custom-mat-table/custom-mat-table.component";
 // Rxjs
-import { map } from "rxjs/operators/map";
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { startWith } from "rxjs/operators/startWith";
-import { switchMap } from "rxjs/operators/switchMap";
-import { catchError } from "rxjs/operators/catchError";
-import { of as observableOf } from "rxjs/observable/of";
+import {
+  map, startWith,
+  switchMap, catchError,
+} from "rxjs/operators";
+import { of as observableOf, merge, Observable } from 'rxjs';
 // Models
 import { Item } from "../shared/item.model";
 // Services
@@ -24,7 +22,7 @@ import { ItemType } from "../../item-types/shared/item-type.model";
 @Component({
   selector: 'app-item-table',
   templateUrl: './item-table.component.html',
-  styleUrls: ["../../shared/custom-mat-table/custom-mat-table.component.scss"]
+  styleUrls: ["./item-table.component.scss"]
 })
 export class ItemTableComponent extends CustomMatTableComponent<Item, ItemService>{
   // Constructor

@@ -356,6 +356,12 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
 
   // on update progress
   onSelectItemMaintenanceId(ItemMaintenanceId?: number): void {
+    if (!this.serviceAuth.currentUserValue) {
+      this.serviceDialogs.error("Warning Message", "Please login befor show information.", this.viewContainerRef)
+        .subscribe(result => { });
+      return;
+    }
+
     if (ItemMaintenanceId && this.mode) {
       if (this.mode > 1) {
         if (ItemMaintenanceId) {
