@@ -44,7 +44,7 @@
   <div class="detail">
     <table *ngIf="!needReset" id="table1">
       <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
-               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" scrollHeight="70vh" [style]="{width:'98vw'}">
+               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
             <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">

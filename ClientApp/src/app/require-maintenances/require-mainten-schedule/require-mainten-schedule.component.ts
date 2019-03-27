@@ -32,7 +32,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
   ) {
-    this.scrollHeight = (window.screen.height - 250) + "px";
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
   }
 
   // Parameter
@@ -49,11 +49,12 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   // value
   status: number | undefined;
   first: number = 0;
-  pageRow: number = 15;
+  pageRow: number = 50;
   needReset: boolean = false;
   loading: boolean;
   ProjectString: string;
   schedule: OptionRequireMaintenance;
+  sizeForm: number = 250;
   // form
   reportForm: FormGroup;
 
@@ -221,11 +222,11 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
     // event.sortField = Field name to sort with
     // event.sortOrder = Sort order as number, 1 for asc and -1 for dec
     // filters: FilterMetadata object having field as key and filter value, filter matchMode as value
-    this.pageRow = (event.rows || 15);
+    this.pageRow = (event.rows || 50);
     // imitate db connection over a network
     this.reportForm.patchValue({
       Skip: event.first,
-      Take: (event.rows || 15),
+      Take: (event.rows || 50),
       SortField: event.sortField,
       SortOrder: event.sortOrder,
     });

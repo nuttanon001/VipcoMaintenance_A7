@@ -1,7 +1,7 @@
-@import "../../shared/custom-mat-table/custom-mat-table.component.scss";
+@import "../../shared/styles/table.style.scss";
 
-.mat-column-OnHand {
-  white-space: unset !important;
-  flex: 0 0 50px !important;
-  width: 50px !important;
+.mat-table {
+  overflow: auto;
+  max-width: calc(100vw - 65vw);
+  height: calc(100vh - 230px);
 }

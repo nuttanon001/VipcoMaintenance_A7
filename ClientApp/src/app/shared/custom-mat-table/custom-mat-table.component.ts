@@ -57,7 +57,7 @@ export class CustomMatTableComponent<Model,Service extends BaseRestService<Model
 
   // Angular NgOnInit
   ngOnInit() {
-	  this.searchBox.onlyCreate2 = this.isOnlyCreate;
+    this.searchBox.onlyCreate2 = this.isOnlyCreate;
     // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
     // Merge

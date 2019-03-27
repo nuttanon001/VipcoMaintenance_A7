@@ -37,9 +37,13 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
       .subscribe(dbItemType => {
         this.itemTypes = [...dbItemType];
       });
+
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
   }
 
   itemTypes: Array<ItemType>;
+  scrollHeight: string;
+  sizeForm: number = 250;
 
   // get request data
   onGetData(schedule: Scroll): void {

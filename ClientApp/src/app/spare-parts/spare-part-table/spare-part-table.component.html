@@ -1,19 +1,14 @@
-<div class="example-container mat-elevation-z8">
-  <div class="example-loading-shade"
-       *ngIf="isLoadingResults || isRateLimitReached">
+<div class="mat-elevation-z8">
+  <div *ngIf="isLoadingResults" class="loading-shade">
     <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
-    <div class="example-rate-limit-reached" *ngIf="isRateLimitReached">
-      It will be reset in one minute.
-    </div>
   </div>
   <div class="mx-2">
     <search-box [isDisabled]="isDisabled"></search-box>
   </div>
 
-  <mat-table #table [dataSource]="dataSource" [ngClass]="isDialog ? 'dialog-table' : 'example-table'"
-             matSort matSortActive="Name" matSortDisableClear matSortDirection="asc">
+  <mat-table #table [dataSource]="dataSource" matSort matSortActive="Name" matSortDisableClear matSortDirection="asc">
     <!--- Note that these columns can be defined in any order.
-  The actual rendered columns are set as a property on the row definition" -->
+    The actual rendered columns are set as a property on the row definition" -->
     <!-- Checkbox Column -->
     <ng-container matColumnDef="select">
       <mat-header-cell *matHeaderCellDef>

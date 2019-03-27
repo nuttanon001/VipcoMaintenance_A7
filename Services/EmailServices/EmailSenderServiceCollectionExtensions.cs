@@ -17,7 +17,7 @@ namespace VipcoMaintenance.Services.EmailServices
             services.AddSingleton(
                 new EmailServerSettings
                 (
-                    host: "smtp.server.com",
+                    host: "mail.vipco-thai.com",
                     port: 25
                 ));
             return services;

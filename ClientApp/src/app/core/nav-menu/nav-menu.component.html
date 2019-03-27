@@ -12,6 +12,14 @@
   <div class="collapse navbar-collapse pl-4" id="Mynavbars">
     <ul class="navbar-nav mr-auto size-24">
       <li class="nav-item">
+        <a class="nav-link" [routerLink]="['/home']" routerLinkActive="active">
+          <span class="icon-content">
+            <mat-icon>home</mat-icon>
+          </span>
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link" [routerLink]="['/maintenance/schedule','1']" routerLinkActive="active">
           <span>Schedule</span>
         </a>
@@ -19,19 +27,19 @@
       <li class="nav-item mx-1" *ngIf="GetLevel1">
         <!--(mouseover)="menuOnOpenMenu(1)"-->
         <!--  #mainMenu="matMenuTrigger" [matMenuTriggerFor]="menu1"
-              (mouseover)="menuOnOpenMenu(1)" -->
+          (mouseover)="menuOnOpenMenu(1)" -->
         <a class="nav-link" [routerLink]="['/require-mainten']" routerLinkActive="active">
           <span>Require</span>
         </a>
         <!--initial-painting-->
         <!--<mat-menu class="mouseleave" #menu1="matMenu" [overlapTrigger]="true">
-    <div (mouseleave)="menuOnCloseMenu(1)" style="padding-top:20px;">
-      <button mat-menu-item [routerLink]="['/require-mainten']" routerLinkActive="active">
-        <mat-icon>style</mat-icon>
-        <span>&nbsp;Require-Maintenance&nbsp;</span>
-      </button>
-    </div>
-  </mat-menu>-->
+      <div (mouseleave)="menuOnCloseMenu(1)" style="padding-top:20px;">
+        <button mat-menu-item [routerLink]="['/require-mainten']" routerLinkActive="active">
+          <mat-icon>style</mat-icon>
+          <span>&nbsp;Require-Maintenance&nbsp;</span>
+        </button>
+      </div>
+    </mat-menu>-->
       </li>
       <li class="nav-item mx-1" *ngIf="GetLevel2">
         <!--*ngIf="GetLevel2"-->

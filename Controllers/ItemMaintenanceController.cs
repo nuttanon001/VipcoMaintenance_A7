@@ -193,7 +193,33 @@ namespace VipcoMaintenance.Controllers
         public override async Task<IActionResult> Get(int key)
         {
             var HasItem = await this.repository.GetFirstOrDefaultAsync(
-                x => x, x => x.ItemMaintenanceId == key, null,
+                x => new ItemMaintenanceViewModel
+                {
+                    ActualEndDate = x.ActualEndDate,
+                    ActualEndDateTime = x.ActualEndDateTime,
+                    ActualStartDate = x.ActualStartDate,
+                    ActualStartDateTime = x.ActualStartDateTime,
+                    Description = x.Description,
+                    ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+                    RequireMaintenanceId = x.RequireMaintenanceId,
+                    ItemMaintenanceId = x.ItemMaintenanceId,
+                    ItemMaintenanceNo = x.ItemMaintenanceNo,
+                    MaintenanceEmp = x.MaintenanceEmp,
+                    PlanEndDate = x.PlanEndDate,
+                    PlanStartDate = x.PlanStartDate,
+                    Remark = x.Remark,
+                    StatusMaintenance = x.StatusMaintenance,
+                    StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+                    TypeMaintenanceId = x.TypeMaintenanceId,
+                    TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
+                    WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
+                    WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
+                    CreateDate = x.CreateDate,
+                    Creator = x.Creator,
+                    ModifyDate = x.ModifyDate,
+                    Modifyer = x.Modifyer,
+                }, 
+                x => x.ItemMaintenanceId == key, null,
                 x => x.Include(z => z.TypeMaintenance).Include(z => z.WorkGroupMaintenance));
             if (HasItem != null)
             {
@@ -330,7 +356,28 @@ namespace VipcoMaintenance.Controllers
             }
 
             var QueryData = await this.repository.GetToListAsync(
-                                    selector: selected => selected,  // Selected
+                                    selector: x => new ItemMaintenanceViewModel
+                                    {
+                                        ActualEndDate = x.ActualEndDate,
+                                        ActualEndDateTime = x.ActualEndDateTime,
+                                        ActualStartDate = x.ActualStartDate,
+                                        ActualStartDateTime = x.ActualStartDateTime,
+                                        Description = x.Description,
+                                        ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+                                        RequireMaintenanceId = x.RequireMaintenanceId,
+                                        ItemMaintenanceId = x.ItemMaintenanceId,
+                                        ItemMaintenanceNo = x.ItemMaintenanceNo,
+                                        MaintenanceEmp = x.MaintenanceEmp,
+                                        PlanEndDate = x.PlanEndDate,
+                                        PlanStartDate = x.PlanStartDate,
+                                        Remark = x.Remark,
+                                        StatusMaintenance = x.StatusMaintenance,
+                                        StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+                                        TypeMaintenanceId = x.TypeMaintenanceId,
+                                        TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
+                                        WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
+                                        WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
+                                    },  // Selected
                                     predicate: predicate, // Where
                                     orderBy: order, // Order
                                     include: x => x.Include(z => z.RequireMaintenance.Item)
@@ -342,14 +389,14 @@ namespace VipcoMaintenance.Controllers
             // Get TotalRow
             Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
 
-            var mapDatas = new List<ItemMaintenanceViewModel>();
-            foreach (var item in QueryData)
-            {
-                var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(item);
-                mapDatas.Add(MapItem);
-            }
+            //var mapDatas = new List<ItemMaintenanceViewModel>();
+            //foreach (var item in QueryData)
+            //{
+            //    var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(item);
+            //    mapDatas.Add(MapItem);
+            //}
 
-            return new JsonResult(new ScrollDataViewModel<ItemMaintenanceViewModel>(Scroll, mapDatas), this.DefaultJsonSettings);
+            return new JsonResult(new ScrollDataViewModel<ItemMaintenanceViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
         }
 
         [HttpPost("GetListMaintenance")]
@@ -384,6 +431,19 @@ namespace VipcoMaintenance.Controllers
                     if (Scroll.WhereId.HasValue)
                         predicate = predicate.And(x => x.WorkGroupMaintenanceId == Scroll.WhereId);
 
+                    if (Scroll.SDate.HasValue)
+                    {
+                        Scroll.SDate = Scroll.SDate.Value.AddHours(7);
+                        predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date >= Scroll.SDate.Value.Date);
+                    }
+
+                    if (Scroll.EDate.HasValue)
+                    {
+                        Scroll.EDate = Scroll.EDate.Value.AddHours(7);
+                        predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date <= Scroll.EDate.Value.Date);
+
+                    }
+
                     //Order by
                     Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
                     // Order
@@ -401,6 +461,13 @@ namespace VipcoMaintenance.Controllers
                                 order = o => o.OrderByDescending(x => x.WorkGroupMaintenance.Name);
                             else
                                 order = o => o.OrderBy(x => x.WorkGroupMaintenance.Name);
+                            break;
+
+                        case "RequireDateString":
+                            if (Scroll.SortOrder == -1)
+                                order = o => o.OrderByDescending(x => x.RequireMaintenance.RequireDate);
+                            else
+                                order = o => o.OrderBy(x => x.RequireMaintenance.RequireDate);
                             break;
 
                         case "MainTypeName":
@@ -794,8 +861,263 @@ namespace VipcoMaintenance.Controllers
                 else
                     TotalRow = await this.repository.GetLengthWithAsync();
 
+                var GetDataTemp = await this.repository.GetToListAsync(
+                          x => new
+                          {
+                              x.PlanEndDate,
+                              x.PlanStartDate,
+                              x.ActualEndDate,
+                              x.ActualStartDate,
+                              MaintenanceApply = x.RequireMaintenance == null ? null : x.RequireMaintenance.MaintenanceApply,
+                              StatusMaintenance =  System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+                              ProjectCodeMasterId = x.RequireMaintenance == null ? null : x.RequireMaintenance.ProjectCodeMasterId,
+                              GroupMaintenance = x.WorkGroupMaintenance == null ? "-" : $"{(x.WorkGroupMaintenance.Name ?? "-")}/{(x.WorkGroupMaintenance.Description ?? "-")}",
+                              ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+                              x.ItemMaintenanceId
+                          },
+                          expression, null,
+                          z => z.Include(x => x.RequireMaintenance.Item)
+                                .Include(x => x.TypeMaintenance)
+                                .Include(x => x.WorkGroupMaintenance),
+                          Schedule.Skip ?? 0, Schedule.Take ?? 20);
+
+                if (GetDataTemp.Any())
+                {
+                    var GetData = GetDataTemp.ToList();
+                    IDictionary<string, int> ColumnGroupTop = new Dictionary<string, int>();
+                    IDictionary<DateTime, string> ColumnGroupBtm = new Dictionary<DateTime, string>();
+                    List<string> ColumnsAll = new List<string>();
+                    // PlanDate
+                    List<DateTime?> ListDate = new List<DateTime?>()
+                    {
+                        //START Date
+                        GetData.Min(x => x.PlanStartDate),
+                        GetData.Min(x => x.ActualStartDate) ?? null,
+                        GetData.Min(x => x.MaintenanceApply) ?? null,
+                        //END Date
+                        GetData.Max(x => x.PlanEndDate),
+                        GetData.Max(x => x.ActualEndDate) ?? null,
+                        GetData.Max(x => x.MaintenanceApply) ?? null,
+                    };
+
+                    DateTime? MinDate = ListDate.Min();
+                    DateTime? MaxDate = ListDate.Max();
+
+                    if (MinDate == null && MaxDate == null)
+                        return NotFound(new { Error = "Data not found" });
+
+                    int countCol = 1;
+                    // add Date to max
+                    MaxDate = MaxDate.Value.AddDays(2);
+                    MinDate = MinDate.Value.AddDays(-2);
+
+                    // If Range of date below then 15 day add more
+                    var RangeDay = (MaxDate.Value - MinDate.Value).Days;
+                    if (RangeDay < 15)
+                    {
+                        MaxDate = MaxDate.Value.AddDays((15 - RangeDay) / 2);
+                        MinDate = MinDate.Value.AddDays((((15 - RangeDay) / 2) * -1));
+                    }
+
+                    // EachDay
+                    var EachDate = new Helper.LoopEachDate();
+                    // Foreach Date
+                    foreach (DateTime day in EachDate.EachDate(MinDate.Value, MaxDate.Value))
+                    {
+                        // Get Month
+                        if (ColumnGroupTop.Any(x => x.Key == day.ToString("MMMM")))
+                            ColumnGroupTop[day.ToString("MMMM")] += 1;
+                        else
+                            ColumnGroupTop.Add(day.ToString("MMMM"), 1);
+
+                        ColumnGroupBtm.Add(day.Date, $"Col{countCol.ToString("00")}");
+                        countCol++;
+                    }
+
+                    var DataTable = new List<IDictionary<string, object>>();
+                    // OrderBy(x => x.Machine.TypeMachineId).ThenBy(x => x.Machine.MachineCode)
+                    foreach (var Data in GetData.OrderBy(x => x.PlanStartDate).ThenBy(x => x.PlanEndDate))
+                    {
+                        IDictionary<string, object> rowData = new ExpandoObject();
+                        var Progress = Data.StatusMaintenance;
+                        var ProjectMaster = "NoData";
+                        if (Data?.ProjectCodeMasterId != null)
+                        {
+                            var ProjectData = await this.repositoryProject.
+                                        GetAsync(Data.ProjectCodeMasterId ?? 0);
+                            ProjectMaster = ProjectData != null ? $"{ProjectData.ProjectCode}/{ProjectData.ProjectName}" : "-";
+                        }
+
+                        // add column time
+                        rowData.Add("ProjectMaster", ProjectMaster);
+                        rowData.Add("GroupMaintenance", Data.GroupMaintenance);
+                        rowData.Add("Item", Data.ItemCode);
+                        rowData.Add("Progress", Progress);
+                        rowData.Add("ItemMainStatus", Data.StatusMaintenance);
+                        rowData.Add("ItemMaintenanceId", Data.ItemMaintenanceId);
+                        // Add new
+                        if (Data.MaintenanceApply.HasValue)
+                        {
+                            if (ColumnGroupBtm.Any(x => x.Key == Data.MaintenanceApply.Value.Date))
+                                rowData.Add("Response", ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.MaintenanceApply.Value.Date).Value);
+                        }
+                        // End new
+
+                        // Data is 1:Plan,2:Actual,3:PlanAndActual
+                        // For Plan1
+                        if (Data.PlanStartDate != null && Data.PlanEndDate != null)
+                        {
+                            // If Same Date can't loop
+                            if (Data.PlanStartDate.Date == Data.PlanEndDate.Date)
+                            {
+                                if (ColumnGroupBtm.Any(x => x.Key == Data.PlanStartDate.Date))
+                                    rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.PlanStartDate.Date).Value, 1);
+                            }
+                            else
+                            {
+                                foreach (DateTime day in EachDate.EachDate(Data.PlanStartDate, Data.PlanEndDate))
+                                {
+                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                                        rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date).Value, 1);
+                                }
+                            }
+                        }
+
+                        //For Actual
+                        if (Data.ActualStartDate != null)
+                        {
+                            var EndDate = Data.ActualEndDate ?? (MaxDate > DateTime.Today ? DateTime.Today : MaxDate);
+                            if (Data.ActualStartDate.Value.Date > EndDate.Value.Date)
+                                EndDate = Data.ActualStartDate;
+                            // If Same Date can't loop
+                            if (Data.ActualStartDate.Value.Date == EndDate.Value.Date)
+                            {
+                                if (ColumnGroupBtm.Any(x => x.Key == Data.ActualStartDate.Value.Date))
+                                {
+                                    var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.ActualStartDate.Value.Date);
+                                    // if Have Plan change value to 3
+                                    if (rowData.Keys.Any(x => x == Col.Value))
+                                        rowData[Col.Value] = 3;
+                                    else // else Don't have plan value is 2
+                                        rowData.Add(Col.Value, 2);
+                                }
+                            }
+                            else
+                            {
+                                foreach (DateTime day in EachDate.EachDate(Data.ActualStartDate.Value, EndDate.Value))
+                                {
+                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                                    {
+                                        var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date);
+
+                                        // if Have Plan change value to 3
+                                        if (rowData.Keys.Any(x => x == Col.Value))
+                                            rowData[Col.Value] = 3;
+                                        else // else Don't have plan value is 2
+                                            rowData.Add(Col.Value, 2);
+                                    }
+                                }
+                            }
+                        }
+
+                        DataTable.Add(rowData);
+                    }
+
+                    if (DataTable.Any())
+                        ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Value)
+                            .ToList().ForEach(item => ColumnsAll.Add(item));
+
+                    return new JsonResult(new
+                    {
+                        TotalRow,
+                        ColumnsTop = ColumnGroupTop.Select(x => new
+                        {
+                            Name = x.Key,
+                            x.Value
+                        }),
+                        ColumnsLow = ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Key.Day),
+                        ColumnsAll,
+                        DataTable
+                    }, this.DefaultJsonSettings);
+                }
+            }
+            catch (Exception ex)
+            {
+                message = $"Has error with message has {ex.ToString()}.";
+            }
+            return BadRequest(new { Error = message });
+        }
+
+        public async Task<IActionResult> ScheduleTemp([FromBody] OptionItemMaintananceSchedule Schedule)
+        {
+            var message = "Data not found.";
+            try
+            {
+                Expression<Func<ItemMaintenance, bool>> expression = x =>
+                                  x.PlanStartDate != null &&
+                                  x.PlanEndDate != null &&
+                                  x.StatusMaintenance != StatusMaintenance.Cancel;
+                int TotalRow;
+
+                if (Schedule != null)
+                {
+                    // Option Filter
+                    if (!string.IsNullOrEmpty(Schedule.Filter))
+                    {
+                        var filters = string.IsNullOrEmpty(Schedule.Filter) ? new string[] { "" }
+                                   : Schedule.Filter.ToLower().Split(null);
+                        foreach (var keyword in filters)
+                        {
+                            expression = expression.And(x => x.Description.ToLower().Contains(keyword) ||
+                                                             x.Remark.ToLower().Contains(keyword) ||
+                                                             x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
+                                                             x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
+                                                             x.WorkGroupMaintenance.Name.ToLower().Contains(keyword) ||
+                                                             x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
+                                                             x.RequireMaintenance.Item.Name.ToLower().Contains(keyword));
+                        }
+                    }
+                    //Order by
+                    Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
+                    // Option Mode
+                    if (Schedule.Mode.HasValue)
+                    {
+                        if (Schedule.Mode == 1)
+                            order = o => o.OrderByDescending(x => x.PlanStartDate);
+                        else
+                        {
+                            order = o => o.OrderBy(x => x.PlanStartDate);
+                            expression = expression.And(x => x.StatusMaintenance == StatusMaintenance.InProcess ||
+                                                             x.StatusMaintenance == StatusMaintenance.TakeAction);
+                        }
+                    }
+                    // Option ProjectMasterId
+                    if (Schedule.ProjectMasterId.HasValue)
+                        expression = expression.And(x => x.RequireMaintenance.ProjectCodeMasterId == Schedule.ProjectMasterId);
+                    // Option Create
+                    if (!string.IsNullOrEmpty(Schedule.Creator))
+                        expression = expression.And(x => x.RequireMaintenance.RequireEmp == Schedule.Creator);
+                    // Option ItemMaintenance
+                    if (Schedule.ItemMaintenanceId.HasValue)
+                        expression = expression.And(x => x.ItemMaintenanceId == Schedule.ItemMaintenanceId);
+                    // Option RequireMaintenance
+                    if (Schedule.RequireMaintenanceId.HasValue)
+                        expression = expression.And(x => x.RequireMaintenanceId == Schedule.RequireMaintenanceId);
+                    // Option WorkGroupMaintenance
+                    if (Schedule.GroupMaintenanceId.HasValue)
+                        expression = expression.And(x => x.WorkGroupMaintenanceId == Schedule.GroupMaintenanceId);
+                    // Option TypeMaintenance
+                    if (Schedule.TypeMaintenanceId.HasValue)
+                        expression = expression.And(x => x.TypeMaintenanceId == Schedule.TypeMaintenanceId);
+
+                    TotalRow = await this.repository.GetLengthWithAsync(expression);
+                }
+                else
+                    TotalRow = await this.repository.GetLengthWithAsync();
+
                 var GetData = await this.repository.GetToListAsync(
-                          x => x, expression, null,
+                          x => x, 
+                          expression, null,
                           z => z.Include(x => x.RequireMaintenance.Item)
                                 .Include(x => x.TypeMaintenance)
                                 .Include(x => x.WorkGroupMaintenance),
@@ -853,11 +1175,11 @@ namespace VipcoMaintenance.Controllers
                         countCol++;
                     }
 
-                    var DataTable = new List<IDictionary<String, Object>>();
+                    var DataTable = new List<IDictionary<string, object>>();
                     // OrderBy(x => x.Machine.TypeMachineId).ThenBy(x => x.Machine.MachineCode)
                     foreach (var Data in GetData.OrderBy(x => x.PlanStartDate).ThenBy(x => x.PlanEndDate))
                     {
-                        IDictionary<String, Object> rowData = new ExpandoObject();
+                        IDictionary<string, object> rowData = new ExpandoObject();
                         var Progress = Data.StatusMaintenance != null ? System.Enum.GetName(typeof(StatusMaintenance), Data.StatusMaintenance) : "NoAction";
                         var ProjectMaster = "NoData";
                         if (Data?.RequireMaintenance?.ProjectCodeMasterId != null)
@@ -989,27 +1311,22 @@ namespace VipcoMaintenance.Controllers
                     expression = expression.And(x => x.ActualEndDate.Value.Date <= option.EDate.Value.Date || x.ActualEndDate == null);
 
                 var HasData = await this.repository.GetToListAsync(
-                    item => item,
+                    item => new HistoryMaintenanceViewModel
+                    {
+                        ItemCode = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemCode ?? "-",
+                        ItemType = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemType.Name ?? "-",
+                        ItemName = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.Name ?? "-",
+                        Description = item.Description ?? "-",
+                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply,
+                        RequestDate = item.RequireMaintenance.RequireDate,
+                        FinishDate = item.ActualEndDate
+                    },
                     expression, x => x.OrderBy(z => z.RequireMaintenance.Item.ItemTypeId).ThenBy(z => z.RequireMaintenance.Item.ItemCode),
                     x => x.Include(z => z.RequireMaintenance.Item.ItemType));
 
                 if (HasData != null)
                 {
-                    var ReportList = new List<HistoryMaintenanceViewModel>();
-                    foreach (var item in HasData)
-                    {
-                        ReportList.Add(new HistoryMaintenanceViewModel()
-                        {
-                            ItemCode = item?.RequireMaintenance?.Item?.ItemCode ?? "-",
-                            ItemType = item?.RequireMaintenance?.Item?.ItemType?.Name ?? "-",
-                            ItemName = item?.RequireMaintenance?.Item?.Name ?? "-",
-                            Description = item?.Description ?? "-",
-                            ApplyRequireDate = item?.RequireMaintenance?.MaintenanceApply ?? null,
-                            RequestDate = item?.RequireMaintenance?.RequireDate ?? null,
-                            FinishDate = item?.ActualEndDate ?? null
-                        });
-                    }
-
+                    var ReportList = HasData.ToList();  
                     if (ReportList.Any())
                     {
                         if (mode.IndexOf("Export") != -1)
@@ -1073,7 +1390,5 @@ namespace VipcoMaintenance.Controllers
 
             return BadRequest(new { Error = Message });
         }
-
-
     }
 }

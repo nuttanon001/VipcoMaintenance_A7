@@ -1,7 +1,7 @@
 <div class="master-container">
   <as-split direction="horizontal" [gutterSize]="7" [useTransition]="true">
     <as-split-area [size]="30" [visible]="hideleft" [order]="1">
-      <div class="child-left-container">
+      <div class="child-left-container" *ngIf="hideleft">
         <app-adjust-table (returnSelected)="onDetailView($event)"
                            (isDisabled)="false"></app-adjust-table>
       </div>

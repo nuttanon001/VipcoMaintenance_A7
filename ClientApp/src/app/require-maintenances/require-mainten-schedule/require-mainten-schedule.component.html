@@ -27,7 +27,7 @@
   <div class="detail">
     <table *ngIf="!needReset" id="table1">
       <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
-               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]"
+               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[50,100,150]"
                [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>

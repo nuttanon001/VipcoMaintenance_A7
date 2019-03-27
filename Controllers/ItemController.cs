@@ -79,13 +79,21 @@ namespace VipcoMaintenance.Controllers
                                                 x.Name.ToLower().Contains(keyword) ||
                                                 x.ItemType.Name.ToLower().Contains(keyword));
                 }
+
                 if (Scroll.WhereId.HasValue)
                 {
                     if (Scroll.WhereId > 0)
                         predicate = predicate.And(x => x.ItemTypeId == Scroll.WhereId);
                 }
+
                 if (!string.IsNullOrEmpty(Scroll.Where))
                     predicate = predicate.And(p => p.Creator == Scroll.Where);
+
+                if (Scroll.SDate.HasValue)
+                    predicate = predicate.And(p => p.RegisterDate.Value.Date >= Scroll.SDate.Value.Date);
+
+                if (Scroll.EDate.HasValue)
+                    predicate = predicate.And(p => p.RegisterDate.Value.Date <= Scroll.EDate.Value.Date);
 
                 //Order by
                 Func<IQueryable<Item>, IOrderedQueryable<Item>> order;
@@ -118,13 +126,21 @@ namespace VipcoMaintenance.Controllers
                         break;
                 }
 
-                var QueryData = await this.repository.GetToListAsync(
-                                        selector: selected => selected,  // Selected
+                var QueryData = (await this.repository.GetToListAsync(
+                                        selector: x => new ItemViewModel
+                                        {
+                                            ItemId = x.ItemId,
+                                            ItemCode = x.ItemCode,
+                                            Name = x.Name,
+                                            Model = x.Model,
+                                            EmpResponsible = x.EmpResponsible,
+                                            GroupMis = x.GroupMis,
+                                        },  // Selected
                                         predicate: predicate, // Where
                                         orderBy: order, // Order
-                                        include: z => z.Include(x => x.ItemType).Include(x => x.Branch), // Include
+                                        include: null, // Include
                                         skip: Scroll.Skip ?? 0, // Skip
-                                        take: Scroll.Take ?? 50); // Take
+                                        take: Scroll.Take ?? 50)).ToList(); // Take
 
                 // Get TotalRow
                 Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
@@ -132,20 +148,19 @@ namespace VipcoMaintenance.Controllers
                 var listGroups = QueryData.Select(x => x.GroupMis).Distinct().ToList();
                 var listEmps = QueryData.Select(x => x.EmpResponsible).Distinct().ToList();
 
-                var groupMis = await this.repositoryGroupMis.GetToListAsync(x => x,x => listGroups.Contains(x.GroupMis));
+                var groupMis = await this.repositoryGroupMis.GetToListAsync(x => new { x.GroupMis,x.GroupDesc },x => listGroups.Contains(x.GroupMis));
                 var emps = await this.repositoryEmp.GetToListAsync(x => new { x.EmpCode,x.NameThai },x => listEmps.Contains(x.EmpCode));
-                var mapDatas = new List<ItemViewModel>();
+                // var mapDatas = new List<ItemViewModel>();
                 foreach (var item in QueryData)
                 {
-                    var MapItem = this.mapper.Map<Item, ItemViewModel>(item);
-                    if (!string.IsNullOrEmpty(MapItem.GroupMis))
-                        MapItem.GroupMisString = groupMis.FirstOrDefault(x => x.GroupMis == MapItem.GroupMis).GroupDesc ?? "-";
-                    if (!string.IsNullOrEmpty(MapItem.EmpResponsible))
-                        MapItem.EmpResposibleString = emps.FirstOrDefault(x => x.EmpCode == MapItem.EmpResponsible).NameThai ?? "-";
-                    mapDatas.Add(MapItem);
+                    if (!string.IsNullOrEmpty(item.GroupMis))
+                        item.GroupMisString = groupMis.FirstOrDefault(x => x.GroupMis == item.GroupMis).GroupDesc ?? "-";
+                    if (!string.IsNullOrEmpty(item.EmpResponsible))
+                        item.EmpResposibleString = emps.FirstOrDefault(x => x.EmpCode == item.EmpResponsible).NameThai ?? "-";
+                    // mapDatas.Add(MapItem);
                 }
 
-                return mapDatas;
+                return QueryData;
             }
 
             return null;
@@ -158,17 +173,44 @@ namespace VipcoMaintenance.Controllers
         public override async Task<IActionResult> Get(int key)
         {
             var HasItem = await this.repository.GetFirstOrDefaultAsync(
-                z => z, z => z.ItemId == key, null,
+                z => new ItemViewModel
+                {
+                    BranchId = z.BranchId,
+                    BranchString = z.Branch.Name,
+                    Brand = z.Brand,
+                    Name = z.Name,
+                    CancelDate = z.CancelDate,
+                    CreateDate = z.CreateDate,
+                    Creator = z.Creator,
+                    Description = z.Description,
+                    EmpResponsible =z.EmpResponsible,
+                    GroupMis = z.GroupMis,
+                    ItemCode = z.ItemCode,
+                    ItemId = z.ItemId,
+                    ItemImage = z.ItemImage,
+                    ItemStatus = z.ItemStatus,
+                    ItemStatusString = System.Enum.GetName(typeof(ItemStatus), z.ItemStatus),
+                    ItemTypeId = z.ItemTypeId,
+                    ItemTypeString = z.ItemType == null ? "-" : z.ItemType.Name,
+                    Model = z.Model,
+                    ModifyDate = z.ModifyDate,
+                    Modifyer = z.Modifyer,
+                    Property = z.Property,
+                    Property2 = z.Property2,
+                    Property3 = z.Property3,
+                    RegisterDate = z.RegisterDate,
+                }, 
+                z => z.ItemId == key, null,
                 z => z.Include(x => x.ItemType).Include(x => x.Branch));
+
             if (HasItem != null)
             {
-                var MapItem = this.mapper.Map<Item, ItemViewModel>(HasItem);
-                if (!string.IsNullOrEmpty(MapItem.EmpResponsible))
-                    MapItem.EmpResposibleString = (await this.repositoryEmp.GetAsync(MapItem.EmpResponsible)).NameThai;
-                if (!string.IsNullOrEmpty(MapItem.GroupMis))
-                    MapItem.GroupMisString = (await this.repositoryGroupMis.GetAsync(MapItem.GroupMis)).GroupDesc ?? "-";
-                MapItem.ItemImage = HasItem.ItemImage;
-                return new JsonResult(MapItem, this.DefaultJsonSettings);
+                if (!string.IsNullOrEmpty(HasItem.EmpResponsible))
+                    HasItem.EmpResposibleString = (await this.repositoryEmp.GetAsync(HasItem.EmpResponsible)).NameThai;
+                if (!string.IsNullOrEmpty(HasItem.GroupMis))
+                    HasItem.GroupMisString = (await this.repositoryGroupMis.GetAsync(HasItem.GroupMis)).GroupDesc ?? "-";
+                HasItem.ItemImage = HasItem.ItemImage;
+                return new JsonResult(HasItem, this.DefaultJsonSettings);
             }
             return BadRequest();
         }
@@ -468,13 +510,23 @@ namespace VipcoMaintenance.Controllers
 
                         if (!string.IsNullOrEmpty(dbItem.ItemImage))
                         {
-                            var base64 = dbItem.ItemImage.Remove(0,22);
-                            var imgBytes = Convert.FromBase64String(base64);
-                            using (var imageFile = new FileStream(templateFolder + $"template.png", FileMode.Create))
+                            try
                             {
-                                imageFile.Write(imgBytes, 0, imgBytes.Length);
-                                imageFile.Flush();
+                                var base64 = "";
+                                if (dbItem.ItemImage.Contains("data:image/jpeg;base64,"))
+                                    base64 = dbItem.ItemImage.Remove(0, 23);
+                                else if (dbItem.ItemImage.Contains("data:image/png;base64,"))
+                                    base64 = dbItem.ItemImage.Remove(0, 22);
+
+                                var imgBytes = Convert.FromBase64String(base64);
+                                using (var imageFile = new FileStream(templateFolder + $"template.png", FileMode.Create))
+                                {
+                                    imageFile.Write(imgBytes, 0, imgBytes.Length);
+                                    imageFile.Flush();
+                                }
                             }
+                            finally
+                            {}
                         }
 
                         using (var wb = this.excelWorkBookService.Create(fileExcel))

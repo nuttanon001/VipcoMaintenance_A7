@@ -11,7 +11,7 @@ import { AuthService } from "../../../core/auth/auth.service";
 @Component({
   selector: "dialog-employee-table",
   templateUrl: "./employee-table.component.html",
-  styleUrls: ["../../../shared/custom-mat-table/custom-mat-table.component.scss"]
+  styleUrls: ["./employee-table.component.scss"]
 })
 export class EmployeeTableComponent extends CustomMatTableComponent<Employee, EmployeeService>{
   // Constructor

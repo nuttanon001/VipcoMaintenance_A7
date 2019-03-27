@@ -35,7 +35,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
     private router: Router,
     public route: ActivatedRoute)
   {
-    this.scrollHeight = (window.screen.height - 350) + "px";
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
   }
 
   // Parameter
@@ -52,6 +52,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
   needReset: boolean = false;
   loading: boolean;
   scrollHeight: string;
+  sizeForm: number = 250;
   // subscription
   subscription: Subscription;
   subscription1: Subscription;

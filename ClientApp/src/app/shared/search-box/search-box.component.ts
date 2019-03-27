@@ -32,6 +32,7 @@ export class SearchBoxComponent implements OnInit {
 
   search2: string;
   onlyCreate2: boolean;
+  temp: string;
 
   constructor() { }
 
@@ -46,10 +47,16 @@ export class SearchBoxComponent implements OnInit {
       debounceTime(350),
       distinctUntilChanged(),
       map((e: any) => {
+        // debug here
+        console.log("e",e.target.value);
+
         return e.target.value;
       }),
     ).subscribe( //extract the value of the input
       (results: any) => {
+        //debug here
+        console.log("results",results);
+
         this.search2 = results;
         this.search.emit(this.search2);
       });

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using VipcoMaintenance.Services;
 using VipcoMaintenance.ViewModels;
 using VipcoMaintenance.Models.Machines;
+using VipcoMaintenance.Models.Maintenances;
 
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -25,14 +26,20 @@ namespace VipcoMaintenance.Controllers
         #region PrivateMenbers
 
         private readonly IUserService userService;
+        private readonly IRepositoryMaintenanceMk2<Permission> repositoryPermission;
         private readonly IMapper mapper;
 
         #endregion PrivateMenbers
 
         #region Constructor
 
-        public UserController(IRepositoryMachineMk2<User> repo,IUserService user, IMapper map) : base(repo)
+        public UserController(IRepositoryMachineMk2<User> repo,
+            IRepositoryMaintenanceMk2<Permission> repoPermission,
+            IUserService user, IMapper map) : base(repo)
         {
+            //Repository
+            this.repositoryPermission = repoPermission;
+            //Helper
             this.mapper = map;
             this.userService = user;
         }
@@ -66,14 +73,22 @@ namespace VipcoMaintenance.Controllers
             try
             {
                 var HasData = await this.userService.AuthenticateAsync(login.UserName, login.PassWord);
+
                 //var HasData = await this.repository.GetAllAsQueryable()
                 //                               .Include(x => x.EmpCodeNavigation)
                 //                               .FirstOrDefaultAsync(m => m.UserName.ToLower() == login.UserName.ToLower() &&
                 //                                                         m.PassWord.ToLower() == login.PassWord.ToLower());
+
                 if (HasData != null)
                 {
-                    //For Demo
-                    //HasData.LevelUser = 2;
+                    if (HasData.LevelUser < 3)
+                    {
+                        var DataPermission = await this.repositoryPermission.GetFirstOrDefaultAsync(x => x, x => x.UserId == HasData.UserId);
+                        if (DataPermission != null)
+                            HasData.LevelUser = DataPermission.LevelPermission;
+                        else
+                            HasData.LevelUser = 1;
+                    }
 
                     return new JsonResult(HasData, this.DefaultJsonSettings);
                 }

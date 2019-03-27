@@ -1,12 +1,12 @@
 <div class="master-container">
   <as-split direction="horizontal" [gutterSize]="7" [useTransition]="true">
     <as-split-area [size]="35" [visible]="hideleft" [order]="1">
-      <div class="child-left-container">
+      <div class="child-left-container" *ngIf="hideleft">
         <!--
-        <data-table (selected)="onDetailView($event)" [columns]="columns"
-                    [isDisabled]="true" [(onlyCre)]="onlyCre">
-        </data-table>
-        -->
+  <data-table (selected)="onDetailView($event)" [columns]="columns"
+              [isDisabled]="true" [(onlyCre)]="onlyCre">
+  </data-table>
+  -->
         <app-require-mainten-table (returnSelected)="onDetailView($event)"
                                    [isDisabled]="false" [isOnlyCreate]="true"></app-require-mainten-table>
       </div>
