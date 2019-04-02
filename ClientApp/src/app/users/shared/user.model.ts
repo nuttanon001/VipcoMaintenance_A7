@@ -12,4 +12,5 @@ export interface User {
   // ViewModel
   NameThai?: string;
   Token?: string;
+  SubLevel?: number;
 }

@@ -16,5 +16,6 @@ namespace VipcoMaintenance.Models.Maintenances
         /// </summary>
         public int UserId { get; set; }
         public int LevelPermission { get; set; }
+        public int? SubLevel { get; set; }
     }
 }

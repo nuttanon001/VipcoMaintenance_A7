@@ -19,14 +19,16 @@ namespace VipcoMaintenance.Helper
                 {
                     if (property.GetValue(entity, null) != null)
                     {
-                        property.SetValue(entity, ((DateTime)property.GetValue(entity, null)).AddHours(7), null);
+                        // FIX bug add hour not change
+                        property.SetValue(entity, ((DateTime)property.GetValue(entity, null)).AddHours(0), null);
                     }
                 }
                 else if (property.PropertyType == typeof(Nullable<DateTime>))
                 {
                     if (property.GetValue(entity, null) != null)
                     {
-                        property.SetValue(entity, ((DateTime)property.GetValue(entity, null)).AddHours(7), null);
+                        // FIX bug add hour not change
+                        property.SetValue(entity, ((DateTime)property.GetValue(entity, null)).AddHours(0), null);
                     }
                 }
             }

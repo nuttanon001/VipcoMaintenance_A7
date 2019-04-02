@@ -54,6 +54,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
   requisition: RequisitionStock;
   indexItem: number;
   toDay: Date = new Date;
+  isReadOnly?: boolean = false;
   // Property
   get ReadOnlyControl(): boolean {
     if (this.editValue) {
@@ -72,6 +73,10 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         .subscribe(dbData => {
           if (dbData) {
             this.editValue = dbData;
+            //Set read only for form
+            if (this.editValue.StatusMaintenance === StatusMaintenance.Complate) {
+              this.isReadOnly = true;
+            }
             //Requistion
             this.serviceRequisitionStock.getRequisitionByItemMaintenance(dbData.ItemMaintenanceId)
               .subscribe(dbRequisition => {
@@ -127,6 +132,8 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                   });
                 }
               });
+
+            // console.log(JSON.stringify(this.editValue));
           }
         }, error => console.error(error), () => {
           this.buildForm();
@@ -141,7 +148,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                     this.getTypeMaintenances();
                   }
                 }
-              })
+              });
           }
         });
     } else {
@@ -181,23 +188,24 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
     this.getGroupMaintenances();
     // New form
     this.editValueForm = this.fb.group({
-      ItemMaintenanceId: [this.editValue.ItemMaintenanceId],
-      ItemMaintenanceNo: [this.editValue.ItemMaintenanceNo],
-      PlanStartDate: [this.editValue.PlanStartDate,
+      // [{value: 'someValue', disabled:true}]
+      ItemMaintenanceId: [{ value: this.editValue.ItemMaintenanceId, disabled:this.isReadOnly}],
+      ItemMaintenanceNo: [{ value: this.editValue.ItemMaintenanceNo, disabled: this.isReadOnly }],
+      PlanStartDate: [{ value: this.editValue.PlanStartDate,disabled: this.isReadOnly},
         [
           Validators.required,
         ]
       ],
-      PlanEndDate: [this.editValue.PlanEndDate,
+      PlanEndDate: [{ value: this.editValue.PlanEndDate,disabled: this.isReadOnly},
         [
           Validators.required,
         ]
       ],
-      ActualStartDate: [this.editValue.ActualStartDate],
-      ActualStartDateTime: [this.editValue.ActualStartDateTime],
-      ActualEndDate: [this.editValue.ActualEndDate],
-      ActualEndDateTime: [this.editValue.ActualEndDateTime],
-      StatusMaintenance: [this.editValue.StatusMaintenance],
+      ActualStartDate: [{ value: this.editValue.ActualStartDate, disabled:this.isReadOnly}],
+      ActualStartDateTime: [{ value: this.editValue.ActualStartDateTime, disabled:this.isReadOnly}],
+      ActualEndDate: [{ value: this.editValue.ActualEndDate, disabled:this.isReadOnly}],
+      ActualEndDateTime: [{ value: this.editValue.ActualEndDateTime, disabled:this.isReadOnly}],
+      StatusMaintenance: [{ value: this.editValue.StatusMaintenance, disabled:this.isReadOnly}],
       Description: [this.editValue.Description,
         [
           Validators.required,
@@ -209,16 +217,16 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
           Validators.maxLength(250)
         ]
       ],
-      MaintenanceEmp: [this.editValue.MaintenanceEmp],
-      RequireMaintenanceId: [this.editValue.RequireMaintenanceId],
-      TypeMaintenanceId: [this.editValue.TypeMaintenanceId,
+      MaintenanceEmp: [{ value: this.editValue.MaintenanceEmp, disabled: this.isReadOnly }],
+      RequireMaintenanceId: [{ value: this.editValue.RequireMaintenanceId, disabled: this.isReadOnly }],
+      TypeMaintenanceId: [{ value: this.editValue.TypeMaintenanceId,disabled: this.isReadOnly},
         [
           Validators.required,
         ]
       ],
-      RequisitionStockSps: [this.editValue.RequisitionStockSps],
-      ItemMainHasEmployees: [this.editValue.ItemMainHasEmployees],
-      WorkGroupMaintenanceId: [this.editValue.WorkGroupMaintenanceId,
+      RequisitionStockSps: [{ value: this.editValue.RequisitionStockSps, disabled: this.isReadOnly }],
+      ItemMainHasEmployees: [{ value: this.editValue.ItemMainHasEmployees, disabled: this.isReadOnly }],
+      WorkGroupMaintenanceId: [{ value: this.editValue.WorkGroupMaintenanceId, disabled: this.isReadOnly },
         [
           Validators.required,
         ]
@@ -229,10 +237,10 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
       Modifyer: [this.editValue.Modifyer],
       ModifyDate: [this.editValue.ModifyDate],
       // ViewModel
-      ItemCode: [this.editValue.ItemCode],
-      MaintenanceEmpString: [this.editValue.MaintenanceEmpString],
-      TypeMaintenanceString: [this.editValue.TypeMaintenanceString],
-      StatusMaintenanceString: [this.editValue.StatusMaintenanceString],
+      ItemCode: [{ value: this.editValue.ItemCode, disabled: this.isReadOnly }],
+      MaintenanceEmpString: [{ value: this.editValue.MaintenanceEmpString, disabled: this.isReadOnly }],
+      TypeMaintenanceString: [{ value: this.editValue.TypeMaintenanceString, disabled: this.isReadOnly }],
+      StatusMaintenanceString: [{ value: this.editValue.StatusMaintenanceString, disabled: this.isReadOnly }],
     });
     this.editValueForm.valueChanges.subscribe((data: any) => this.onValueChanged(data));
 
@@ -479,5 +487,11 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         });
       }
     }
+  }
+
+  // on valid data
+  onFormValid(isValid: boolean): void {
+    this.editValue = this.editValueForm.getRawValue();
+    this.communicateService.toParent([this.editValue, isValid]);
   }
 }

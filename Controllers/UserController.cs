@@ -85,10 +85,18 @@ namespace VipcoMaintenance.Controllers
                     {
                         var DataPermission = await this.repositoryPermission.GetFirstOrDefaultAsync(x => x, x => x.UserId == HasData.UserId);
                         if (DataPermission != null)
+                        {
                             HasData.LevelUser = DataPermission.LevelPermission;
+                            HasData.SubLevel = DataPermission.SubLevel;
+                        }
                         else
+                        {
                             HasData.LevelUser = 1;
+                            HasData.SubLevel = 0;
+                        }
                     }
+                    else
+                        HasData.SubLevel = 2;
 
                     return new JsonResult(HasData, this.DefaultJsonSettings);
                 }

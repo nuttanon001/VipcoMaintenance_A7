@@ -10,5 +10,6 @@ namespace VipcoMaintenance.ViewModels
     {
         public string NameThai { get; set; }
         public string Token { get; set; }
+        public int? SubLevel { get; set; }
     }
 }

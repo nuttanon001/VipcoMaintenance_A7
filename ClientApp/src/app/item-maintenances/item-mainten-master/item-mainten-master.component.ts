@@ -12,6 +12,7 @@ import { DialogsService } from "../../dialogs/shared/dialogs.service";
 // timezone
 import * as moment from "moment-timezone";
 import { ItemMaintenTableComponent } from "../item-mainten-table/item-mainten-table.component";
+import { User } from 'src/app/users/shared/user.model';
 
 @Component({
   selector: 'app-item-mainten-master',
@@ -36,12 +37,15 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
       dialogsService,
       viewContainerRef
     );
+
+    this.authService.currentUser.subscribe(x => this.currentUser = x);
   }
 
   //Parameter
   backToSchedule: boolean = false;
   noReport: boolean = false;
   loadReportPaint: boolean = false;
+  currentUser?: User;
 
   @ViewChild(ItemMaintenTableComponent)
   private tableComponent: ItemMaintenTableComponent;
@@ -110,10 +114,13 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
   onDetailEdit(editValue?: ItemMaintenance): void {
     if (editValue) {
       if (editValue.StatusMaintenance === StatusMaintenance.Complate) {
-        this.dialogsService.error("Access Deny", "การซ่อมบำรุง ดำเนินการแล้วเสร็จไม่สามารถแก้ไขได้ !!!", this.viewContainerRef);
-        return;
+        if (!this.currentUser || !this.currentUser.SubLevel || this.currentUser.SubLevel !== 2) {
+          this.dialogsService.error("Access Deny", "การซ่อมบำรุง ดำเนินการแล้วเสร็จไม่สามารถแก้ไขได้ !!!", this.viewContainerRef);
+          return;
+        }
       }
     }
+
     super.onDetailEdit(editValue);
   }
 

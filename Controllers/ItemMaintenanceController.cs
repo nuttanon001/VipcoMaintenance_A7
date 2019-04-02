@@ -308,7 +308,7 @@ namespace VipcoMaintenance.Controllers
 
             foreach (string temp in filters)
             {
-                string keyword = temp;
+                string keyword = temp.Trim();
                 predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
                                             x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
                                             x.Remark.ToLower().Contains(keyword) ||
@@ -535,7 +535,7 @@ namespace VipcoMaintenance.Controllers
             record.CreateDate = DateTime.Now;
             record.StatusMaintenance = this.ChangeStatus(record);
             // +7 Hour
-            record = this.helper.AddHourMethod(record);
+            // record = this.helper.AddHourMethod(record);
             var RunNumber = (await this.repository.GetLengthWithAsync(x => x.CreateDate.Value.Year == record.CreateDate.Value.Year)) + 1;
             record.ItemMaintenanceNo = $"M/{record.CreateDate.Value.ToString("yy")}-{RunNumber.ToString("0000")}";
             // Actual Start DateTime
@@ -627,7 +627,7 @@ namespace VipcoMaintenance.Controllers
             record.ModifyDate = DateTime.Now;
             record.StatusMaintenance = this.ChangeStatus(record);
             // +7 Hour
-            record = this.helper.AddHourMethod(record);
+            //record = this.helper.AddHourMethod(record);
             // Actual Start DateTime
             if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
             {
@@ -1294,6 +1294,7 @@ namespace VipcoMaintenance.Controllers
         public async Task<IActionResult> ReportList([FromBody] ScrollViewModel option, string mode = "")
         {
             var Message = "";
+
             try
             {
                 Expression<Func<ItemMaintenance, bool>> expression = e => e.StatusMaintenance != StatusMaintenance.Cancel;
