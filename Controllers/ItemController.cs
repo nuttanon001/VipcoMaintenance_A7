@@ -133,12 +133,16 @@ namespace VipcoMaintenance.Controllers
                                             ItemCode = x.ItemCode,
                                             Name = x.Name,
                                             Model = x.Model,
+                                            Property = x.Property,
+                                            BranchString = x.Branch.Name,
                                             EmpResponsible = x.EmpResponsible,
                                             GroupMis = x.GroupMis,
+                                            RegisterDate = x.RegisterDate,
+                                            CancelDate = x.CancelDate
                                         },  // Selected
                                         predicate: predicate, // Where
                                         orderBy: order, // Order
-                                        include: null, // Include
+                                        include: x => x.Include(z => z.Branch), // Include
                                         skip: Scroll.Skip ?? 0, // Skip
                                         take: Scroll.Take ?? 50)).ToList(); // Take
 

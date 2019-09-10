@@ -50,11 +50,12 @@ namespace VipcoMaintenance.Services
                 {
                     new Claim(ClaimTypes.Name, userVM.UserId.ToString())
                 }),
-                Expires = DateTime.Now.AddMinutes(30),
+                Expires = DateTime.Now.AddHours(12),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             userVM.Token = tokenHandler.WriteToken(token);
+            userVM.ValidTo = token.ValidTo;
 
             // remove password before returning
             userVM.PassWord = null;
@@ -84,11 +85,12 @@ namespace VipcoMaintenance.Services
                 {
                     new Claim(ClaimTypes.Name, userVM.UserId.ToString()),
                 }),
-                Expires = DateTime.Now.AddMinutes(30),
+                Expires = DateTime.Now.AddHours(12),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             userVM.Token = tokenHandler.WriteToken(token);
+            userVM.ValidTo = token.ValidTo;
 
             // remove password before returning
             userVM.PassWord = null;

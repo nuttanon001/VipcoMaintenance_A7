@@ -1,4 +1,4 @@
-import { Component,OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
+import { Component,OnInit, OnDestroy, ViewContainerRef, HostListener } from "@angular/core";
 import { FormBuilder, FormGroup, AbstractControl } from "@angular/forms";
 import { Subscription, Observable } from "rxjs";
 import { LazyLoadEvent } from "primeng/primeng";
@@ -6,7 +6,7 @@ import { debounceTime, distinctUntilChanged, map, take } from "rxjs/operators";
 import { ItemService } from '../shared/item.service';
 import { DialogsService } from 'src/app/dialogs/shared/dialogs.service';
 import { Item } from '../shared/item.model';
-import { MyPrimengColumn } from 'src/app/shared/column.model';
+import { MyPrimengColumn, Format } from 'src/app/shared/column.model';
 import { Scroll } from 'src/app/shared/scroll.model';
 import { ScrollData } from 'src/app/shared/scroll-data.model';
 import { ItemTypeService } from 'src/app/item-types/shared/item-type.service';
@@ -28,7 +28,7 @@ export class ItemMasterListComponent implements OnInit, OnDestroy {
     private serviceDialogs: DialogsService,
   ) {
     // 100 for bar | 200 for titil and filter
-    this.mobHeight = (window.screen.height - 300) + "px";
+    this.mobHeight = (window.innerHeight - this.sizeForm) + "px";
   }
 
   //Parameter
@@ -44,7 +44,8 @@ export class ItemMasterListComponent implements OnInit, OnDestroy {
   rowPage: number = 25;
   first: number = 0;
   needReset: boolean = false;
-  mobHeight: any;
+  mobHeight: string = "50px";;
+  sizeForm: number = 220;
   // Data
   itemTypes: Array<ItemType>;
 
@@ -149,8 +150,8 @@ export class ItemMasterListComponent implements OnInit, OnDestroy {
           { field: 'BranchString', header: 'Branch', width: 150, },
           { field: 'EmpResposibleString', header: 'Employee', width: 200, },
           { field: 'GroupMisString', header: 'Group', width: 200, },
-          { field: 'RegisterDate', header: 'Register', width: 175, },
-          { field: 'CancelDate', header: 'Cancel', width: 175, },
+          { field: 'RegisterDate', header: 'Register', width: 175, format: Format.Date },
+          { field: 'CancelDate', header: 'Cancel', width: 175, format: Format.Date },
 
           // { field: 'LocationStock', header: 'Location', width: 125, },
           // { field: 'InternelStockString', header: 'StockByLocation', width: 250, },
@@ -215,4 +216,27 @@ export class ItemMasterListComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('window:resize', ['$event'])
+  @debounceFunc()
+  onResize(event) {
+    // console.log("innerWidth", event.target.innerWidth);
+    // console.log("innerHeight", event.target.innerHeight);
+
+    this.mobHeight = (event.target.innerHeight - this.sizeForm) + "px";
+  }
+}
+
+export function debounceFunc(delay: number = 300): MethodDecorator {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    let timeout = null
+
+    const original = descriptor.value;
+
+    descriptor.value = function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => original.apply(this, args), delay);
+    };
+
+    return descriptor;
+  };
 }

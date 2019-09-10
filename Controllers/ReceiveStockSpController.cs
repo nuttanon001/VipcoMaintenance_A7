@@ -44,7 +44,22 @@ namespace VipcoMaintenance.Controllers
         public override async Task<IActionResult> Get(int key)
         {
             var HasItem = await this.repository.GetFirstOrDefaultAsync(
-                x => x,x => x.ReceiveStockSpId.Equals(key),null,
+                x => new ReceiveStockSpViewModel
+                {
+                    CreateDate = x.CreateDate,
+                    Creator = x.Creator,
+                    ModifyDate = x.ModifyDate,
+                    Modifyer = x.Modifyer,
+                    MovementStockSpId = x.MovementStockSpId,
+                    PurchaseOrder = x.PurchaseOrder,
+                    Quantity = x.Quantity,
+                    ReceiveDate = x.ReceiveDate,
+                    ReceiveEmp = x.ReceiveEmp,
+                    ReceiveStockSpId = x.ReceiveStockSpId,
+                    Remark = x.Remark,
+                    SparePartId = x.SparePartId,
+                    SparePartName = x.SparePart.Name
+                }, x => x.ReceiveStockSpId.Equals(key),null,
                 x => x.Include(z => z.SparePart));
             if (HasItem != null)
             {
@@ -110,7 +125,18 @@ namespace VipcoMaintenance.Controllers
             }
 
             var QueryData = await this.repository.GetToListAsync(
-                                    selector: selected => selected,  // Selected
+                                    selector: x => new ReceiveStockSpViewModel
+                                    {
+                                        MovementStockSpId = x.MovementStockSpId,
+                                        PurchaseOrder = x.PurchaseOrder,
+                                        Quantity = x.Quantity,
+                                        ReceiveDate = x.ReceiveDate,
+                                        ReceiveEmp = x.ReceiveEmp,
+                                        ReceiveStockSpId = x.ReceiveStockSpId,
+                                        Remark = x.Remark,
+                                        SparePartId = x.SparePartId,
+                                        SparePartName = x.SparePart.Name
+                                    },  // Selected
                                     predicate: predicate, // Where
                                     orderBy: order, // Order
                                     include: x => x.Include(z => z.SparePart), // Include
@@ -120,14 +146,14 @@ namespace VipcoMaintenance.Controllers
             // Get TotalRow
             Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
 
-            var mapDatas = new List<ReceiveStockSpViewModel>();
-            foreach (var item in QueryData)
-            {
-                var MapItem = this.mapper.Map<ReceiveStockSp, ReceiveStockSpViewModel>(item);
-                mapDatas.Add(MapItem);
-            }
+            //var mapDatas = new List<ReceiveStockSpViewModel>();
+            //foreach (var item in QueryData)
+            //{
+            //    var MapItem = this.mapper.Map<ReceiveStockSp, ReceiveStockSpViewModel>(item);
+            //    mapDatas.Add(MapItem);
+            //}
 
-            return new JsonResult(new ScrollDataViewModel<ReceiveStockSpViewModel>(Scroll, mapDatas), this.DefaultJsonSettings);
+            return new JsonResult(new ScrollDataViewModel<ReceiveStockSpViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
         }
 
         // POST: api/ReceiveStockSp/

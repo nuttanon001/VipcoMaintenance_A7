@@ -25,6 +25,7 @@ namespace VipcoMaintenance.Models.Maintenances
         public StatusMaintenance? StatusMaintenance { get; set; }
         [StringLength(500)]
         public string Description { get; set; }
+
         [StringLength(200)]
         public string Remark { get; set; }
         // FK
@@ -32,15 +33,15 @@ namespace VipcoMaintenance.Models.Maintenances
         public string MaintenanceEmp { get; set; }
         // RequireMaintenance
         public int? RequireMaintenanceId { get; set; }
-        public virtual RequireMaintenance RequireMaintenance { get; set; }
+        public RequireMaintenance RequireMaintenance { get; set; }
         // TypeMaintenance
         public int? TypeMaintenanceId { get; set; }
-        public virtual TypeMaintenance TypeMaintenance { get; set; }
+        public TypeMaintenance TypeMaintenance { get; set; }
         // MaintenanceHasSpare
         public virtual ICollection<RequisitionStockSp> RequisitionStockSps { get; set; }
         // WorkGroupMaintenance
         public int? WorkGroupMaintenanceId { get; set; }
-        public virtual WorkGroupMaintenance WorkGroupMaintenance { get; set; }
+        public WorkGroupMaintenance WorkGroupMaintenance { get; set; }
         // ItemMainHasEmployee
         public virtual ICollection<ItemMainHasEmployee> ItemMainHasEmployees { get; set; }
     }

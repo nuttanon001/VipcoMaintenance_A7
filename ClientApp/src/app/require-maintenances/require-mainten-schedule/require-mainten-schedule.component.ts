@@ -121,7 +121,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
           this.totalRecords = 0;
           this.columns = new Array;
           this.datasource = new Array;
-          this.reloadData();
+          //this.reloadData();
           this.loading = false;
           return;
         }
@@ -145,12 +145,12 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
           this.needReset = false;
         }
 
-        this.reloadData();
+        //this.reloadData();
       }, error => {
         this.totalRecords = 0;
         this.columns = new Array;
         this.datasource = new Array;
-        this.reloadData();
+        //this.reloadData();
       }, () => this.loading = false);
   }
 
@@ -170,7 +170,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
     //      }
     //    }
     //  });
-
+    /*
     const result = interval(this.time)
       .pipe(
         take(this.time),
@@ -185,6 +185,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
         })
       );
     this.subscription = result.subscribe();
+    */
   }
 
   // open dialog

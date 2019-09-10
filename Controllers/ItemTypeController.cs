@@ -79,20 +79,20 @@ namespace VipcoMaintenance.Controllers
                                     selector: selected => selected,  // Selected
                                     predicate: predicate, // Where
                                     orderBy: order, // Order
-                                    include: x => x.Include(z => z.WorkGroup), // Include
+                                    include: null,//x => x.Include(z => z.WorkGroup), // Include
                                     skip: Scroll.Skip ?? 0, // Skip
                                     take: Scroll.Take ?? 50); // Take
             // Get TotalRow
             Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
 
-            var mapDatas = new List<ItemTypeViewModel>();
-            foreach (var item in QueryData)
-            {
-                var MapItem = this.mapper.Map<ItemType, ItemTypeViewModel>(item);
-                mapDatas.Add(MapItem);
-            }
+            //var mapDatas = new List<ItemTypeViewModel>();
+            //foreach (var item in QueryData)
+            //{
+            //    var MapItem = this.mapper.Map<ItemType, ItemTypeViewModel>(item);
+            //    mapDatas.Add(MapItem);
+            //}
 
-            return new JsonResult(new ScrollDataViewModel<ItemTypeViewModel>(Scroll, mapDatas), this.DefaultJsonSettings);
+            return new JsonResult(new ScrollDataViewModel<ItemType>(Scroll, QueryData), this.DefaultJsonSettings);
         }
     }
 }

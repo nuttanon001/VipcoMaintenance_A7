@@ -155,6 +155,7 @@ namespace VipcoMaintenance.Controllers
                 return BadRequest();
             return new JsonResult(record, this.DefaultJsonSettings);
         }
+
         //PUT: api/AdjutStockSp/
         [HttpPut]
         public override async Task<IActionResult> Update(int key, [FromBody] AdjustStockSp record)

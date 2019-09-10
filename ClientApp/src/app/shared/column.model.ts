@@ -7,6 +7,12 @@ export interface MyPrimengColumn {
   colspan?: number;
   rowspan?: number;
   canSort?: boolean;
+  format?: Format;
+}
+
+export enum Format {
+  Number = 1,
+  Date
 }
 
 export enum ColumnType {

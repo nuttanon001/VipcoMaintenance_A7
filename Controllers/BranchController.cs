@@ -7,13 +7,14 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
+using VipcoMaintenance.Helper;
 using VipcoMaintenance.Services;
 using VipcoMaintenance.ViewModels;
 using VipcoMaintenance.Models.Maintenances;
+
 using AutoMapper;
-using VipcoMaintenance.Helper;
-using Microsoft.AspNetCore.Authorization;
 
 namespace VipcoMaintenance.Controllers
 {
@@ -24,6 +25,37 @@ namespace VipcoMaintenance.Controllers
     {
         public BranchController(IRepositoryMaintenanceMk2<Branch> repo,
             IMapper mapper) : base(repo, mapper) {}
+
+        // GET: api/controller/5
+        [HttpGet("GetKeyNumber")]
+        public override async Task<IActionResult> Get(int key)
+        {
+            var message = "Data not been found.";
+
+            try
+            {
+                var HasData = await this.repository.GetFirstOrDefaultAsync(
+                       x => new {
+                           x.BranchId,
+                           x.Address,
+                           x.CreateDate,
+                           x.Creator,
+                           x.ModifyDate,
+                           x.Modifyer,
+                           x.Name,
+                       },
+                       x => x.BranchId == key);
+                // if HasData != null
+                if (HasData != null)
+                    return new JsonResult(HasData, this.DefaultJsonSettings);
+            }
+            catch(Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return BadRequest(new { message });
+        }
 
         // POST: api/Branch/GetScroll
         [HttpPost("GetScroll")]

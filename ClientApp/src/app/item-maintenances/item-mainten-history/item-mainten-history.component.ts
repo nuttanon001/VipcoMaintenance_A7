@@ -43,7 +43,7 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
 
   itemTypes: Array<ItemType>;
   scrollHeight: string;
-  sizeForm: number = 250;
+  sizeForm: number = 230;
 
   // get request data
   onGetData(schedule: Scroll): void {
@@ -70,9 +70,9 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
           { field: 'ItemCode', header: 'ItemCode', width: 100, type: ColumnType.Show },
           { field: 'ItemType', header: 'ItemType', width: 100, type: ColumnType.Show },
           { field: 'ItemName', header: 'ItemName', width: 250, type: ColumnType.Show },
-          { field: 'RequestDateString', header: 'RequestDate', width: 125, type: ColumnType.Show },
+          { field: 'RequestDateString2', header: 'RequestDate', width: 125, type: ColumnType.Show },
           { field: 'ApplyRequireDateString', header: 'ApplyDate', width: 125, type: ColumnType.Show },
-          { field: 'FinishDateString', header: 'FinishDate', width: 125, type: ColumnType.Show },
+          { field: 'FinishDateString2', header: 'FinishDate', width: 125, type: ColumnType.Show },
           { field: 'Description', header: 'Description', width: 250, type: ColumnType.Show },
         ];
 

@@ -223,8 +223,8 @@ namespace VipcoMaintenance.Controllers
                 x => x.Include(z => z.TypeMaintenance).Include(z => z.WorkGroupMaintenance));
             if (HasItem != null)
             {
-                var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(HasItem);
-                return new JsonResult(MapItem, this.DefaultJsonSettings);
+                // var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(HasItem);
+                return new JsonResult(HasItem, this.DefaultJsonSettings);
             }
             return BadRequest();
         }
@@ -1047,7 +1047,7 @@ namespace VipcoMaintenance.Controllers
             }
             return BadRequest(new { Error = message });
         }
-
+        /*
         public async Task<IActionResult> ScheduleTemp([FromBody] OptionItemMaintananceSchedule Schedule)
         {
             var message = "Data not found.";
@@ -1288,6 +1288,7 @@ namespace VipcoMaintenance.Controllers
             }
             return BadRequest(new { Error = message });
         }
+        */
 
         // POST: api/ItemMaintenance/ReportList
         [HttpPost("ReportList")]
@@ -1311,6 +1312,8 @@ namespace VipcoMaintenance.Controllers
                 if (option.EDate.HasValue)
                     expression = expression.And(x => x.ActualEndDate.Value.Date <= option.EDate.Value.Date || x.ActualEndDate == null);
 
+                // bug time
+                var addHour = new DateTime(2019, 2, 14);
                 var HasData = await this.repository.GetToListAsync(
                     item => new HistoryMaintenanceViewModel
                     {
@@ -1318,9 +1321,14 @@ namespace VipcoMaintenance.Controllers
                         ItemType = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemType.Name ?? "-",
                         ItemName = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.Name ?? "-",
                         Description = item.Description ?? "-",
-                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply,
                         RequestDate = item.RequireMaintenance.RequireDate,
-                        FinishDate = item.ActualEndDate
+                        RequestDateString2 = string.IsNullOrEmpty(item.RequireMaintenance.RequireDateTime) ? item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy HH:mm") : 
+                                             item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy") + " " + item.RequireMaintenance.RequireDateTime, 
+                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply.HasValue ? 
+                            (item.RequireMaintenance.MaintenanceApply.Value >= addHour ? item.RequireMaintenance.MaintenanceApply.Value.AddHours(8) : item.RequireMaintenance.MaintenanceApply) 
+                            : item.RequireMaintenance.MaintenanceApply,
+                        FinishDate = item.ActualEndDate,
+                        FinishDateString2 = item.ActualEndDate.HasValue ? (string.IsNullOrEmpty(item.ActualEndDateTime) ? item.ActualEndDate.Value.ToString("dd/MM/yyyy HH:mm") : item.ActualEndDate.Value.ToString("dd/MM/yyyy") + " " + item.ActualEndDateTime) : ""
                     },
                     expression, x => x.OrderBy(z => z.RequireMaintenance.Item.ItemTypeId).ThenBy(z => z.RequireMaintenance.Item.ItemCode),
                     x => x.Include(z => z.RequireMaintenance.Item.ItemType));
@@ -1352,9 +1360,9 @@ namespace VipcoMaintenance.Controllers
                                     item.ItemCode,
                                     item.ItemType,
                                     item.ItemName,
+                                    (string.IsNullOrEmpty(item.RequestDateString2) ? item.RequestDateString : item.RequestDateString2),
                                     item.ApplyRequireDateString,
-                                    item.RequestDateString,
-                                    item.FinishDateString,
+                                    (string.IsNullOrEmpty(item.FinishDateString2) ? item.FinishDateString : item.FinishDateString2),
                                     item.Description
                                 );
                             }
@@ -1380,7 +1388,9 @@ namespace VipcoMaintenance.Controllers
                             return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
                         }
                         else
-                            return new JsonResult(new ScrollDataViewModel<HistoryMaintenanceViewModel>(option,ReportList), this.DefaultJsonSettings);
+                        {
+                            return new JsonResult(new ScrollDataViewModel<HistoryMaintenanceViewModel>(option, ReportList), this.DefaultJsonSettings);
+                        }
                     }
                 }
             }

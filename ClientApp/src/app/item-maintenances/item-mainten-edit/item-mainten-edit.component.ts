@@ -19,7 +19,8 @@ import { ItemMaintenService, ItemMaintenCommunicateService } from "../shared/ite
 import { WorkGroupMaintenService } from "../../work-group-maintenances/shared/work-group-mainten.service";
 import { ItemMaintenHasEmpService } from "../shared/item-mainten-has-emp.service";
 import { ItemMaintenanceHasEmp } from "../shared/item-maintenance-has-emp.model";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { debounceTime, distinctUntilChanged, map, switchMap } from "rxjs/operators";
+import { empty } from 'rxjs';
 
 @Component({
   selector: 'app-item-mainten-edit',
@@ -70,73 +71,95 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
   onGetDataByKey(value?: ItemMaintenance): void {
     if (value && value.ItemMaintenanceId) {
       this.service.getOneKeyNumber(value)
-        .subscribe(dbData => {
+        .pipe(map(dbData => {
           if (dbData) {
             this.editValue = dbData;
+            this.editValue.RequisitionStockSps = new Array;
+            this.editValue.ItemMainHasEmployees = new Array;
             //Set read only for form
             if (this.editValue.StatusMaintenance === StatusMaintenance.Complate) {
               this.isReadOnly = true;
             }
-            //Requistion
-            this.serviceRequisitionStock.getRequisitionByItemMaintenance(dbData.ItemMaintenanceId)
-              .subscribe(dbRequisition => {
-                this.editValue.RequisitionStockSps = new Array;
-                if (dbRequisition) {
-                  dbRequisition.forEach((item, index) => {
-                    this.editValue.RequisitionStockSps.push({
-                      CreateDate: item.CreateDate,
-                      Creator: item.Creator,
-                      ItemMaintenanceId: item.ItemMaintenanceId,
-                      ModifyDate: item.ModifyDate,
-                      Modifyer: item.Modifyer,
-                      MovementStockSpId: item.MovementStockSpId,
-                      PaperNo: item.PaperNo,
-                      Quantity: item.Quantity,
-                      Remark: item.Remark,
-                      RequisitionDate: item.RequisitionDate,
-                      RequisitionEmp: item.RequisitionEmp,
-                      RequisitionEmpString: item.RequisitionEmpString,
-                      RequisitionStockSpId: item.RequisitionStockSpId,
-                      SparePartId: item.SparePartId,
-                      SparePartName: item.SparePartName,
-                      TotalPrice: item.TotalPrice,
-                      UnitPrice: item.UnitPrice
-                    });
-                  });
-                }
-                this.editValueForm.patchValue({
-                  RequisitionStockSps: this.editValue.RequisitionStockSps
-                });
-              });
-            //Employee
-            this.serviceItemMainEmp.actionItemMaintenanceHasEmployee(dbData.ItemMaintenanceId)
-              .subscribe(ItemMainHasEmp => {
-                this.editValue.ItemMainHasEmployees = new Array;
-                if (ItemMainHasEmp) {
-                  ItemMainHasEmp.forEach((item, index) => {
-                    this.editValue.ItemMainHasEmployees.push({
-                      CreateDate: item.CreateDate,
-                      Creator: item.Creator,
-                      EmpCode: item.EmpCode,
-                      ItemMainEmpString: item.ItemMainEmpString,
-                      ItemMainHasEmployeeId: item.ItemMainHasEmployeeId,
-                      ItemMaintenanceId: item.ItemMaintenanceId,
-                      ModifyDate: item.ModifyDate,
-                      Modifyer: item.Modifyer,
-                      Remark:item.Remark
-                    });
-                  });
-                  //Patch value to Form
-                  this.editValueForm.patchValue({
-                    ItemMainHasEmployees: this.editValue.ItemMainHasEmployees
-                  });
-                }
-              });
-
-            // console.log(JSON.stringify(this.editValue));
           }
-        }, error => console.error(error), () => {
+          else {
+            return empty();
+          }
+        }),
+        switchMap(() => this.serviceRequisitionStock.getRequisitionByItemMaintenance(this.editValue.ItemMaintenanceId)),
+        map(dbRequisition => {
+          if (dbRequisition) {
+            dbRequisition.forEach(item => {
+              let temp: RequisitionStock = {
+                RequisitionStockSpId: 0,
+                RequisitionDate: new Date,
+                Quantity: 1
+              };
+              // loop deep clone without $id don't need it
+              for (let key in item) {
+                if (key.indexOf("$id") === -1) {
+                  temp[key] = item[key];
+                }
+              }
+              this.editValue.RequisitionStockSps.push(temp);
+            });
+            this.editValue.RequisitionStockSps = this.editValue.RequisitionStockSps.slice();
+          }
+        }),
+        switchMap(() => this.serviceItemMainEmp.actionItemMaintenanceHasEmployee(this.editValue.ItemMaintenanceId)),
+        map(ItemMainHasEmp => {
+          if (ItemMainHasEmp) {
+            ItemMainHasEmp.forEach(item => {
+              let temp2: ItemMaintenanceHasEmp = {
+                ItemMainHasEmployeeId:0
+              };
+
+              // loop deep clone without $id don't need it
+              for (let key in item) {
+                if (key.indexOf("$id") === -1) {
+                  temp2[key] = item[key];
+                }
+              }
+              this.editValue.ItemMainHasEmployees.push(temp2);
+            });
+            this.editValue.RequisitionStockSps = this.editValue.RequisitionStockSps.slice();
+          }
+        }),
+        switchMap(() => this.serviceGroupMainten.getAll()),
+        map(mainGroups => {
+          if (mainGroups) {
+            this.groupMaintenances = [...mainGroups.sort((item1, item2) => {
+              if (item1.Name > item2.Name) {
+                return 1;
+              }
+              if (item1.Name < item2.Name) {
+                return -1;
+              }
+              return 0;
+            })];
+          }
+        }),
+        switchMap(() => this.serviceRequireMainten.getOneKeyNumber({ RequireMaintenanceId: this.editValue.RequireMaintenanceId })),
+        map(dbDataReq => {
+          if (dbDataReq) {
+            this.requireMainten = dbDataReq;
+          }
+        }),
+        switchMap(() => this.serviceTypeMainten.getAll()),
+        map(dbMainType => {
+          if (dbMainType) {
+            this.typeMaintenances = [...dbMainType.sort((item1, item2) => {
+              if (item1.Name > item2.Name) {
+                return 1;
+              }
+              if (item1.Name < item2.Name) {
+                return -1;
+              }
+              return 0;
+            })];
+          }
+        })).subscribe(dbData => { }, error => console.error(error), () => {
           this.buildForm();
+          /*
           if (this.editValue.RequireMaintenanceId) {
             this.serviceRequireMainten.getOneKeyNumber({ RequireMaintenanceId: this.editValue.RequireMaintenanceId })
               .subscribe(dbDataReq => {
@@ -150,6 +173,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                 }
               });
           }
+          */
         });
     } else {
       this.editValue = {
@@ -182,15 +206,15 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
 
   // build form
   buildForm(): void {
-    // Get type maintenances
-    this.getTypeMaintenances();
     // Get group maintenances
     this.getGroupMaintenances();
+    // Get type maintenances
+    this.getTypeMaintenances();
     // New form
     this.editValueForm = this.fb.group({
       // [{value: 'someValue', disabled:true}]
       ItemMaintenanceId: [{ value: this.editValue.ItemMaintenanceId, disabled:this.isReadOnly}],
-      ItemMaintenanceNo: [{ value: this.editValue.ItemMaintenanceNo, disabled: this.isReadOnly }],
+      ItemMaintenanceNo: [{ value: this.editValue.ItemMaintenanceNo, disabled: this.isReadOnly}],
       PlanStartDate: [{ value: this.editValue.PlanStartDate,disabled: this.isReadOnly},
         [
           Validators.required,
@@ -209,12 +233,12 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
       Description: [this.editValue.Description,
         [
           Validators.required,
-          Validators.maxLength(250)
+          Validators.maxLength(500)
         ]
       ],
       Remark: [this.editValue.Remark,
         [
-          Validators.maxLength(250)
+          Validators.maxLength(200)
         ]
       ],
       MaintenanceEmp: [{ value: this.editValue.MaintenanceEmp, disabled: this.isReadOnly }],
@@ -334,9 +358,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
   getTypeMaintenances(): void {
     if (!this.typeMaintenances) {
       this.typeMaintenances = new Array;
-    }
 
-    if (this.requireMainten) {
       this.serviceTypeMainten.getAll()
         .subscribe(dbData => {
           if (dbData) {
@@ -352,6 +374,11 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
             })];
           }
         });
+      /*
+      if (this.requireMainten) {
+        
+      }
+      */
     }
   }
 
@@ -359,23 +386,23 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
   getGroupMaintenances(): void {
     if (!this.groupMaintenances) {
       this.groupMaintenances = new Array;
-    }
 
-    this.serviceGroupMainten.getAll()
-      .subscribe(dbData => {
-        if (dbData) {
-          //this.groupMaintenances = [...dbData];
-          this.groupMaintenances = [...dbData.sort((item1, item2) => {
-            if (item1.Name > item2.Name) {
-              return 1;
-            }
-            if (item1.Name < item2.Name) {
-              return -1;
-            }
-            return 0;
-          })];
-        }
-      })
+      this.serviceGroupMainten.getAll()
+        .subscribe(dbData => {
+          if (dbData) {
+            //this.groupMaintenances = [...dbData];
+            this.groupMaintenances = [...dbData.sort((item1, item2) => {
+              if (item1.Name > item2.Name) {
+                return 1;
+              }
+              if (item1.Name < item2.Name) {
+                return -1;
+              }
+              return 0;
+            })];
+          }
+        });
+    }
   }
 
   // open dialog
