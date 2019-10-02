@@ -21,6 +21,8 @@ namespace VipcoMaintenance.Models.Maintenances
             modelBuilder.Entity<ItemMaintenance>().ToTable("ItemMaintenance");
             modelBuilder.Entity<ItemType>().ToTable("ItemType");
             modelBuilder.Entity<MovementStockSp>().ToTable("MovementStockSp");
+            modelBuilder.Entity<ObsoleteItemHasAttach>().ToTable("ObsoleteItemHasAttach");
+            modelBuilder.Entity<ObsoleteItem>().ToTable("ObsoleteItem");
             modelBuilder.Entity<Permission>().ToTable("Permission");
             modelBuilder.Entity<ReceiveStockSp>().ToTable("ReceiveStockSp");
             modelBuilder.Entity<RequireMaintenance>().ToTable("RequireMaintenance");
@@ -40,6 +42,8 @@ namespace VipcoMaintenance.Models.Maintenances
         public DbSet<ItemMaintenance> ItemMaintenances { get; set; }
         public DbSet<ItemType> ItemTypes { get; set; }
         public DbSet<MovementStockSp> MovementStockSps { get; set; }
+        public DbSet<ObsoleteItemHasAttach> ObsoleteItemHasAttaches { get; set; }
+        public DbSet<ObsoleteItem> ObsoleteItem { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<ReceiveStockSp> ReceiveStockSps { get; set; }
         public DbSet<RequireMaintenance> RequireMaintenances { get; set; }

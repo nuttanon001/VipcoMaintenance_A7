@@ -1,0 +1,488 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Authorization;
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Dynamic;
+using System.Threading.Tasks;
+using System.Linq.Expressions;
+using System.Collections.Generic;
+
+using VipcoMaintenance.Helper;
+using VipcoMaintenance.Models.Maintenances;
+using VipcoMaintenance.Services;
+using VipcoMaintenance.Services.EmailServices;
+using VipcoMaintenance.Services.ExcelExportServices;
+using VipcoMaintenance.ViewModels;
+using VipcoMaintenance.ViewModels.Items;
+
+using AutoMapper;
+using ClosedXML.Excel;
+using VipcoMaintenance.Models.Machines;
+
+namespace VipcoMaintenance.Controllers.ItemCancel
+{
+    [Route("api/[controller]")]
+    [Authorize]
+    [ApiController]
+    public class ObsoleteItemController : GenericController<ObsoleteItem>
+    {
+        // Repository
+        private readonly IRepositoryMaintenanceMk2<Item> repositoryItem;
+        private readonly IRepositoryMaintenanceMk2<ObsoleteItemHasAttach> repositoryHasAttach;
+        private readonly IRepositoryMachineMk2<AttachFile> repositoryAttach;
+        // IHost
+        private readonly IHostingEnvironment hosting;
+        // GET: api/ItemHasCancel
+        public ObsoleteItemController(IRepositoryMaintenanceMk2<ObsoleteItem> repo,
+            IRepositoryMaintenanceMk2<Item> repoItem,
+            IRepositoryMaintenanceMk2<ObsoleteItemHasAttach> repoHasAttach,
+            IRepositoryMachineMk2<AttachFile> repoAttach,
+            IHostingEnvironment hosting,
+            IMapper mapper):base(repo,mapper)
+        {
+            //MaintenanceDatabase
+            this.repositoryItem = repoItem;
+            this.repositoryHasAttach = repoHasAttach;
+            // MachineDatabase
+            this.repositoryAttach = repoAttach;
+            // Ihost
+            this.hosting = hosting;
+        }
+
+        // GET: api/controller/5
+        [HttpGet("GetKeyNumber")]
+        public override async Task<IActionResult> Get(int key)
+        {
+            var HasData = await this.repository.GetFirstOrDefaultAsync
+                (x => new ObsoleteItemViewModel()
+                {
+                    Approve1 = x.Approve1,
+                    Approve1Date = x.Approve1Date,
+                    Approve1NameThai = x.Approve1NameThai,
+                    Approve2 = x.Approve2,
+                    Approve2Date = x.Approve2Date,
+                    Approve2NameThai = x.Approve2NameThai,
+                    ApproveToObsolete = x.ApproveToObsolete,
+                    ApproveToFix = x.ApproveToFix,
+                    ObsoleteDate = x.ObsoleteDate,
+                    ObsoleteNo = x.ObsoleteNo,
+                    ComplateBy = x.ComplateBy,
+                    ComplateByNameThai = x.ComplateByNameThai,
+                    CreateDate = x.CreateDate,
+                    Creator = x.Creator,
+                    Description = x.Description,
+                    FixedAsset = x.FixedAsset,
+                    ItemCancelHasAttach = x.ItemCancelHasAttach,
+                    ItemCode = x.Item.ItemCode,
+                    ObsoleteItemId = x.ObsoleteItemId,
+                    ItemName = x.Item.Name,
+                    ItemId = x.ItemId,
+                    Remark = x.Remark,
+                    Request = x.Request,
+                    RequestNameThai = x.RequestNameThai,
+                    Status = x.Status,
+                },x => x.ObsoleteItemId == key,null,x => x.Include(z => z.Item));
+            return new JsonResult(HasData, this.DefaultJsonSettings);
+        }
+
+        // POST: api/ItemHasCancel/GetScroll/5
+        [HttpPost("GetScroll")]
+        public async Task<IActionResult> GetScroll([FromBody] ScrollViewModel Scroll)
+        {
+            if (Scroll == null)
+                return BadRequest();
+
+            // Filter
+            var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                                : Scroll.Filter.Split(null);
+
+            Expression<Func<ObsoleteItem, bool>> predicate = null;
+            foreach (string temp in filters)
+            {
+                if (string.IsNullOrEmpty(temp))
+                    continue;
+
+                if (predicate == null)
+                    predicate = PredicateBuilder.False<ObsoleteItem>();
+
+                string keyword = temp.ToLower();
+                predicate = predicate.Or(x => x.ObsoleteNo.ToLower().Contains(keyword) ||
+                                              x.Item.ItemCode.ToLower().Contains(keyword) ||
+                                              x.Item.Name.ToLower().Contains(keyword));
+            }
+            /*
+            if (Scroll.WhereId.HasValue)
+            {
+                if (predicate == null)
+                    predicate = PredicateBuilder.True<ItemHasCancel>();
+
+                predicate = predicate.And(p => p.ResponsibleType == (ResponsibleType)Scroll.WhereId);
+            }
+            */
+
+            if (!string.IsNullOrEmpty(Scroll.Where))
+            {
+                if (predicate == null)
+                    predicate = PredicateBuilder.True<ObsoleteItem>();
+
+                predicate = predicate.And(p => p.Creator == Scroll.Where);
+            }
+
+            //Order by
+            Func<IQueryable<ObsoleteItem>, IOrderedQueryable<ObsoleteItem>> order;
+            // Order
+            switch (Scroll.SortField)
+            {
+                case "CreateDate":
+                    if (Scroll.SortOrder == -1)
+                        order = o => o.OrderByDescending(x => x.CreateDate);
+                    else
+                        order = o => o.OrderBy(x => x.CreateDate);
+                    break;
+
+                case "CancelDate":
+                    if (Scroll.SortOrder == -1)
+                        order = o => o.OrderByDescending(x => x.ObsoleteDate);
+                    else
+                        order = o => o.OrderBy(x => x.ObsoleteDate);
+                    break;
+
+                case "ItemCode":
+                    if (Scroll.SortOrder == -1)
+                        order = o => o.OrderByDescending(x => x.Item.ItemCode);
+                    else
+                        order = o => o.OrderBy(x => x.Item.ItemCode);
+                    break;
+
+                case "CancelNo":
+                    if (Scroll.SortOrder == -1)
+                        order = o => o.OrderByDescending(x => x.ObsoleteNo);
+                    else
+                        order = o => o.OrderBy(x => x.ObsoleteNo);
+                    break;
+
+                default:
+                    order = o => o.OrderByDescending(x => x.ObsoleteDate);
+                    break;
+            }
+
+            var QueryData = await this.repository.GetToListAsync(
+                                    selector: x => new ObsoleteItemViewModel
+                                    {
+                                        ObsoleteNo = x.ObsoleteNo,
+                                        ObsoleteItemId = x.ObsoleteItemId,
+                                        ItemName = x.Item.Name,
+                                        ItemCode = x.Item.ItemCode,
+                                        RequestNameThai = x.RequestNameThai,
+                                        Status = x.Status,
+                                    },  // Selected
+                                    predicate: predicate, // Where
+                                    orderBy: order, // Order
+                                    include: x => x.Include(z => z.Item), // Include
+                                    skip: Scroll.Skip ?? 0, // Skip
+                                    take: Scroll.Take ?? 50); // Take
+
+            // Get TotalRow
+            Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
+            //var mapDatas = new List<OverTimeMasterViewModel>();
+            //foreach (var item in QueryData)
+            //{
+            //    var MapItem = this.mapper.Map<OverTimeMaster, OverTimeMasterViewModel>(item);
+            //    mapDatas.Add(MapItem);
+            //}
+
+            return new JsonResult(new ScrollDataViewModel<ObsoleteItem>(Scroll, QueryData), this.DefaultJsonSettings);
+        }
+
+        [HttpPost("GetSchedule")]
+        public async Task<IActionResult> GetSchedule([FromBody] ScrollViewModel Scroll)
+        {
+            var message = "Data not been found.";
+            try
+            {
+                Expression<Func<ObsoleteItem, bool>> predicate = x => x.Status != StatusObsolete.Cancel;
+                if (Scroll != null)
+                {
+                    // Filter
+                    var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                                        : Scroll.Filter.Split(null);
+
+                    foreach (string temp in filters)
+                    {
+                        if (string.IsNullOrEmpty(temp))
+                            continue;
+
+                        if (predicate == null)
+                            predicate = PredicateBuilder.False<ObsoleteItem>();
+
+                        string keyword = temp.ToLower();
+                        predicate = predicate.Or(x => x.ObsoleteNo.ToLower().Contains(keyword) ||
+                                                      x.Item.ItemCode.ToLower().Contains(keyword) ||
+                                                      x.Item.Name.ToLower().Contains(keyword));
+                    }
+
+                    // Option
+                    // WhereId filter itemId
+                    if (Scroll.WhereId.HasValue)
+                    {
+                        if (Scroll.WhereId == 1)
+                        {
+                            if (predicate == null)
+                                predicate = PredicateBuilder.True<ObsoleteItem>();
+
+                            predicate = predicate.And(p => p.ItemId == Scroll.Where2Id);
+                        }
+                    }
+
+                    // Where filter DocNo
+                    //if (string.IsNullOrEmpty(Scroll.Where))
+                    //{
+                    //    if (predicate == null)
+                    //        predicate = PredicateBuilder.True<ItemHasCancel>();
+
+                    //    predicate = predicate.And(p => p.CancelNo.Contains(Scroll.Where));
+                    //}
+
+                    Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate);
+                }
+                else
+                    Scroll.TotalRow = await this.repository.GetLengthWithAsync();
+
+                var hasData = await this.repository.GetToListAsync(
+                        x => new
+                        {
+                            x.ObsoleteNo,
+                            x.Item.ItemCode,
+                            x.Item.Name,
+                            x.ItemId,
+                            x.ObsoleteItemId,
+                            ObsoleteDate = x.ObsoleteDate.Value.Date,
+                            x.CreateDate,
+                            x.Status,
+                        },
+                        predicate, x => x.OrderByDescending(z => z.ObsoleteDate),
+                        z => z.Include(x => x.Item), Scroll.Skip ?? 0, Scroll.Take ?? 50
+                    );
+
+                if (hasData.Any())
+                {
+                    var dataTable = new List<ObsoleteItemScheduleViewModel>();
+
+                    foreach (var mainItem in hasData.GroupBy(x => x.ObsoleteDate).OrderByDescending(x => x.Key))
+                    {
+                        var newData = new ObsoleteItemScheduleViewModel()
+                        {
+                            ObsoleteDate = mainItem.Key.Date
+                        };
+
+                        foreach (var subItem in mainItem)
+                        {
+                            newData.ObsoleteItems.Add(new ObsoleteItemViewModel
+                            {
+                                ObsoleteNo = subItem.ObsoleteNo,
+                                ObsoleteItemId = subItem.ObsoleteItemId,
+                                ItemId = subItem.ItemId,
+                                ItemName = subItem.Name,
+                                ItemCode = subItem.ItemCode,
+                                Status = subItem.Status
+                            });
+                        }
+
+                        dataTable.Add(newData);
+                    }
+
+                    if (dataTable.Any())
+                    {
+                        return new JsonResult(
+                            new ScrollDataViewModel<ObsoleteItemScheduleViewModel>(Scroll,dataTable), this.DefaultJsonSettings);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return NotFound(new { message });
+        }
+
+        [HttpPost]
+        public override async Task<IActionResult> Create([FromBody] ObsoleteItem record)
+        {
+            // Set date for CrateDate Entity
+            if (record == null)
+                return BadRequest();
+            // +7 Hour
+            // record = this.helper.AddHourMethod(record);
+
+            if (record.GetType().GetProperty("CreateDate") != null)
+                record.GetType().GetProperty("CreateDate").SetValue(record, DateTime.Now);
+            if (await this.repository.AddAsync(record) == null)
+                return BadRequest();
+
+            if (record.ItemId.HasValue)
+            {
+                // Change item status
+                var hasItem = await this.repositoryItem.GetFirstOrDefaultAsync(x => x, x => x.ItemId == record.ItemId);
+                hasItem.CancelDate = record.ObsoleteDate != null ? record.ObsoleteDate.Value.DateTime : DateTime.Now;
+                hasItem.ItemStatus = ItemStatus.Cancel;
+                hasItem.ModifyDate = DateTime.Now;
+                hasItem.Modifyer = record.Creator;
+
+                await this.repositoryItem.UpdateAsync(hasItem, hasItem.ItemId);
+            }
+
+            return new JsonResult(record, this.DefaultJsonSettings);
+        }
+
+        [HttpPut]
+        public override async Task<IActionResult> Update(int key, [FromBody] ObsoleteItem record)
+        {
+            if (key < 1)
+                return BadRequest();
+            if (record == null)
+                return BadRequest();
+
+            // +7 Hour
+            // record = this.helper.AddHourMethod(record);
+
+            // Set date for CrateDate Entity
+            if (record.GetType().GetProperty("ModifyDate") != null)
+                record.GetType().GetProperty("ModifyDate").SetValue(record, DateTime.Now);
+            if (await this.repository.UpdateAsync(record, key) == null)
+                return BadRequest();
+
+            if (record.ItemId.HasValue)
+            {
+                // Change item status
+                var hasItem = await this.repositoryItem.GetFirstOrDefaultAsync(x => x, x => x.ItemId == record.ItemId);
+                if (hasItem.ItemStatus != ItemStatus.Cancel)
+                {
+                    hasItem.ItemStatus = ItemStatus.Cancel;
+                    hasItem.ModifyDate = DateTime.Now;
+                    hasItem.Modifyer = record.Creator;
+                    hasItem.CancelDate = record.ObsoleteDate != null ? record.ObsoleteDate.Value.DateTime : DateTime.Now;
+
+                    await this.repositoryItem.UpdateAsync(hasItem, hasItem.ItemId);
+                }
+            }
+
+            return new JsonResult(record, this.DefaultJsonSettings);
+        }
+
+        #region ATTACH
+        // GET: api/ReceiptHeader/GetAttach/5
+        [HttpGet("GetAttach")]
+        public async Task<IActionResult> GetAttach(int key)
+        {
+            var AttachIds = await this.repositoryHasAttach.GetToListAsync(
+                x => x.AttachFileId, x => x.ObsoleteItemHasAttachId == key);
+            if (AttachIds != null)
+            {
+                var DataAttach = await this.repositoryAttach.GetToListAsync(x => x, x => AttachIds.Contains(x.AttachFileId));
+                return new JsonResult(DataAttach, this.DefaultJsonSettings);
+            }
+
+            return NotFound(new { Error = "Attatch not been found." });
+        }
+
+        // POST: api/ReceiptHeader/PostAttach/5/Someone
+        [HttpPost("PostAttach"), DisableRequestSizeLimit]
+        public async Task<IActionResult> PostAttact2(int key, string CreateBy)
+        {
+            string Message = "";
+            try
+            {
+                var files = Request.Form.Files;
+                long size = files.Sum(f => f.Length);
+
+                // full path to file in temp location
+                var filePath1 = Path.GetTempFileName();
+
+                foreach (var formFile in files)
+                {
+                    string FileName = Path.GetFileName(formFile.FileName).ToLower();
+                    // create file name for file
+                    string FileNameForRef = $"{DateTime.Now.ToString("ddMMyyhhmmssfff")}{ Path.GetExtension(FileName).ToLower()}";
+                    // full path to file in temp location
+                    var filePath = Path.Combine(this.hosting.WebRootPath + "/files", FileNameForRef);
+
+                    if (formFile.Length > 0)
+                    {
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                            await formFile.CopyToAsync(stream);
+                    }
+
+                    var returnData = await this.repositoryAttach.AddAsync(new AttachFile()
+                    {
+                        FileAddress = $"/maintenance/files/{FileNameForRef}",
+                        FileName = FileName,
+                        CreateDate = DateTime.Now,
+                        Creator = CreateBy ?? "Someone"
+                    });
+
+                    await this.repositoryHasAttach.AddAsync(new ObsoleteItemHasAttach()
+                    {
+                        AttachFileId = returnData.AttachFileId,
+                        CreateDate = DateTime.Now,
+                        Creator = CreateBy ?? "Someone",
+                        ObsoleteItemlId = key
+                    });
+                }
+
+                return Ok(new { count = 1, size, filePath1 });
+
+            }
+            catch (Exception ex)
+            {
+                Message = ex.ToString();
+            }
+
+            return NotFound(new { Error = "Not found " + Message });
+        }
+
+        // DELETE: api/ReceiptHeader/DeleteAttach/5
+        [HttpDelete("DeleteAttach")]
+        public async Task<IActionResult> DeleteAttach(string AttachFileString)
+        {
+            if (!string.IsNullOrEmpty(AttachFileString) && AttachFileString.IndexOf(",") != -1)
+            {
+                var AttachFileIds = AttachFileString.Split(',').ToList();
+                foreach (var AttachFiles in AttachFileIds)
+                {
+                    if (int.TryParse(AttachFiles, out int AttachFileId))
+                    {
+                        var AttachFile = await this.repositoryAttach.GetAsync(AttachFileId);
+                        if (AttachFile != null)
+                        {
+                            var filePath = Path.Combine(this.hosting.WebRootPath + AttachFile.FileAddress);
+                            FileInfo delFile = new FileInfo(filePath);
+
+                            if (delFile.Exists)
+                                delFile.Delete();
+                            // Condition
+                            var requestHasAttach = await this.repositoryHasAttach.GetFirstOrDefaultAsync(
+                                x => x, x => x.AttachFileId == AttachFile.AttachFileId);
+
+                            if (requestHasAttach != null)
+                                this.repositoryHasAttach.Delete(requestHasAttach.ObsoleteItemHasAttachId);
+
+                            // remove attach
+                            return new JsonResult(
+                                await this.repositoryAttach.DeleteAsync(AttachFile.AttachFileId),
+                                this.DefaultJsonSettings);
+                        }
+                    }
+                }
+
+            }
+            return NotFound(new { Error = "Not found attach file." });
+        }
+        #endregion
+    }
+}

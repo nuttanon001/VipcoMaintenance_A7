@@ -155,8 +155,9 @@
 
             <div class="right-content">
               <mat-form-field>
-                <mat-select placeholder="Selected Status"
-                            id="ItemStatus" formControlName="ItemStatus">
+                <mat-select placeholder="Selected Status" 
+                            id="ItemStatus" formControlName="ItemStatus"
+                            [disabled]="true">
                   <mat-option *ngFor="let status of itemStatus" [value]="status.Value">
                     {{ status.Label }}
                   </mat-option>

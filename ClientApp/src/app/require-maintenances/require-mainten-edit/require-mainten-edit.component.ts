@@ -140,15 +140,17 @@ export class RequireMaintenEditComponent extends BaseEditComponent<RequireMainte
     if (this.branchs) {
       this.serviceBranch.getAll()
         .subscribe(dbBranch => {
-          this.branchs = [...dbBranch.sort((item1, item2) => {
-            if (item1.Name > item2.Name) {
-              return 1;
-            }
-            if (item1.Name < item2.Name) {
-              return -1;
-            }
-            return 0;
-          })];
+          if (dbBranch) {
+            this.branchs = dbBranch.sort((item1, item2) => {
+              if (item1.Name > item2.Name) {
+                return 1;
+              }
+              if (item1.Name < item2.Name) {
+                return -1;
+              }
+              return 0;
+            }).slice();
+          }
 
           if (!this.editValue.BranchId) {
             this.editValue.BranchId = this.branchs.find(item => item.Name.toLowerCase() === "vipco2").BranchId || undefined;

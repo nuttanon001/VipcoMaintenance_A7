@@ -1,0 +1,27 @@
+<div *ngIf="InfoValue;else elseBlock">
+  <mat-horizontal-stepper [linear]="true" #stepper="matHorizontalStepper">
+    <mat-step [completed]="isValid">
+      <ng-template matStepLabel>
+        <strong><b>Issue Information</b></strong>
+      </ng-template>
+      <ng-container *ngIf="regConfig">
+        <dynamic-form [fields]="regConfig" (submit)="submitDynamicForm($event)">
+        </dynamic-form>
+      </ng-container>
+    </mat-step>
+    <mat-step [completed]="isValid">
+      <ng-template matStepLabel>
+        <strong><b>Attach File(s)</b></strong>
+      </ng-template>
+      <input type="file" multiple (change)="onUpdateAttach($event)">
+      <hr />
+      <img [src]="ItemImage" class="size-img" />
+    </mat-step>
+
+  </mat-horizontal-stepper>
+</div>
+
+<ng-template #elseBlock>
+  <mat-progress-bar mode="indeterminate" style="margin-top:50px;"></mat-progress-bar>
+  Waiting... for loading
+</ng-template>

@@ -127,7 +127,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         switchMap(() => this.serviceGroupMainten.getAll()),
         map(mainGroups => {
           if (mainGroups) {
-            this.groupMaintenances = [...mainGroups.sort((item1, item2) => {
+            this.groupMaintenances = mainGroups.sort((item1, item2) => {
               if (item1.Name > item2.Name) {
                 return 1;
               }
@@ -135,7 +135,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                 return -1;
               }
               return 0;
-            })];
+            }).slice();
           }
         }),
         switchMap(() => this.serviceRequireMainten.getOneKeyNumber({ RequireMaintenanceId: this.editValue.RequireMaintenanceId })),
@@ -147,7 +147,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         switchMap(() => this.serviceTypeMainten.getAll()),
         map(dbMainType => {
           if (dbMainType) {
-            this.typeMaintenances = [...dbMainType.sort((item1, item2) => {
+            this.typeMaintenances = dbMainType.sort((item1, item2) => {
               if (item1.Name > item2.Name) {
                 return 1;
               }
@@ -155,7 +155,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                 return -1;
               }
               return 0;
-            })];
+            }).slice();
           }
         })).subscribe(dbData => { }, error => console.error(error), () => {
           this.buildForm();
@@ -363,7 +363,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         .subscribe(dbData => {
           if (dbData) {
             // this.typeMaintenances = [...dbData];
-            this.typeMaintenances = [...dbData.sort((item1, item2) => {
+            this.typeMaintenances = dbData.sort((item1, item2) => {
               if (item1.Name > item2.Name) {
                 return 1;
               }
@@ -371,7 +371,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                 return -1;
               }
               return 0;
-            })];
+            }).slice();
           }
         });
       /*
@@ -391,7 +391,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
         .subscribe(dbData => {
           if (dbData) {
             //this.groupMaintenances = [...dbData];
-            this.groupMaintenances = [...dbData.sort((item1, item2) => {
+            this.groupMaintenances = dbData.sort((item1, item2) => {
               if (item1.Name > item2.Name) {
                 return 1;
               }
@@ -399,7 +399,7 @@ export class ItemMaintenEditComponent extends BaseEditComponent<ItemMaintenance,
                 return -1;
               }
               return 0;
-            })];
+            }).slice();
           }
         });
     }

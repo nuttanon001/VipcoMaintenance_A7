@@ -1,0 +1,77 @@
+.mat-menu-panel {
+  &.mouseleave {
+    .mat-menu-content {
+      padding: 0;
+      > div {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+    }
+  }
+}
+
+.bg-bar {
+  // background-color: #0a7ab2;
+  background: linear-gradient(145deg,#0a7ab2,#008080 80%);
+  // background-image: linear-gradient(145deg, rgb(38, 50, 56), rgb(120, 144, 156));
+}
+
+$bg-color: transparent;
+$font-color: black;
+.navbar-nav {
+  button {
+    color: lightcyan;
+    font-size: 12px;
+
+    &:hover {
+      color: $font-color;
+      background-color: $bg-color;
+    }
+
+    &:focus {
+      color: $font-color;
+      background-color: $bg-color;
+    }
+  }
+
+  a {
+    color: lightcyan;
+    cursor: pointer;
+
+    &:hover {
+      color: $font-color;
+      background-color: $bg-color;
+    }
+
+    .active {
+      background-color: $bg-color;
+    }
+
+    &:focus {
+      color: $font-color;
+      background-color: $bg-color;
+    }
+  }
+}
+
+:host /deep/ .size-24 button svg {
+  width: 24px;
+  height: 24px;
+  transform: scale(2);
+}
+
+.rotate-45 {
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+.rotate-90 {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  transform: rotate(90deg);
+}

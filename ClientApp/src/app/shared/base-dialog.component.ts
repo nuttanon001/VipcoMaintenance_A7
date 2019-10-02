@@ -39,8 +39,7 @@ export abstract class BaseDialogComponent<Model, Service> implements OnInit {
 
   onSelectedValues(values?: Array<Model>): void {
     if (values) {
-      this.getValues = new Array;
-      this.getValues = [...values];
+      this.getValues = values.slice();
     }
   }
 

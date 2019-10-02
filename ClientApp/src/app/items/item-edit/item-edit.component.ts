@@ -156,8 +156,8 @@ export class ItemEditComponent extends BaseEditComponent<Item, ItemService> {
     if (this.workGroup) {
       this.serviceItemType.getAll()
         .subscribe(dbItemType => {
-          this.itemTypes = [...dbItemType.filter((item: ItemType) =>
-            item.WorkGroupId === this.workGroup.WorkGroupId)];
+          this.itemTypes = dbItemType.filter((item: ItemType) =>
+            item.WorkGroupId === this.workGroup.WorkGroupId).slice();
         });
     }
   }
@@ -169,16 +169,18 @@ export class ItemEditComponent extends BaseEditComponent<Item, ItemService> {
 
     this.serviceBranch.getAll()
       .subscribe(dbBranch => {
-        this.branchs = [...dbBranch.sort((item1, item2) => {
-          if (item1.Name > item2.Name) {
-            return 1;
-          }
-          if (item1.Name < item2.Name) {
-            return -1;
-          }
-          return 0;
-        })];
-      })
+        if (dbBranch) {
+          this.branchs = dbBranch.sort((item1, item2) => {
+            if (item1.Name > item2.Name) {
+              return 1;
+            }
+            if (item1.Name < item2.Name) {
+              return -1;
+            }
+            return 0;
+          }).slice();
+        }
+      });
   }
   // get item status
   getItemStatus(): void {

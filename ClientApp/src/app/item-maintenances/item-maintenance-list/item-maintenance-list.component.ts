@@ -54,15 +54,20 @@ export class ItemMaintenanceListComponent implements OnInit, OnDestroy {
     }
     this.serviceMainGroup.getAll()
       .subscribe(dbWorkgroup => {
-        this.wgMaintenances = [...dbWorkgroup.sort((item1, item2) => {
-          if (item1.Name > item2.Name) {
-            return 1;
-          }
-          if (item1.Name < item2.Name) {
-            return -1;
-          }
-          return 0;
-        })];
+        if (dbWorkgroup) {
+          this.wgMaintenances = dbWorkgroup.sort((item1, item2) => {
+            if (item1.Name > item2.Name) {
+              return 1;
+            }
+            if (item1.Name < item2.Name) {
+              return -1;
+            }
+            return 0;
+          }).slice();
+        } else {
+          this.wgMaintenances = new Array;
+        }
+     
       });
 
     this.buildForm();

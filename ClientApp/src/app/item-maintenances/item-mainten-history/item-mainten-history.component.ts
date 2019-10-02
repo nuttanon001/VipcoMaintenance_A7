@@ -35,7 +35,7 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
 
     serviceItemType.getAll()
       .subscribe(dbItemType => {
-        this.itemTypes = [...dbItemType];
+        this.itemTypes = dbItemType ? dbItemType.slice() : new Array;
       });
 
     this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 

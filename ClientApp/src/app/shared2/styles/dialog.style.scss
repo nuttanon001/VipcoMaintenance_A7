@@ -1,0 +1,25 @@
+.row-content {
+  min-height: 50px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  display: flex;
+  flex-direction: row;
+
+  .row-left-content {
+    display: flex;
+    order: 0;
+    width: 100%;
+    mat-form-field {
+      width: 95%;
+    }
+  }
+
+  .row-right-content {
+    display: flex;
+    order: 1;
+    width: 100%;
+    mat-form-field {
+      width: 95%;
+    }
+  }
+}

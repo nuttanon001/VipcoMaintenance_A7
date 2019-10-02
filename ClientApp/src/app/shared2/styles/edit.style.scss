@@ -1,0 +1,260 @@
+@import "~bootstrap/scss/bootstrap";
+
+.edit-container {
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0 5px 0;
+  /*height: -webkit-calc(100vh - 230px); /* google, safari */
+  /*height: calc(100vh - 230px);*/
+  // overflow:scroll;
+  @extend .mx-3;
+}
+
+.edit-container-row {
+  @extend .edit-container;
+  flex-direction: row;
+}
+
+.edit-left-content {
+  display: flex;
+  flex-grow: 0;
+  order: 1;
+  //align-content: flex-start | flex-end | center | space-between | space-around | stretch;
+  align-content: flex-start;
+}
+
+.edit-left-content-column {
+  @extend .edit-left-content;
+  flex-flow: column;
+}
+
+.edit-right-content {
+  /* We first create a flex layout context */
+  display: flex;
+  /* flex direction */
+  flex-direction: column;
+  /* flex grow 0 is upper item have container size */
+  flex-grow: 0;
+  /* flex order of position container */
+  order: 3;
+  margin-top: 15px;
+}
+
+.chlid-edit-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.edit-center-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  order: 2;
+}
+
+.edit-center-content-with-scroll {
+  @extend .edit-center-content;
+  height: 75vh;
+  overflow: scroll;
+}
+
+.top-container {
+  order: 1;
+  display: flex;
+  flex-grow: 0;
+  flex-direction: column;
+}
+
+.base-bottom-container {
+  order: 2;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  overflow: scroll;
+}
+
+.bottom-container {
+  @extend .base-bottom-container;
+  height: 70vh;
+}
+
+.bottom-container-60vh {
+  @extend .base-bottom-container;
+  height: 60vh;
+}
+
+.bottom-container-45vh {
+  @extend .base-bottom-container;
+  height: 45vh;
+}
+
+.bottom-container-40vh {
+  @extend .base-bottom-container;
+  height: 40vh;
+}
+
+.chlid-edit-container-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  text-align: center;
+}
+
+.edit-form-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.container {
+  margin: 0;
+  padding: 0;
+}
+
+.is-request-date {
+  color: red;
+  margin-left: 30px;
+}
+
+.is-request {
+  color: red;
+  margin-left: 2px;
+}
+
+label {
+  text-align: right;
+}
+
+.label-click {
+  color: blue;
+  cursor: pointer;
+}
+
+.size-img {
+  height: auto;
+  max-width: 300px;
+}
+
+.ng-valid[required], .ng-valid.required {
+  border-bottom: 2px solid #42A948; // green
+}
+
+.ng-invalid:not(form) {
+  border-bottom: 2px solid #a94442; // red
+}
+
+.no-border {
+  margin: -20px 0px,0px 0px; /*t,r,b,l*/
+  padding: 0;
+  float: left;
+  border: 0;
+  box-shadow: none; /* You may want to include this as bootstrap applies these styles too */
+}
+
+.base-label {
+  @extend .col-form-label;
+  @extend .col-form-label-sm;
+  align-items: center;
+}
+
+.my-label {
+  @extend .base-label;
+  @extend .col-sm-2;
+}
+
+
+.my-label-col-1 {
+  @extend .base-label;
+  @extend .col-sm-1;
+}
+
+.my-label-col1-right {
+  @extend .my-label-col-1;
+  text-align: right;
+  margin-right: 0px;
+  padding-right: 0px;
+}
+
+
+.my-label-col-3 {
+  @extend .base-label;
+  @extend .col-sm-3;
+}
+
+.my-input {
+  @extend .form-control;
+  @extend .form-control-sm;
+}
+
+.my-input-click {
+  @extend .my-input;
+  background-color: lightgoldenrodyellow !important;
+  cursor: pointer;
+}
+
+.my-input-read-only {
+  @extend .my-input;
+  background-color: transparent !important;
+  color: maroon !important;
+}
+
+.my-input-combobox {
+  @extend .form-control;
+  @extend .form-control-sm;
+  @extend .no-border;
+}
+
+.my-input-file {
+  @extend .m-0;
+  @extend .p-0;
+  @extend .form-control-file;
+  @extend .form-control-sm;
+}
+
+.my-form {
+  @extend .form-group;
+  @extend .row;
+  margin: 5px 0 5px 0;
+}
+
+/*:host /deep/ .ngx-datatable.material .datatable-header .datatable-header-cell {
+    text-align: center;
+    padding: .9rem 1.2rem;
+    color: rgba(0, 0, 0, 0.54);
+    vertical-align: bottom;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+:host /deep/ .ngx-datatable.material .datatable-body-row .datatable-body-cell {
+    text-align: center;
+    padding: .9rem 1.2rem;
+    color: rgba(0, 0, 0, 0.54);
+    vertical-align: bottom;
+    font-size: 12px;
+}*/
+
+.my-scrolling {
+  height: calc(100vh - 280px);
+  @extend .m-1;
+}
+
+:host /deep/ .is-cancel {
+  background-color: red;
+  // color: red !important;
+}
+
+:host /deep/ .is-wait {
+  background-color: gold;
+  // color: gold !important;
+}
+
+:host /deep/ .is-complate {
+  background-color: lightgreen;
+  // color: lightgreen !important;
+}
+
+textarea {
+  resize: none;
+}

@@ -47,7 +47,7 @@ export class ItemTableComponent extends CustomMatTableComponent<Item, ItemServic
     }
     this.serviceItemType.getAll()
       .subscribe(dbItemType => {
-        this.itemTypes = [...dbItemType];
+        this.itemTypes = dbItemType ? dbItemType.slice() : new Array;
       });
 
     // If the user changes the sort order, reset back to the first page.

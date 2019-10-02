@@ -107,8 +107,10 @@ export class TypeMaintenEditComponent
     if (this.workGroup) {
       this.serviceItemType.getAll()
         .subscribe(dbItemType => {
-          this.itemTypes = [...dbItemType.filter((item: ItemType) =>
-            item.WorkGroupId === this.workGroup.WorkGroupId)];
+          if (dbItemType) {
+            this.itemTypes = dbItemType.filter((item: ItemType) =>
+              item.WorkGroupId === this.workGroup.WorkGroupId).slice();
+          }
         });
     }
   }

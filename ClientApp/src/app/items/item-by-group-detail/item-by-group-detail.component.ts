@@ -82,7 +82,7 @@ export class ItemByGroupDetailComponent extends BaseEditComponent<ItemByGroup, I
     }
     this.serviceGroupOfWork.getAll()
       .subscribe(dbGroupOfWorks => {
-        this.groupOfWorks = [...dbGroupOfWorks];
+        this.groupOfWorks = dbGroupOfWorks ? dbGroupOfWorks.slice() : new Array;
       });
   }
 

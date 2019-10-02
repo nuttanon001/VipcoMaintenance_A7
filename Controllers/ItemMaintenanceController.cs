@@ -796,7 +796,7 @@ namespace VipcoMaintenance.Controllers
         [HttpPost("Schedule")]
         public async Task<IActionResult> Schedule([FromBody] OptionItemMaintananceSchedule Schedule)
         {
-            var message = "Data not found.";
+            var message = "Data not been found.";
             try
             {
                 Expression<Func<ItemMaintenance, bool>> expression = x =>

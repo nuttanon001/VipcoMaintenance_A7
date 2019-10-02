@@ -1,0 +1,78 @@
+<div class="master-container">
+  <form [formGroup]="reportForm" class="header">
+    <div>
+      <i class="fa fa-search" aria-hidden="true"></i>
+      <mat-form-field>
+        <input matInput placeholder="Filter By Text"
+               formControlName="Filter">
+      </mat-form-field>
+    </div>
+
+    <div>
+      <button mat-mini-fab color="warn" (click)="resetFilter()"
+              matTooltipPosition="left" matTooltip="Reset all filter">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </form>
+
+  <div *ngIf="needReset" class="loading-shade">
+    <mat-spinner *ngIf="needReset"></mat-spinner>
+  </div>
+  <div class="detail">
+    <table *ngIf="!needReset" id="table1">
+      <!-- 70vh -->
+      <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
+               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]" (onSort)="onSort()"
+               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true"
+               [scrollHeight]="tableHeight" [style]="{width:'98vw'}">
+        <ng-template pTemplate="colgroup" let-columns>
+          <colgroup>
+            <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}" />
+          </colgroup>
+        </ng-template>
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of columns" [pSortableColumn]="col.canSort ? col.field : ''"
+                [ngStyle]="{'width.px':col.width}" class="PoHeader">
+              {{col.header}}
+              <p-sortIcon *ngIf="col.canSort" [field]="col.field"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+          <tr>
+            <td *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
+              <ng-container *ngIf="col.field !== 'ItemCancels';else listBlock">
+                <ng-container [ngSwitch]="col.format">
+                  <span *ngSwitchCase="1">{{rowData[col.field] | number}}</span>
+                  <span *ngSwitchCase="2">{{rowData[col.field] | date:'dd/MM/yy'}}</span>
+                  <span *ngSwitchDefault [innerHtml]="rowData[col.field] || '-'"></span>
+                </ng-container>
+              </ng-container>
+              <ng-template #listBlock>
+                <ol type="I">
+                  <li *ngFor="let subItem of rowData[col.field];"
+                      (click)="onClickSubItem(subItem)"
+                      class="text-"
+                      [ngClass]="{'text-success': data.danger === 4,
+                          'text-success': data.Status === 3,
+                          'text-warning' : data.Status === 2 ,
+                          'text-secondary' : data.Status === 1}">
+                    <span>
+                      <i style="color:steelblue;">
+                        <strong>{{subItem.CancelNo}}</strong>
+                        <p>{{subItem.ItemNo}} - {{subItem.ItemName}}</p>
+                      </i>
+                    </span>
+                  </li>
+                </ol>
+              </ng-template>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </table>
+  </div>
+</div>
+

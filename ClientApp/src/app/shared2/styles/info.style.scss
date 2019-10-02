@@ -1,0 +1,36 @@
+.form-container-column {
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+
+  mat-form-field {
+    width: 45%;
+    min-height:50px;
+    margin:5px;
+  }
+}
+
+.form-container-row {
+  @extend .form-container-column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.click-input {
+  cursor: pointer;
+}
+
+.material-icons {
+  font-size: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.headers-align .mat-expansion-panel-header-description {
+  justify-content: space-between;
+  align-items: center;
+  min-height:33px;
+}

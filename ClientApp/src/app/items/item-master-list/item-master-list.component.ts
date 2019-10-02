@@ -56,7 +56,9 @@ export class ItemMasterListComponent implements OnInit, OnDestroy {
     }
     this.serviceItemType.getAll()
       .subscribe(dbItemType => {
-        this.itemTypes = [...dbItemType];
+        if (dbItemType) {
+          this.itemTypes = dbItemType.slice();
+        }
       });
 
     this.buildForm();

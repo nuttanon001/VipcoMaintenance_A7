@@ -1,0 +1,35 @@
+
+@media (max-width: 767px) {
+    /* On small screens, the nav menu spans the full width of the screen. Leave a space for it. */
+    .body-content {
+        padding-top: 50px;
+    }
+}
+
+body {
+    /*font-family: Roboto, 'Helvetica Neue', sans-serif;*/
+    font-family: Roboto, 'Helvetica Neue', monospace;
+    font-size: 8pt;
+}
+
+.app-layout {
+    width:100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.navigation {
+    order: 1;
+    flex-grow: 0;
+
+    @media print {
+        display: none;
+    }
+}
+
+.main-content {
+  order: 2;
+  flex-grow: 1;
+  margin: 7px;
+}
+

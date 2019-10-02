@@ -14,6 +14,7 @@ import { LoginComponent } from './users/login/login.component';
 import { RegisterComponent } from './users/register/register.component';
 // Modules
 import { CustomMaterialModule } from "./shared/customer-material/customer-material.module";
+import { CustomMaterialModule as CustomMaterialAlias } from "./shared2/customer-material.module";
 import { DialogsModule } from "./dialogs/dialog.module";
 import { SharedModule } from "./shared/shared.module";
 // Serices
@@ -49,6 +50,7 @@ import { ErrorInterceptorService } from './core/auth/error-interceptor.service';
     SharedModule,
     DialogsModule,
     CustomMaterialModule,
+    CustomMaterialAlias,
     // Router
     RouterModule.forRoot([
       { path: "", redirectTo: "home", pathMatch: "full" },
@@ -70,6 +72,11 @@ import { ErrorInterceptorService } from './core/auth/error-interceptor.service';
         path: "item-type",
         loadChildren: './item-types/item-type.module#ItemTypeModule',
         canActivate: [AuthGuard],
+      },
+      {
+        path: "obsolete",
+        loadChildren: './obsolete-items/obsolete-item.module#ObsoleteItemModule',
+        canActivate: [AuthGuard], 
       },
       {
         path: "work-group",

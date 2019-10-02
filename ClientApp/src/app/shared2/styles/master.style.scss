@@ -1,0 +1,93 @@
+@import "../../../sass/styles.scss";
+
+@mixin block-master {
+  display: flex;
+  flex-direction: column;
+
+  .child-container {
+    display: flex;
+    flex-direction: row;
+
+    .left-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 0;
+      order: 1;
+      align-content: flex-start;
+    }
+
+    .center-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      order: 2;
+      margin-right: 7px;
+      margin-left: 7px;
+    }
+
+    .right-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 0;
+      order: 3;
+      margin-top: 15px;
+    }
+  }
+}
+
+/* Structure */
+.master-container {
+  /*height: $master-vh;
+  width: $master-vw;*/
+  @include block-master;
+}
+
+.master-dialog-vh {
+  width: $dialog-vw;
+  height: $dialog-vh;
+  @include block-master;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width:100%;
+  height:100%;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media(max-width: 600px) {
+
+  .master-container, .master-dialog-vh {
+
+    .child-container {
+      display: flex;
+      flex-direction: column;
+
+      .center-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        order: 2;
+        margin-right: 0px;
+        margin-left: 0px;
+      }
+
+      .right-content {
+        display: flex;
+        flex-direction: row;
+        flex-grow: 0;
+        order: 1;
+        margin-top:0px;
+        margin-bottom: 5px;
+      }
+    }
+  }
+}

@@ -72,7 +72,7 @@ export class ItemByGroupMasterComponent
                 GroupMis: value.GroupMis,
                 GroupMisString: value.GroupMisString,
                 ItemCount: value.ItemCount,
-                Items: [...dbData]
+                Items: dbData.slice()
               };
               setTimeout(() => this.comService.toChildEdit(this.displayValue), 1000);
               return;
