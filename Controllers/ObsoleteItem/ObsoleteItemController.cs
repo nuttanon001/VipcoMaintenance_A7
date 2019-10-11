@@ -610,7 +610,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
         public async Task<IActionResult> GetAttach(int key)
         {
             var AttachIds = await this.repositoryHasAttach.GetToListAsync(
-                x => x.AttachFileId, x => x.ObsoleteItemHasAttachId == key);
+                x => x.AttachFileId, x => x.ObsoleteItemId == key,x => x.OrderByDescending(z => z.ObsoleteItemHasAttachId));
             if (AttachIds != null)
             {
                 var DataAttach = await this.repositoryAttach.GetToListAsync(x => x, x => AttachIds.Contains(x.AttachFileId));

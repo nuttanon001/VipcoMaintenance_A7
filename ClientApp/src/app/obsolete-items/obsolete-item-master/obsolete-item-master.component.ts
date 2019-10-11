@@ -53,10 +53,8 @@ export class ObsoleteItemMasterComponent
   // on detail view
   onDetailView(value?: { data: ObsoleteItem, option: number }): void {
     if (value) {
-
       // debug here
-      console.log(JSON.stringify(value),JSON.stringify(this.user));
-
+      // console.log(JSON.stringify(value),JSON.stringify(this.user));
       if (value.option === 0) {
         this.dialogsService.dialogInfoObsoleteItem(this.viewContainerRef, {
           info: value.data,
@@ -67,6 +65,18 @@ export class ObsoleteItemMasterComponent
         if (value.data.Status === StatusObsolete.Wait || value.data.Status === StatusObsolete.ApproveLevel1) {
           // Only sub level 1
           if (this.user.SubLevel !== 1) {
+            this.dialogsService.error("Access Deny", "Access is restricted", this.viewContainerRef).subscribe();
+            return;
+          }
+        } else if (value.data.Status === StatusObsolete.ApproveLevel2) {
+          // Only sub level 2
+          if (this.user.SubLevel !== 2) {
+            this.dialogsService.error("Access Deny", "Access is restricted", this.viewContainerRef).subscribe();
+            return;
+          }
+        } else if (value.data.Status === StatusObsolete.ApproveLevel3 || value.data.Status === StatusObsolete.FixOnly) {
+          // Only sub level 3
+          if (this.user.SubLevel !== 3) {
             this.dialogsService.error("Access Deny", "Access is restricted", this.viewContainerRef).subscribe();
             return;
           }
@@ -82,14 +92,16 @@ export class ObsoleteItemMasterComponent
       } else if (value.option === 2) {
         this.displayValue = value.data;
         // Check status can edit if not readonly
-
+        /*
         if (value.data.Status === StatusObsolete.Wait || value.data.Status === StatusObsolete.ApproveLevel1) {
           // Only sub level 2
           if (this.user.SubLevel !== 2) {
             this.dialogsService.error("Access Deny", "Access is restricted", this.viewContainerRef).subscribe();
             return;
           }
-        } else if (value.data.Status === StatusObsolete.ApproveLevel2) {
+        } else
+        */
+        if (value.data.Status === StatusObsolete.ApproveLevel2) {
           // Only sub level 2
           if (this.user.SubLevel !== 2) {
             this.dialogsService.error("Access Deny", "Access is restricted", this.viewContainerRef).subscribe();

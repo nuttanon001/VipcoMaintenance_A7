@@ -9,13 +9,14 @@ import { Scroll } from 'src/app/shared2/basemode/scroll.model';
 import { Format } from 'src/app/shared2/basemode/my-colmun.model';
 import { ScrollData } from 'src/app/shared2/basemode/scroll-data.model';
 import { ObsoleteItem, StatusObsolete } from '../shared/obsolete-item.model';
+import { OptionField } from 'src/app/shared2/dynamic-form/field-config.model';
 // Services
 import { AuthService } from 'src/app/core/auth/auth.service';
 import { ObsoleteItemService } from '../shared/obsolete-item.service';
 import { DialogsService } from 'src/app/dialogs/shared/dialogs.service';
 // Rxjs
-import { switchMap } from 'rxjs/operators';
-import { OptionField } from 'src/app/shared2/dynamic-form/field-config.model';
+import { of, empty } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-obsolete-item-schedule',
@@ -188,23 +189,28 @@ export class ObsoleteItemScheduleComponent
           this.onClickSubItem(update,2);
 
         } else if (status === 2) {
-          if (update.Status === StatusObsolete.Wait || update.Status === StatusObsolete.ApproveLevel1) {
-            update.Status = StatusObsolete.Cancel;
-          } else if (update.Status === StatusObsolete.ApproveLevel2) {
-            update.Status = StatusObsolete.FixOnly;
-            update.ApproveToFix = true;
-            update.ApproveToObsolete = false;
-          }
-
-          // Update status to api
-          this.service.updateStatus(update)
-            .pipe(switchMap((data) => {
+          //
+          this.serviceDialogs.confirm("System Messsage", "Do you want to delete this item.", this.viewCon)
+            .pipe(switchMap((result1: boolean) => {
+              if (result1) {
+                if (update.Status === StatusObsolete.Wait || update.Status === StatusObsolete.ApproveLevel1) {
+                  update.Status = StatusObsolete.Cancel;
+                } else if (update.Status === StatusObsolete.ApproveLevel2) {
+                  update.Status = StatusObsolete.FixOnly;
+                  update.ApproveToFix = true;
+                  update.ApproveToObsolete = false;
+                }
+                return this.service.updateStatus(update);
+              } else {
+                return empty;
+              }
+            }), map((data) => {
               if (data) {
                 return this.serviceDialogs.context("System Message", "Update Complated.", this.viewCon);
               } else {
                 return this.serviceDialogs.error("System Message", "Update Failed.", this.viewCon);
               }
-            })).subscribe();
+            })).subscribe(() => this.resetFilter());
         }
       }
     }

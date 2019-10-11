@@ -71,7 +71,7 @@
                     <span (click)="onClickSubItem(subItem,0)" style="cursor:pointer">
                       <strong>{{subItem.ObsoleteNo || 'Unknow'}}</strong>
                       <br />
-                      {{subItem.ItemCode || ''}}{{subItem.ItemName ? ' | ' + subItem.ItemName : ''}}
+                      Code: {{subItem.ItemCode || ''}}{{subItem.ItemName ? ' | Name: ' + subItem.ItemName : ''}}
                       || <i class="text-primary">Status {{subItem.StatusString}}</i> 
                     </span>
                     <br />

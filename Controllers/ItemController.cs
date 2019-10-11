@@ -448,7 +448,7 @@ namespace VipcoMaintenance.Controllers
                                         LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[EmployeeGroupMIS] wg
                                             ON [im].[GroupMis] = [wg].[GroupMIS]
                                         LEFT JOIN [dbo].ObsoleteItem ob
-                                            ON [im].[ItemId] = [ob].[ItemId]",
+                                            ON [im].[ItemId] = [ob].[ItemId] AND [ob].[Status] != 6",
                         WhereCommand = sWhere,
                         OrderCommand = sSort
                     };
