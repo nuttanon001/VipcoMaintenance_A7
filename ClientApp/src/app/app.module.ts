@@ -112,6 +112,11 @@ import { ErrorInterceptorService } from './core/auth/error-interceptor.service';
         loadChildren: "./inventories/inventory.module#InventoriyModule",
         canActivate: [AuthGuard],
       },
+      {
+        path: "allowed-employee",
+        loadChildren: "./allowed-employees/allowed-employee.module#AllowedEmployeeModule",
+        canActivate: [AuthGuard]
+      },
       { path: "**", redirectTo: "home" },
     ]),
   ],

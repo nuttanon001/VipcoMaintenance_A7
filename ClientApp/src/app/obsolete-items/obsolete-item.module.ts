@@ -13,6 +13,7 @@ import { ObsoleteItemRoutingModule } from './obsolete-item-routing.module';
 import { CustomMaterialModule } from '../shared2/customer-material.module';
 // Services
 import { ObsoleteItemCommunicateService } from './shared/obsolete-item-communicate.service';
+import { ItemService } from '../items/shared/item.service';
 
 @NgModule({
   imports: [
@@ -30,6 +31,7 @@ import { ObsoleteItemCommunicateService } from './shared/obsolete-item-communica
     ObsoleteItemScheduleComponent,
   ],
   providers: [
+    ItemService,
     ObsoleteItemCommunicateService
   ]
 })

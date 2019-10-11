@@ -17,6 +17,8 @@ namespace VipcoMaintenance.ViewModels
         public bool? Reload { get; set; }
         public string Where { get; set; }
         public int? WhereId { get; set; }
+        public int? WhereId2 { get; set; }
+        public int? WhereId3 { get; set; }
         public int? Where2Id { get; set; }
         public int? TotalRow { get; set; }
         public DateTime? SDate { get; set; }

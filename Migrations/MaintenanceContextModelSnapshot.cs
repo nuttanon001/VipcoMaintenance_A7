@@ -15,7 +15,7 @@ namespace VipcoMaintenance.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
@@ -309,6 +309,107 @@ namespace VipcoMaintenance.Migrations
                     b.HasIndex("SparePartId");
 
                     b.ToTable("MovementStockSp");
+                });
+
+            modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.ObsoleteItem", b =>
+                {
+                    b.Property<int>("ObsoleteItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Approve1")
+                        .HasMaxLength(50);
+
+                    b.Property<DateTimeOffset?>("Approve1Date");
+
+                    b.Property<string>("Approve1NameThai")
+                        .HasMaxLength(200);
+
+                    b.Property<string>("Approve2")
+                        .HasMaxLength(50);
+
+                    b.Property<DateTimeOffset?>("Approve2Date");
+
+                    b.Property<string>("Approve2NameThai")
+                        .HasMaxLength(200);
+
+                    b.Property<bool?>("ApproveToFix");
+
+                    b.Property<bool?>("ApproveToObsolete");
+
+                    b.Property<string>("ComplateBy")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("ComplateByNameThai")
+                        .HasMaxLength(200);
+
+                    b.Property<DateTime?>("CreateDate");
+
+                    b.Property<string>("Creator")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500);
+
+                    b.Property<double?>("FixedAsset");
+
+                    b.Property<int?>("ItemId");
+
+                    b.Property<DateTime?>("ModifyDate");
+
+                    b.Property<string>("Modifyer")
+                        .HasMaxLength(50);
+
+                    b.Property<DateTimeOffset?>("ObsoleteDate");
+
+                    b.Property<string>("ObsoleteNo")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(500);
+
+                    b.Property<string>("Request")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("RequestNameThai")
+                        .HasMaxLength(200);
+
+                    b.Property<int?>("Status");
+
+                    b.HasKey("ObsoleteItemId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ObsoleteItem");
+                });
+
+            modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.ObsoleteItemHasAttach", b =>
+                {
+                    b.Property<int>("ObsoleteItemHasAttachId")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("AttachFileId");
+
+                    b.Property<DateTime?>("CreateDate");
+
+                    b.Property<string>("Creator")
+                        .HasMaxLength(50);
+
+                    b.Property<int?>("FileType");
+
+                    b.Property<DateTime?>("ModifyDate");
+
+                    b.Property<string>("Modifyer")
+                        .HasMaxLength(50);
+
+                    b.Property<int?>("ObsoleteItemId");
+
+                    b.HasKey("ObsoleteItemHasAttachId");
+
+                    b.HasIndex("ObsoleteItemId");
+
+                    b.ToTable("ObsoleteItemHasAttach");
                 });
 
             modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.Permission", b =>
@@ -708,6 +809,20 @@ namespace VipcoMaintenance.Migrations
                     b.HasOne("VipcoMaintenance.Models.Maintenances.SparePart", "SparePart")
                         .WithMany("MovementStockSps")
                         .HasForeignKey("SparePartId");
+                });
+
+            modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.ObsoleteItem", b =>
+                {
+                    b.HasOne("VipcoMaintenance.Models.Maintenances.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+                });
+
+            modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.ObsoleteItemHasAttach", b =>
+                {
+                    b.HasOne("VipcoMaintenance.Models.Maintenances.ObsoleteItem", "ObsoleteItem")
+                        .WithMany()
+                        .HasForeignKey("ObsoleteItemId");
                 });
 
             modelBuilder.Entity("VipcoMaintenance.Models.Maintenances.ReceiveStockSp", b =>

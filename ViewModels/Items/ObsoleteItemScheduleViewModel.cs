@@ -9,6 +9,6 @@ namespace VipcoMaintenance.ViewModels.Items
     public class ObsoleteItemScheduleViewModel
     {
         public DateTime ObsoleteDate { get; set; }
-        public List<ObsoleteItem> ObsoleteItems { get; set; } = new List<ObsoleteItem>();
+        public List<ObsoleteItemViewModel> ObsoleteItems { get; set; } = new List<ObsoleteItemViewModel>();
     }
 }

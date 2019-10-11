@@ -15,7 +15,9 @@
       </ng-template>
       <input type="file" multiple (change)="onUpdateAttach($event)">
       <hr />
-      <img [src]="ItemImage" class="size-img" />
+      <ng-container *ngIf="ItemImage">
+        <img [src]="ItemImage" class="size-img" />
+      </ng-container>
     </mat-step>
 
   </mat-horizontal-stepper>

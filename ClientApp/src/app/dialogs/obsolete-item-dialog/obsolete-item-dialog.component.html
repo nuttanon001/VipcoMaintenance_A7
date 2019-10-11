@@ -1,0 +1,17 @@
+<div class="master-dialog-vh">
+  <H5 style="color:cadetblue">Obsolete Item Information</H5>
+  <div class="child-container">
+    <div class="center-content">
+      <div *ngIf="InfoValue">
+        <app-obsolete-item-info-dialog [InfoValue]="InfoValue"></app-obsolete-item-info-dialog>
+      </div>
+    </div>
+
+    <div class="right-content">
+      <button mat-mini-fab color="warn" (click)="onCancelClick()"
+              matTooltip="close dialog">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

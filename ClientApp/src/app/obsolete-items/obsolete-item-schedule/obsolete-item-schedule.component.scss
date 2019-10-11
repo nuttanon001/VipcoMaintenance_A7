@@ -1,1 +1,9 @@
-@import "../../shared2/styles/master.style.scss";
+@import "../../shared2/styles/schedule.style.scss";
+
+.master-container {
+  display: flex;
+  flex-direction: column;
+  width: calc(100vw - 150px);
+  height: -webkit-calc(100vh - 150px); /* google, safari */
+  height: calc(100vh - 150px);
+}

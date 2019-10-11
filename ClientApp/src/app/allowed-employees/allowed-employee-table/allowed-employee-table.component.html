@@ -1,0 +1,81 @@
+<div class="mat-elevation-z8">
+  <div *ngIf="isLoadingResults" class="loading-shade">
+    <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
+  </div>
+  <div class="mx-2">
+    <search-box2></search-box2>
+  </div>
+  <mat-table #table [dataSource]="dataSource" matSort matSortDisableClear>
+    <!-- Generic column definition -->
+    <ng-container *ngFor="let column of columns" [matColumnDef]="column.columnField">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.columnName }}</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <span class="mobile-label">{{ column.columnName }}:</span>
+        {{ column.cell(row) }}
+      </mat-cell>
+      <!--Ex Else-->
+      <!--<ng-container *ngIf="column.columnField !== 'StatusWorkPermit';else ElseBlock">
+        <mat-cell *matCellDef="let row">{{ column.cell(row) }}</mat-cell>
+      </ng-container>
+      <ng-template #ElseBlock>
+        <mat-cell *matCellDef="let row"
+                  [ngClass]="{'is-wait': row.StatusWorkPermit === 1,
+                              'is-complate': row.StatusWorkPermit === 2,
+                              'is-cancel': row.StatusWorkPermit === 3}">
+          <span class="m-2">{{ column.cell(row) }}</span>
+        </mat-cell>
+      </ng-template>-->
+    </ng-container>
+
+    <!-- Select Column -->
+    <!--<ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? selection.toggle(row) : null"
+                      [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>-->
+    <!-- Command Column -->
+    <ng-container matColumnDef="Command">
+      <mat-header-cell *matHeaderCellDef>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <div>
+          <button mat-icon-button color="warn" (click)="onActionClick(row,2)"
+                  [disabled]="readOnly" matTooltip="ReadOnly">
+            <mat-icon>find_in_page</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" (click)="onActionClick(row,1)"
+                  [disabled]="readOnly" matTooltip="Edit">
+            <mat-icon>create</mat-icon>
+          </button>
+
+          <button mat-icon-button color="primary" (click)="onActionClick(row,3)"
+                  [disabled]="readOnly" matTooltip="Copy">
+            <mat-icon>collections</mat-icon>
+          </button>
+
+          <button mat-icon-button color="accent" (click)="onActionClick(row,0)"
+                  [disabled]="readOnly" matTooltip="Delete">
+            <mat-icon>clear</mat-icon>
+          </button>
+        </div>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [ngClass]="{'mat-row-highlight': selectedRow === row}"
+             (click)="selection.toggle(row)"
+             style="cursor:pointer"></mat-row>
+  </mat-table>
+  <mat-paginator #paginator
+                 [pageSize]="50"
+                 [pageSizeOptions]="[50, 100, 150]"
+                 [length]="resultsLength"
+                 [showFirstLastButtons]="true">
+  </mat-paginator>
+</div>

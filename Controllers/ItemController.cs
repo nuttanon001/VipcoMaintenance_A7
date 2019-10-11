@@ -31,6 +31,8 @@ namespace VipcoMaintenance.Controllers
         private readonly IRepositoryMachineMk2<EmployeeGroupMis> repositoryGroupMis;
         private readonly IRepositoryMaintenanceMk2<ItemType> repositoryType;
         private readonly IRepositoryMaintenanceMk2<RequireMaintenance> repositoryRequireMaintenance;
+        // IRepositoryDapper
+        private readonly IRepositoryDapper<ItemViewModel> dapper;
         private readonly ExcelWorkBookService excelWorkBookService;
         private readonly IHelperService helperService;
         private readonly IHostingEnvironment hosting;
@@ -40,6 +42,7 @@ namespace VipcoMaintenance.Controllers
             IRepositoryMachineMk2<EmployeeGroupMis> repoGroupMis,
             IRepositoryMaintenanceMk2<ItemType> repoType,
             IRepositoryMaintenanceMk2<RequireMaintenance> repoRequireMain,
+            IRepositoryDapper<ItemViewModel> repoDapper,
             ExcelWorkBookService excelWorkBook,
             IHelperService helper,
             IHostingEnvironment hosting,
@@ -51,6 +54,8 @@ namespace VipcoMaintenance.Controllers
             // Repository Maintenance
             this.repositoryType = repoType;
             this.repositoryRequireMaintenance = repoRequireMain;
+            // Dapper
+            this.dapper = repoDapper;
             // Helper
             this.excelWorkBookService = excelWorkBook;
             this.helperService = helper;
@@ -88,6 +93,11 @@ namespace VipcoMaintenance.Controllers
 
                 if (!string.IsNullOrEmpty(Scroll.Where))
                     predicate = predicate.And(p => p.Creator == Scroll.Where);
+
+                if (Scroll.Where2Id.HasValue)
+                {
+                    predicate = predicate.And(p => p.ItemStatus != ItemStatus.Cancel);
+                }
 
                 if (Scroll.SDate.HasValue)
                     predicate = predicate.And(p => p.RegisterDate.Value.Date >= Scroll.SDate.Value.Date);
@@ -341,6 +351,121 @@ namespace VipcoMaintenance.Controllers
                 Message = $"{ex.ToString()}";
             }
             return BadRequest(new { Message });
+        }
+
+        // POST: api/ReturnHeader/GetScroll
+        [HttpPost("GetScrollMk2")]
+        public async Task<IActionResult> GetScrollMk2([FromBody] ScrollViewModel Scroll)
+        {
+            var message = "Data not been found.";
+            try
+            {
+                if (Scroll != null)
+                {
+                    string sWhere = "";
+                    string sSort = "";
+
+                    #region Where
+
+                    // Filter
+                    var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                                        : Scroll.Filter.Split(null);
+
+                    foreach (string temp in filters)
+                    {
+                        if (string.IsNullOrEmpty(temp))
+                            continue;
+
+                        string keyword = temp.ToLower();
+                        sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") +
+                                                        $@"(LOWER([im].[ItemCode]) LIKE '%{keyword}%'
+                                                        OR LOWER([im].[Name]) LIKE '%{keyword}%'
+                                                        OR LOWER([ty].[Name]) LIKE '%{keyword}%')";
+                    }
+
+                    // Where Return Type
+                    if (Scroll.WhereId2.HasValue)
+                    {
+                        sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[im].[ItemTypeId] = {Scroll.WhereId2}";
+                    }
+
+                    // Where Obsolete Item
+                    if (Scroll.WhereId3.HasValue)
+                    {
+                        sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[ob].[ItemId] IS NULL";
+                    }
+
+                    #endregion
+
+                    #region Sort
+
+                    switch (Scroll.SortField)
+                    {
+                        case "ItemCode":
+                            if (Scroll.SortOrder == -1)
+                                sSort = $"[im].[ItemCode] DESC";//QueryData = QueryData.OrderByDescending(x => x.PAYM.Pshnum0);
+                            else
+                                sSort = $"[im].[ItemCode] ASC";//QueryData = QueryData.OrderBy(x => x.PAYM.Pshnum0);
+                            break;
+
+                        case "Name":
+                            if (Scroll.SortOrder == -1)
+                                sSort = $"[im].[Name] DESC";//QueryData = QueryData.OrderByDescending(x => x.PAYM.Pjth0);
+                            else
+                                sSort = $"[im].[Name] ASC";//QueryData = QueryData.OrderBy(x => x.PAYM.Pjth0);
+                            break;
+
+                        case "ItemTypeString":
+                            if (Scroll.SortOrder == -1)
+                                sSort = $"[ty].[Name] DESC";//QueryData = QueryData.OrderByDescending(x => x.PAYM.Prqdat0);
+                            else
+                                sSort = $"[ty].[Name] ASC";//QueryData = QueryData.OrderBy(x => x.PAYM.Prqdat0);
+                            break;
+
+                        default:
+                            sSort = $"[im].[ItemCode] ASC";//QueryData = QueryData.OrderByDescending(x => x.PAYM.Prqdat0);
+                            break;
+                    }
+
+                    #endregion
+
+                    var sqlCommnad = new SqlCommandViewModel()
+                    {
+                        SelectCommand = $@" [im].[ItemCode]
+                                        ,[im].[Name]
+                                        ,[im].[Model]
+                                        ,[im].[ItemId]
+                                        ,[im].[Property]
+                                        ,[im].[EmpResponsible]
+                                        ,[im].[GroupMis]
+                                        ,[im].[RegisterDate]
+                                        ,[im].[CancelDate]
+                                        ,[ty].[Name] AS [ItemTypeString]
+                                        ,[wg].[GroupDesc] AS [GroupMisString]",
+                        FromCommand = $@" [dbo].[Item] im
+                                        LEFT OUTER JOIN [dbo].[ItemType] ty
+                                            ON [im].[ItemTypeId] = [ty].[ItemTypeId]
+                                        LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[EmployeeGroupMIS] wg
+                                            ON [im].[GroupMis] = [wg].[GroupMIS]
+                                        LEFT JOIN [dbo].ObsoleteItem ob
+                                            ON [im].[ItemId] = [ob].[ItemId]",
+                        WhereCommand = sWhere,
+                        OrderCommand = sSort
+                    };
+
+                    var result = await this.dapper.GetEntitiesAndTotal(sqlCommnad, new { Skip = Scroll.Skip ?? 0, Take = Scroll.Take ?? 50 });
+                    var dbData = result.Entities;
+                    Scroll.TotalRow = result.TotalRow;
+
+                    return new JsonResult(new ScrollDataViewModel<ItemViewModel>(Scroll, dbData), this.DefaultJsonSettings);
+                }
+            }
+            catch (Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return BadRequest(new { message });
         }
 
         // POST: api/Item/GetScroll

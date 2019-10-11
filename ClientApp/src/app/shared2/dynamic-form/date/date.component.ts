@@ -1,13 +1,17 @@
 import { Component, OnInit } from "@angular/core";
 import { FormGroup } from "@angular/forms";
 import { FieldConfig } from "../field-config.model";
+import { Subscription } from 'rxjs';
+import { ShareService } from '../../share.service';
+import { filter } from "rxjs/operators";
 
 // Component
 @Component({
   selector: "app-date",
   template: `
   <mat-form-field [formGroup]="group" class="app-date">
-    <input matInput [matDatepicker]="picker" [formControlName]="field.name" [placeholder]="field.label" [readonly]="field.readonly">
+    <input matInput [matDatepicker]="picker" [formControlName]="field.name" [placeholder]="field.label"
+          [readonly]="field.readonly">
     <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="field.readonly"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
     <mat-hint></mat-hint>
@@ -51,6 +55,29 @@ import { FieldConfig } from "../field-config.model";
 export class DateComponent implements OnInit {
   field: FieldConfig;
   group: FormGroup;
-  constructor() { }
-  ngOnInit() { }
+  subscription: Subscription;
+
+  constructor(
+    private serviceShared: ShareService
+  ) { }
+
+  ngOnInit() {
+    this.subscription = this.serviceShared.toChild$.pipe(filter((item) => this.field.name == item.name)).
+      subscribe(item => {
+        // console.log(item);
+        // Patch Value
+        if (this.field.continue) {
+          const value = this.group.get(this.field.name).value;
+          this.group.get(this.field.name).patchValue((value ? value + "," : "") + item.value);
+        } else {
+          this.group.get(this.field.name).patchValue(item.value);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
 }

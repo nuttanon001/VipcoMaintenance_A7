@@ -243,4 +243,21 @@ export class ItemEditComponent extends BaseEditComponent<Item, ItemService> {
     }
     myReader.readAsDataURL(file);
   }
+  // open ObsoleteItem
+  openObsoleteItem(): void {
+    if (this.editValue) {
+      if (this.editValue.ItemStatus === ItemStatus.Cancel) {
+        this.serviceDialogs.dialogInfoObsoleteItem(this.viewContainerRef,
+          {
+            info:
+            {
+              ObsoleteItemId: 0,
+              ItemId: this.editValue.ItemId
+            },
+            multi: false,
+            option: false
+          }).subscribe();
+      }
+    }
+  }
 }

@@ -9,6 +9,17 @@
     </div>
 
     <div>
+      <mat-form-field>
+        <mat-select placeholder="Selecte filter status" formControlName="WhereId">
+          <mat-option>Without cancel status</mat-option>
+          <mat-option *ngFor="let item of option" [value]="item.value" style="margin-left:5px;">
+            {{item.label}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div>
       <button mat-mini-fab color="warn" (click)="resetFilter()"
               matTooltipPosition="left" matTooltip="Reset all filter">
         <mat-icon>clear</mat-icon>
@@ -25,7 +36,7 @@
       <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
                [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]" (onSort)="onSort()"
                [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true"
-               [scrollHeight]="tableHeight" [style]="{width:'98vw'}">
+               [scrollHeight]="tableHeight" [style]="{width:'95vw'}">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
             <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}" />
@@ -43,7 +54,7 @@
         <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
           <tr>
             <td *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
-              <ng-container *ngIf="col.field !== 'ItemCancels';else listBlock">
+              <ng-container *ngIf="col.field !== 'ObsoleteItems';else listBlock">
                 <ng-container [ngSwitch]="col.format">
                   <span *ngSwitchCase="1">{{rowData[col.field] | number}}</span>
                   <span *ngSwitchCase="2">{{rowData[col.field] | date:'dd/MM/yy'}}</span>
@@ -53,18 +64,35 @@
               <ng-template #listBlock>
                 <ol type="I">
                   <li *ngFor="let subItem of rowData[col.field];"
-                      (click)="onClickSubItem(subItem)"
-                      class="text-"
-                      [ngClass]="{'text-success': data.danger === 4,
-                          'text-success': data.Status === 3,
-                          'text-warning' : data.Status === 2 ,
-                          'text-secondary' : data.Status === 1}">
-                    <span>
-                      <i style="color:steelblue;">
-                        <strong>{{subItem.CancelNo}}</strong>
-                        <p>{{subItem.ItemNo}} - {{subItem.ItemName}}</p>
-                      </i>
+                      [ngClass]="{'text-danger': subItem.Status === 6 ,
+                          'text-success': subItem.Status === 4 ,
+                          'text-warning' : subItem.Status === 3 ,
+                          'text-secondary' : subItem.Status === 1 || subItem.Status === 2}">
+                    <span (click)="onClickSubItem(subItem,0)" style="cursor:pointer">
+                      <strong>{{subItem.ObsoleteNo || 'Unknow'}}</strong>
+                      <br />
+                      {{subItem.ItemCode || ''}}{{subItem.ItemName ? ' | ' + subItem.ItemName : ''}}
+                      || <i class="text-primary">Status {{subItem.StatusString}}</i> 
                     </span>
+                    <br />
+                    <span>
+                      <button mat-mini-fab color="accent" (click)="onClickSubItem(subItem,1)" matTooltip="Edit">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      &nbsp;&nbsp;&nbsp;
+                      <button mat-mini-fab color="primary" (click)="onChangeStatus(subItem,1)" matTooltip="Approve">
+                        <mat-icon>done</mat-icon>
+                      </button>
+                      &nbsp;&nbsp;&nbsp;
+                      <button mat-mini-fab color="warn" (click)="onChangeStatus(subItem,2)" matTooltip="Cancel">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                      &nbsp;&nbsp;&nbsp;
+                      <button mat-mini-fab color="primary" (click)="onPrint(subItem)" matTooltip="Print">
+                        <mat-icon>print</mat-icon>
+                      </button>
+                    </span>
+                    <br/>
                   </li>
                 </ol>
               </ng-template>

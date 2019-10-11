@@ -9,6 +9,8 @@ import "hammerjs";
 import { DialogsService } from "./shared/dialogs.service";
 // modules
 import { CustomMaterialModule } from "../shared/customer-material/customer-material.module";
+import { CustomMaterialModule as CustomMaterialAlias } from "../shared2/customer-material.module";
+import { SharedModule as SharedModuleAlias } from "../shared2/shared.module";
 // components
 import {
   ConfirmDialog, ContextDialog,
@@ -25,6 +27,10 @@ import { ItemMaintenDialogComponent } from './item-mainten-dialog/item-mainten-d
 import { ItemMaintenViewDialogComponent } from './item-mainten-dialog/item-mainten-view-dialog.component';
 import { ItemMaintenModule } from "../item-maintenances/item-mainten.module";
 import { SharedModule } from "../shared/shared.module";
+import { ObsoleteItemDialogComponent } from './obsolete-item-dialog/obsolete-item-dialog.component';
+import { ObsoleteItemInfoDialogComponent } from './obsolete-item-dialog/obsolete-item-info-dialog/obsolete-item-info-dialog.component';
+import { ItemMk2DialogComponent } from './item-mk2-dialog/item-mk2-dialog.component';
+import { ItemMk2TableComponent } from './item-mk2-dialog/item-mk2-table/item-mk2-table.component';
 
 @NgModule({
   imports: [
@@ -34,7 +40,9 @@ import { SharedModule } from "../shared/shared.module";
     ReactiveFormsModule,
     // customer Module
     SharedModule,
+    SharedModuleAlias,
     CustomMaterialModule,
+    CustomMaterialAlias,
   ],
   declarations: [
     ErrorDialog,
@@ -54,7 +62,11 @@ import { SharedModule } from "../shared/shared.module";
     SparePartDialogComponent,
     SparePartTableDialogComponent,
     ItemMaintenDialogComponent,
-    ItemMaintenViewDialogComponent
+    ItemMaintenViewDialogComponent,
+    ObsoleteItemDialogComponent,
+    ObsoleteItemInfoDialogComponent,
+    ItemMk2DialogComponent,
+    ItemMk2TableComponent
   ],
   providers: [
     DialogsService,
@@ -77,7 +89,11 @@ import { SharedModule } from "../shared/shared.module";
     SparePartDialogComponent,
     SparePartTableDialogComponent,
     ItemMaintenDialogComponent,
-    ItemMaintenViewDialogComponent
+    ItemMaintenViewDialogComponent,
+    ObsoleteItemDialogComponent,
+    ObsoleteItemInfoDialogComponent,
+    ItemMk2DialogComponent,
+    ItemMk2TableComponent
   ],
 })
 export class DialogsModule { }

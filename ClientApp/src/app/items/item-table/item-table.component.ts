@@ -37,6 +37,7 @@ export class ItemTableComponent extends CustomMatTableComponent<Item, ItemServic
   // Parameter
   @ViewChild(MatSelect) selectItemType: MatSelect;
   @Input() isDialog: boolean = false;
+  @Input() Option: boolean = false;
 
   itemTypes: Array<ItemType>;
   // Override
@@ -67,6 +68,7 @@ export class ItemTableComponent extends CustomMatTableComponent<Item, ItemServic
             SortField: this.sort.active,
             SortOrder: this.sort.direction === "desc" ? 1 : -1,
             WhereId: this.selectItemType.value || -1,
+            Where2Id: this.Option ? 1 : undefined,
             Where: this.searchBox.onlyCreate2 ? this.authService.getAuth.UserName || "" : ""
           };
           return this.service.getAllWithScroll(scroll);

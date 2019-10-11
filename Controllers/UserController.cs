@@ -15,6 +15,9 @@ using VipcoMaintenance.Models.Maintenances;
 
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Newtonsoft.Json;
+using VipcoMaintenance.ViewModels.Employees;
 
 namespace VipcoMaintenance.Controllers
 {
@@ -28,6 +31,7 @@ namespace VipcoMaintenance.Controllers
         private readonly IUserService userService;
         private readonly IRepositoryMaintenanceMk2<Permission> repositoryPermission;
         private readonly IMapper mapper;
+        private readonly IHostingEnvironment hosting;
 
         #endregion PrivateMenbers
 
@@ -35,6 +39,7 @@ namespace VipcoMaintenance.Controllers
 
         public UserController(IRepositoryMachineMk2<User> repo,
             IRepositoryMaintenanceMk2<Permission> repoPermission,
+            IHostingEnvironment hostingEnv,
             IUserService user, IMapper map) : base(repo)
         {
             //Repository
@@ -42,6 +47,7 @@ namespace VipcoMaintenance.Controllers
             //Helper
             this.mapper = map;
             this.userService = user;
+            this.hosting = hostingEnv;
         }
 
         #endregion
@@ -67,11 +73,16 @@ namespace VipcoMaintenance.Controllers
         // POST: api/LoginName/Login
         [AllowAnonymous]
         [HttpPost("Login")]
+
         public async Task<IActionResult> Login([FromBody] User login)
         {
             var Message = "Login has error.";
             try
             {
+                string contentRootPath = this.hosting.ContentRootPath;
+                var allowedEmps = JsonConvert.DeserializeObject<List<AllowedEmployeeViewModel>>
+                    (await System.IO.File.ReadAllTextAsync(contentRootPath + "/Data/allowed_emp.json"));
+
                 var HasData = await this.userService.AuthenticateAsync(login.UserName, login.PassWord);
 
                 //var HasData = await this.repository.GetAllAsQueryable()
@@ -87,7 +98,8 @@ namespace VipcoMaintenance.Controllers
                         if (DataPermission != null)
                         {
                             HasData.LevelUser = DataPermission.LevelPermission;
-                            HasData.SubLevel = DataPermission.SubLevel;
+                            var allowedEmp = allowedEmps.FirstOrDefault(x => x.EmpCode == HasData.EmpCode);
+                            HasData.SubLevel = allowedEmp != null ? allowedEmp.SubLevel : 0 ;
                         }
                         else
                         {
@@ -96,7 +108,7 @@ namespace VipcoMaintenance.Controllers
                         }
                     }
                     else
-                        HasData.SubLevel = 2;
+                        HasData.SubLevel = 3;
 
                     return new JsonResult(HasData, this.DefaultJsonSettings);
                 }
@@ -109,7 +121,44 @@ namespace VipcoMaintenance.Controllers
             }
             return NotFound(new { Error = Message });
         }
+        public async Task<IActionResult> LoginTemplate([FromBody] User login)
+        {
+            var Message = "Login has error.";
+            try
+            {
+                string contentRootPath = this.hosting.ContentRootPath;
 
+                var allowedEmps = JsonConvert.DeserializeObject<List<AllowedEmployeeViewModel>>
+                    (await System.IO.File.ReadAllTextAsync(contentRootPath + "/Data/allowed_emp.json"));
+
+                var HasData = await this.userService.AuthenticateAsync(login.UserName, login.PassWord);
+
+                if (HasData != null)
+                {
+                    if (HasData.LevelUser < 3)
+                        HasData.LevelUser = 1;
+
+                    var allowedEmp = allowedEmps.FirstOrDefault(x => x.EmpCode == HasData.EmpCode);
+                    if (allowedEmp != null)
+                    {
+                        HasData.SubLevel = allowedEmp.SubLevel;
+                        if (HasData.LevelUser < 3)
+                            HasData.LevelUser = allowedEmp.SubLevel == 10 ? 2 : 1;
+                    }
+                    else
+                        HasData.SubLevel = 0;
+
+                    return new JsonResult(HasData, this.DefaultJsonSettings);
+                }
+                else
+                    return NotFound(new { Error = "user or password not match" });
+            }
+            catch (Exception ex)
+            {
+                Message = $"Has error {ex.ToString()}";
+            }
+            return NotFound(new { Error = Message });
+        }
 
         // POST: api/User
         [AllowAnonymous]

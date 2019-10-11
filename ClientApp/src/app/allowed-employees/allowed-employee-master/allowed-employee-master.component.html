@@ -1,0 +1,43 @@
+<div class="master-container">
+  <div>
+    <!--Title-->
+    <h4 class="card-title text-info">
+      Management allowed employee information.
+    </h4>
+  </div>
+  <div *ngIf="onLoading" class="loading-shade">
+    <mat-spinner></mat-spinner>
+  </div>
+  <div class="child-container">
+    <!--Center-->
+    <div class="center-content">
+      <!--Component-->
+      <div *ngIf="!ShowDetail;else InfoBlock">
+        <app-allowed-employee-table (returnSelectedWith)="onDetailView($event)"
+                                    (filter)="filter = $event" [OptionFilter]="filter"></app-allowed-employee-table>
+      </div>
+      <ng-template #InfoBlock>
+        <app-allowed-employee-info></app-allowed-employee-info>
+      </ng-template>
+    </div>
+    <!--Right-->
+    <div class="right-content">
+      <button mat-mini-fab color="primary" (click)="onDetailView()"
+              matTooltipPosition="left" matTooltip="Create"
+              [disabled]="ShowDetail">
+        <mat-icon>add</mat-icon>
+      </button>
+      <hr />
+      <button mat-mini-fab color="warn" (click)="onCancelEdit()"
+              matTooltipPosition="left" matTooltip="Cancel"
+              [disabled]="!ShowDetail">
+        <mat-icon>clear</mat-icon>
+      </button>
+      <button mat-mini-fab color="accent" (click)="onSubmit()"
+              matTooltipPosition="left" matTooltip="Save"
+              [disabled]="!canSave">
+        <mat-icon>save</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

@@ -33,7 +33,7 @@ export class ObsoleteItemInfoComponent
   constructor(
     service: ObsoleteItemService,
     serviceCom: ObsoleteItemCommunicateService,
-    serviceAuth: AuthService,
+    private serviceAuth: AuthService,
     private serviceItem: ItemService,
     private serviceShared: ShareService,
     private serviceDialogs: DialogsService,
@@ -64,9 +64,28 @@ export class ObsoleteItemInfoComponent
       this.isCopying = InfoValue.Copying;
       this.service.getOneKeyNumber(InfoValue)
         .pipe(switchMap((dbData: ObsoleteItem) => {
-          if (dbData)
+          if (dbData) {
             this.isValid = true;
+          }
           this.InfoValue = dbData;
+          this.InfoValue.Status = InfoValue.Status;
+
+          if (!this.InfoValue.ReadOnly) {
+            if (this.InfoValue.Status === StatusObsolete.ApproveLevel2) {
+              if (!this.InfoValue.Approve2NameThai) {
+                this.InfoValue.Approve2 = this.user.EmpCode;
+                this.InfoValue.Approve2NameThai = this.user.NameThai;
+                this.InfoValue.Approve2Date = moment().toDate();
+              }
+            } else if (this.InfoValue.Status === StatusObsolete.ApproveLevel3) {
+              if (!this.InfoValue.ComplateByNameThai) {
+                this.InfoValue.ComplateBy = this.user.EmpCode;
+                this.InfoValue.ComplateByNameThai = this.user.NameThai;
+                this.InfoValue.ApproveToObsolete = true;
+                this.InfoValue.ApproveToFix = false;
+              }
+            }
+          }
           // new Array
           this.InfoValue.RemoveAttach = new Array;
           this.attachFiles = new Array;
@@ -97,29 +116,44 @@ export class ObsoleteItemInfoComponent
             });
             // try to new array of data for refresh attach component
             this.attachFiles = this.attachFiles.slice();
+            if (this.attachFiles[0]) {
+              this.ItemImage = this.attachFiles[0].FileAddress;
+            }
           }
 
           if (this.InfoValue.ItemId) {
-            return this.serviceItem.getByMasterId(this.InfoValue.ItemId);
+            return this.serviceItem.getOneKeyNumber({ ItemId: this.InfoValue.ItemId});
           } else {
             return of(undefined);
           }
         }), map((dbItem: Item) => {
           if (dbItem) {
             this.Item = dbItem;
-            this.Lifetime = this.CalcLifetime(moment(dbItem.RegisterDate || Date()), moment(dbItem.CancelDate || Date()))
+            this.Lifetime = this.CalcLifetime
+               (dbItem.CancelDate ? moment(dbItem.CancelDate) : moment(),
+                dbItem.RegisterDate ? moment(dbItem.RegisterDate) : moment());
           }
         })).subscribe(() => this.buildForm());
     }
     else {
+      // Debug Here
+      // console.log("ObsoleteItem");
+
       this.InfoValue = {
         ObsoleteItemId: 0,
         ObsoleteDate: moment().toDate(),
-        Status: StatusObsolete.ApproveLevel1,
+        Status: StatusObsolete.Wait,
         Approve1: this.user.EmpCode,
         Approve1NameThai: this.user.NameThai,
         Approve1Date: moment().toDate(),
       };
+
+      this.Item = { 
+        ItemId: 0,
+        //Name: "",
+        //ItemCode: "",
+      };
+
       this.buildForm();
     }
   }
@@ -131,7 +165,7 @@ export class ObsoleteItemInfoComponent
         type: typeField.date,
         label: "Obsolete Date",
         name: "ObsoleteDate",
-        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel1,
+        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.Wait,
         value: this.InfoValue.ObsoleteDate,
         validations: [
           {
@@ -156,7 +190,7 @@ export class ObsoleteItemInfoComponent
         label: "Tool/Machine Name.",
         inputType: inputType.text,
         name: "Name",
-        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel1,
+        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.Wait,
         value: this.Item.Name,
         validations: [
           {
@@ -166,12 +200,13 @@ export class ObsoleteItemInfoComponent
           },
         ]
       },
+
       {
         type: typeField.inputclick,
         label: "Tool/Machine No.",
         inputType: inputType.text,
         name: "ItemCode",
-        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel1,
+        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.Wait,
         value: this.Item.ItemCode,
         validations: [
           {
@@ -203,7 +238,7 @@ export class ObsoleteItemInfoComponent
         type: typeField.input,
         label: "Lifetime",
         inputType: inputType.text,
-        name: "Model",
+        name: "Lifetime",
         readonly: true,
         value: this.Lifetime,
       },
@@ -213,7 +248,7 @@ export class ObsoleteItemInfoComponent
         label: "FixedAsset",
         inputType: inputType.number,
         name: "FixedAsset",
-        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel1,
+        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.Wait,
         value: this.InfoValue.FixedAsset,
         validations: [
           {
@@ -226,28 +261,26 @@ export class ObsoleteItemInfoComponent
 
       {
         type: typeField.input,
-        label: "Reviewed By",
+        label: "WorkGroup",
         inputType: inputType.text,
-        name: "Approve1NameThai",
+        name: "GroupMisString",
         readonly: true,
-        value: this.InfoValue.Approve1NameThai,
+        value: this.Item.GroupMisString,
       },
 
-      {
-        type: typeField.empty
-      },
-
-      //-----------------------------------------------------------------//
-      
       {
         type: typeField.textarea,
         label: "Obsolete Description",
         name: "Description",
-        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel2,
-        hidden: this.InfoValue === StatusObsolete.ApproveLevel1,
+        readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.Wait,
+        // hidden: this.InfoValue.Status === StatusObsolete.Wait,
         value: this.InfoValue.Description,
         validations: [
-          this.InfoValue.Status === StatusObsolete.ApproveLevel2 ? this.requestValidator : undefined,
+          {
+            name: ValidatorField.required,
+            validator: Validators.required,
+            message: "This field is required"
+          },
           {
             name: ValidatorField.maxLength,
             validator: Validators.maxLength(500),
@@ -257,28 +290,39 @@ export class ObsoleteItemInfoComponent
       },
 
       {
-        type: typeField.empty
+        type: typeField.input,
+        label: "Reviewed By Level 1",
+        inputType: inputType.text,
+        name: "Approve1NameThai",
+        readonly: true,
+        value: this.InfoValue.Approve1NameThai,
       },
+      //-----------------------------------------------------------------//
 
       {
         type: typeField.inputclick,
         label: "Obsolete By",
         name: "RequestNameThai",
         readonly: this.denySave || this.InfoValue.Status !== StatusObsolete.ApproveLevel2,
-        hidden: this.InfoValue === StatusObsolete.ApproveLevel1,
+        hidden: this.InfoValue.Status === StatusObsolete.Wait,
         value: this.InfoValue.RequestNameThai,
         validations: [
+          //{
+          //  name: ValidatorField.required,
+          //  validator: Validators.required,
+          //  message: "This field is required"
+          //},
           this.InfoValue.Status === StatusObsolete.ApproveLevel2 ? this.requestValidator : undefined,
         ]
       },
 
       {
         type: typeField.input,
-        label: "Reviewed By",
+        label: "Reviewed By Level 2",
         inputType: inputType.text,
         name: "Approve2NameThai",
         readonly: true,
-        hidden: this.InfoValue === StatusObsolete.ApproveLevel1,
+        hidden: this.InfoValue.Status === StatusObsolete.Wait,
         value: this.InfoValue.Approve2NameThai,
       },
       
@@ -293,6 +337,11 @@ export class ObsoleteItemInfoComponent
         value: this.InfoValue.Remark,
         validations: [
           this.InfoValue.Status === StatusObsolete.ApproveLevel3 ? this.requestValidator : undefined,
+          //{
+          //  name: ValidatorField.required,
+          //  validator: Validators.required,
+          //  message: "This field is required"
+          //},
           {
             name: ValidatorField.maxLength,
             validator: Validators.maxLength(500),
@@ -318,7 +367,7 @@ export class ObsoleteItemInfoComponent
     // let ExcludeList = this.regConfig.map((item) => item.name);
   }
 
-  // set communicate
+  // Set communicate
   SetCommunicatetoParent(): void {
     if (this.isValid) {
       this.communicateService.toParent(this.InfoValue);
@@ -330,10 +379,10 @@ export class ObsoleteItemInfoComponent
   // Calc Lifetime
   CalcLifetime = (sDate?: moment.Moment, eDate?: moment.Moment) => {
     let months = sDate.diff(eDate, 'month', true);
-    return months >= 12 ? `${(months / 12).toFixed(1)} ปี` : `${months} เดือน`;
+    return months >= 12 ? `${(months / 12).toFixed(1)} ปี` : `${months.toFixed(0)} เดือน`;
   }
 
-  // submit dynamic form
+  // Submit dynamic form
   submitDynamicForm(InfoValue?: ReturnValue<ObsoleteItem>): void {
     if (InfoValue) {
       if (!this.denySave) {
@@ -351,7 +400,7 @@ export class ObsoleteItemInfoComponent
     }
   }
 
-  // event from component
+  // Event from component
   FromComponents(): void {
     this.subscription2 = this.serviceShared.ToParent$.subscribe(data => {
       if (data.name.indexOf("RequestNameThai") !== -1) {
@@ -361,7 +410,7 @@ export class ObsoleteItemInfoComponent
               this.serviceShared.toChild(
                 {
                   name: data.name,
-                  value: `${emp.NameEng}`
+                  value: `${emp.NameThai}`
                 });
 
               this.InfoValue.Request = emp.EmpCode;
@@ -369,25 +418,50 @@ export class ObsoleteItemInfoComponent
             }
           });
       } else if (data.name.indexOf("Name") !== -1 || data.name.indexOf("ItemCode") !== -1) {
-        this.serviceDialogs.dialogSelectItem(this.viewCon)
+        this.serviceDialogs.dialogSelectedItemMk2(this.viewCon,
+          {
+            info: {ItemId:0},
+            multi: false,
+            option: true
+          })
           .subscribe((item: Item) => {
             if (item) {
-              let temp: Array<string> = ["Name", "ItemCode", "RegisterDate","Property",]
+              let temp: Array<string> = ["Name", "ItemCode", "RegisterDate", "Property","GroupMisString"]
               temp.forEach(tName => {
                 this.serviceShared.toChild(
                   {
-                    name: data[tName],
+                    name: tName,
                     value: item[tName]
                   });
-                this.InfoValue[tName] = item[tName];
+                this.Item[tName] = item[tName];
               });
+
+              // Bind to InfoValue
+              this.InfoValue.ItemId = item.ItemId;
+              this.InfoValue.ItemCode = item.ItemCode;
+              this.InfoValue.ItemName = item.Name;
+              // Debug here
+              // console.log(this.Item.RegisterDate, this.InfoValue.ObsoleteDate);
+
+              this.Lifetime = this.CalcLifetime(
+                this.InfoValue.ObsoleteDate ? moment(this.InfoValue.ObsoleteDate) : moment(),
+                this.Item.RegisterDate ? moment(this.Item.RegisterDate) : moment());
+
+              // Debug here
+              // console.log(this.Lifetime);
+
+              this.serviceShared.toChild(
+                {
+                  name: "Lifetime",
+                  value: this.Lifetime
+                });
             }
           });
       }
     });
   }
 
-  // on Attach Update List
+  // On Attach Update List
   onUpdateAttach(event: any): void {
     if (event.target.files) {
       let pattern = /image/;

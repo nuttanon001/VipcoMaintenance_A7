@@ -1,0 +1,11 @@
+@import "../../../shared2/styles/table.style.scss";
+
+.mat-table {
+  overflow: auto;
+  height: calc(#{$dialog-vh} - 150px);
+  width: calc(#{$dialog-vw} - 45px);
+}
+
+.mat-column-ProductName {
+  min-width: 200px;
+}

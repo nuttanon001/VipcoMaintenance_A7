@@ -93,8 +93,8 @@ namespace VipcoMaintenance.Models.Maintenances
         /// </summary>
         public DateTimeOffset? Approve2Date { get; set; }
 
-        [JsonIgnore]
-        public ObsoleteItemHasAttach ItemCancelHasAttach { get; set; }
+        // [JsonIgnore]
+        // public ObsoleteItemHasAttach ObsoleteItemHasAttach { get; set; }
 
 
         [StringLength(500)]
@@ -115,7 +115,8 @@ namespace VipcoMaintenance.Models.Maintenances
 
     public enum StatusObsolete
     {
-        ApproveLevel1 = 1,
+        Wait = 1,
+        ApproveLevel1,
         ApproveLevel2,
         ApproveLevel3,
         FixOnly,

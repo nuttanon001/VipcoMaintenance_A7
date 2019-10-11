@@ -13,12 +13,10 @@ namespace VipcoMaintenance.Models.Maintenances
     {
         [Key]
         public int ObsoleteItemHasAttachId { get; set; }
-        public int? ObsoleteItemlId { get; set; }
+        public int? ObsoleteItemId { get; set; }
         [JsonIgnore]
-        public ObsoleteItem ItemHasCancel { get; set; }
+        public ObsoleteItem ObsoleteItem { get; set; }
         public int? AttachFileId { get; set; }
-        [JsonIgnore]
-        public AttachFile AttachFile { get; set; }
         public FileType? FileType { get; set; }
     }
 

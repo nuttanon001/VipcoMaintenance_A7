@@ -14,9 +14,11 @@ import { filter } from "rxjs/operators";
            (keyup.enter)="onSendToParent(field.name)"
            [type]="field.inputType" class="click-input" readonly>
     <ng-container *ngFor="let validation of field.validations;" ngProjectAs="mat-error">
-      <mat-error *ngIf="group.get(field.name).hasError(validation.name)">
-        {{validation.message}}
-      </mat-error>
+      <ng-container *ngIf="validation">
+        <mat-error *ngIf="group.get(field.name).hasError(validation.name)">
+          {{validation.message}}
+        </mat-error>
+      </ng-container>
     </ng-container>
   </mat-form-field>
 `,

@@ -38,7 +38,7 @@ namespace VipcoMaintenance
                         option.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
                     });
             // Add AutoMap
-            AutoMapper.Mapper.Reset();
+            // AutoMapper.Mapper();
             services.AddAutoMapper(typeof(Startup));
 
             // Add AppSettings
@@ -89,7 +89,8 @@ namespace VipcoMaintenance
             services.AddTransient(typeof(IRepositoryMaintenance<>), typeof(RepositoryMaintenance<>))
                .AddTransient(typeof(IRepositoryMachine<>), typeof(RepositoryMachine<>))
                .AddTransient(typeof(IRepositoryMachineMk2<>), typeof(RepositoryMachineMk2<>))
-               .AddTransient(typeof(IRepositoryMaintenanceMk2<>), typeof(RepositoryMaintenanceMk2<>));
+               .AddTransient(typeof(IRepositoryMaintenanceMk2<>), typeof(RepositoryMaintenanceMk2<>))
+               .AddTransient(typeof(IRepositoryDapper<>),typeof(RepositoryDapper<>));
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {

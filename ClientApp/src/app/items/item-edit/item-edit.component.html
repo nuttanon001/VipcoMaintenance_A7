@@ -154,7 +154,7 @@
             </div>
 
             <div class="right-content">
-              <mat-form-field>
+              <mat-form-field (click)="openObsoleteItem()" style="cursor:pointer;">
                 <mat-select placeholder="Selected Status" 
                             id="ItemStatus" formControlName="ItemStatus"
                             [disabled]="true">

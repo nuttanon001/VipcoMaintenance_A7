@@ -24,11 +24,28 @@ export class ObsoleteItemService extends BaseRestService<ObsoleteItem> {
   ) {
     super(
       http,
-      "api/ItemHasCancel/",
-      "ItemHasCancelService",
-      "ItemHasCancelId",
+      "api/ObsoleteItem/",
+      "ObsoleteItemService",
+      "ObsoleteItemId",
       httpErrorHandler
     )
+  }
+  // GetByItem
+  /** get one with key number */
+  getByItem(itemId: number): Observable<ObsoleteItem> {
+    // Add safe, URL encoded search parameter if there is a search term
+    const options = { params: new HttpParams().set("itemId", itemId.toString()) };
+    return this.http.get<ObsoleteItem>(this.baseUrl + "GetByItem/", options)
+      .pipe(shareReplay(), catchError(this.handleError("Get model with key", <ObsoleteItem>{})));
+  }
+  /** update status */
+  updateStatus(uObject: ObsoleteItem): Observable<any | ObsoleteItem> {
+    return this.http.put<ObsoleteItem>(this.baseUrl + "UpdateStatus/", JSON.stringify(uObject), {
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+      }),
+      params: new HttpParams().set("key", uObject[this.keyName].toString())
+    }).pipe(shareReplay(), catchError(this.handleError("Update status", <ObsoleteItem>{})));
   }
 
   /** get all with scroll data */
@@ -88,14 +105,14 @@ export class ObsoleteItemService extends BaseRestService<ObsoleteItem> {
 
   // ===================== End Upload File ===========================\\
 
-  getPaperReport(receiptId: number, subReport: string = "GetReport/"): Observable<any> {
+  getPaperReport(masterId: number, subReport: string = "GetReport/"): Observable<any> {
     let url: string = this.baseUrl + subReport;
     return this.http.get(url, {
       headers: new HttpHeaders({
         "Content-Type": "application/json",
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }),
-      params: new HttpParams().set("key", receiptId.toString()),
+      params: new HttpParams().set("key", masterId.toString()),
       responseType: 'blob' // <-- changed to blob 
     }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }

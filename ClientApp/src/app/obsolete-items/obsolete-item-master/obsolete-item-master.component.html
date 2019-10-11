@@ -14,8 +14,7 @@
       <!--Component-->
       <div *ngIf="!ShowDetail;else InfoBlock">
         <app-obsolete-item-schedule (returnSelectedWith)="onDetailView($event)"
-                                  [isOnlyCreate]="false" [isDisabled]="true"
-                                  (filter)="filter = $event" [OptionFilter]="filter">
+                                    (filter)="filter = $event" [OptionFilter]="filter">
         </app-obsolete-item-schedule>
       </div>
       <ng-template #InfoBlock>

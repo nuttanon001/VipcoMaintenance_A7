@@ -68,11 +68,16 @@ export interface ObsoleteItem extends BaseModel {
   ItemName?: string;
   AttachFiles?: Array<File>;
   RemoveAttach?: Array<number>;
-
+  RegisterDate?: Date;
+  SerialNumber?: string;
+  Lifetime?: string;
+  WorkGroup?: string;
+  FileAddress?: string;
 }
 
 export enum StatusObsolete {
-  ApproveLevel1 = 1,
+  Wait = 1,
+  ApproveLevel1,
   ApproveLevel2,
   ApproveLevel3,
   FixOnly,

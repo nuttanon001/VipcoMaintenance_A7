@@ -22,6 +22,10 @@ import { Workgroup } from "../../work-groups/shared/workgroup.model";
 import { SparePart } from "../../spare-parts/shared/spare-part.model";
 import { SparePartDialogComponent } from "../spare-part-dialog/spare-part-dialog.component";
 import { ItemMaintenDialogComponent } from "../item-mainten-dialog/item-mainten-dialog.component";
+import { DialogInfo } from 'src/app/shared2/basemode/dialog-info.model';
+import { ObsoleteItem } from 'src/app/obsolete-items/shared/obsolete-item.model';
+import { ObsoleteItemDialogComponent } from '../obsolete-item-dialog/obsolete-item-dialog.component';
+import { ItemMk2DialogComponent } from '../item-mk2-dialog/item-mk2-dialog.component';
 
 @Injectable()
 export class DialogsService {
@@ -261,6 +265,42 @@ export class DialogsService {
 
     // open dialog
     dialogRef = this.dialog.open(ItemDialogComponent, config);
+    return dialogRef.afterClosed();
+  }
+
+/**
+  * @param viewContainerRef
+  * @param data = info: ReplyAssurance
+  */
+  public dialogInfoObsoleteItem(viewContainerRef: ViewContainerRef, data: DialogInfo<ObsoleteItem>): Observable<number> {
+    let dialogRef: MatDialogRef<ObsoleteItemDialogComponent>;
+    let config: MatDialogConfig = new MatDialogConfig();
+
+    // config
+    config.viewContainerRef = viewContainerRef;
+    config.data = data;
+    config.hasBackdrop = true;
+
+    // open dialog
+    dialogRef = this.dialog.open(ObsoleteItemDialogComponent, config);
+    return dialogRef.afterClosed();
+  }
+
+  /**
+  * @param viewContainerRef
+  * @param data = info: ReplyAssurance
+  */
+  public dialogSelectedItemMk2(viewContainerRef: ViewContainerRef, data: DialogInfo<Item>): Observable<Item|Array<Item>> {
+    let dialogRef: MatDialogRef<ItemMk2DialogComponent>;
+    let config: MatDialogConfig = new MatDialogConfig();
+
+    // config
+    config.viewContainerRef = viewContainerRef;
+    config.data = data;
+    config.hasBackdrop = true;
+
+    // open dialog
+    dialogRef = this.dialog.open(ItemMk2DialogComponent, config);
     return dialogRef.afterClosed();
   }
 }

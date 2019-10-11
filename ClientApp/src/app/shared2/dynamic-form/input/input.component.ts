@@ -4,6 +4,8 @@ import { FieldConfig } from "../field-config.model";
 import { Subscription } from "rxjs";
 import { ShareService } from "../../share.service";
 import { filter } from "rxjs/operators";
+          
+// [value]="group.get(field.name).value | currency:'THB'"
 
 @Component({
   selector: "app-input",
@@ -56,6 +58,7 @@ export class InputComponent implements OnInit,OnDestroy {
   constructor(
     private serviceShared: ShareService
   ) { }
+
   ngOnInit() {
     this.subscription = this.serviceShared.toChild$.pipe(filter((item) => this.field.name == item.name)).
       subscribe(item => {

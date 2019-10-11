@@ -100,6 +100,10 @@
               <mat-icon>text_fields</mat-icon>
               <span>&nbsp;Type-Item&nbsp;</span>
             </button>
+            <button mat-menu-item [routerLink]="['/obsolete']" routerLinkActive="active">
+              <mat-icon>delete_foreve</mat-icon>
+              <span>&nbsp;Obsolete&nbsp;</span>
+            </button>
             <hr />
             <button mat-menu-item [routerLink]="['/spare-part']" routerLinkActive="active">
               <mat-icon>highlight</mat-icon>
@@ -133,6 +137,10 @@
             <button mat-menu-item [routerLink]="['/branch']" routerLinkActive="active">
               <mat-icon>room</mat-icon>
               <span>&nbsp;Branch&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/allowed-employee']" routerLinkActive="active">
+              <mat-icon>announcement</mat-icon>
+              <span>&nbsp;Allowed Emp&nbsp;</span>
             </button>
           </div>
         </mat-menu>

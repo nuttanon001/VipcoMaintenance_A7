@@ -105,10 +105,10 @@
         {{displayValue.Property3 || "-"}}
       </div>
 
-      <div class="my-label">
+      <div class="my-label" (click)="openObsoleteItem()" style="cursor:pointer;">
         Status :
       </div>
-      <div class="my-value">
+      <div class="my-value" (click)="openObsoleteItem()" style="cursor:pointer;">
         {{displayValue.ItemStatusString || "-"}}
       </div>
     </div>

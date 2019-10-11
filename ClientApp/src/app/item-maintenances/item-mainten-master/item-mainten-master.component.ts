@@ -114,7 +114,7 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
   onDetailEdit(editValue?: ItemMaintenance): void {
     if (editValue) {
       if (editValue.StatusMaintenance === StatusMaintenance.Complate) {
-        if (!this.currentUser || !this.currentUser.SubLevel || this.currentUser.SubLevel !== 2) {
+        if (!this.currentUser || !this.currentUser.SubLevel || this.currentUser.SubLevel !== 3) {
           this.dialogsService.error("Access Deny", "การซ่อมบำรุง ดำเนินการแล้วเสร็จไม่สามารถแก้ไขได้ !!!", this.viewContainerRef);
           return;
         }

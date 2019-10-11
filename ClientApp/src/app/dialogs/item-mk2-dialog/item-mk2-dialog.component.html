@@ -1,0 +1,33 @@
+<div class="master-dialog-vh">
+  <H5 style="color:cadetblue">Product(s) Information</H5>
+  <div class="child-container">
+    <div class="center-content">
+      <div *ngIf="!data.multi;else ElseBlock">
+        <app-item-mk2-table (returnSelected)="onSelectedValue($event)"
+                            (Option)="data.option"
+                            (isSubAction)="'GetScrollMk2/'"
+                            (returnSelectedWith)="onCreateNewValue($event)">
+        </app-item-mk2-table>
+      </div>
+      <ng-template #ElseBlock>
+        <app-item-mk2-table (returnSelectesd)="onSelectedValues($event)"
+                            (Option)="data.option"
+                            (isSubAction)="'GetScrollMk2/'"
+                            (returnSelectedWith)="onCreateNewValue($event)"
+                            [isMultiple]="true">
+        </app-item-mk2-table>
+      </ng-template>
+    </div>
+    <div class="right-content">
+      <button mat-mini-fab color="primary" (click)="onSelectedClick()" matTooltip="primary"
+              [disabled]="(!getValue && !getValues)">
+        <mat-icon>done</mat-icon>
+      </button>
+      <hr />
+      <button mat-mini-fab color="warn" (click)="onCancelClick()"
+              matTooltip="close dialog">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

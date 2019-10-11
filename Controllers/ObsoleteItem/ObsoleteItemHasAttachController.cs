@@ -43,7 +43,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                 if (key > 0)
                 {
                     var hasData = await this.repository
-                        .GetToListAsync(x => x, x => x.ObsoleteItemlId == key);
+                        .GetToListAsync(x => x, x => x.ObsoleteItemId == key);
                 }
             }
             catch(Exception ex)
