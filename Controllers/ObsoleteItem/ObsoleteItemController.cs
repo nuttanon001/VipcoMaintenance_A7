@@ -509,7 +509,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     {
                         var imageAddress = "";
                         var AttachIds = await this.repositoryHasAttach.GetFirstOrDefaultAsync
-                            (x => x.AttachFileId, x => x.ObsoleteItemHasAttachId == key, 
+                            (x => x.AttachFileId, x => x.ObsoleteItemId == key, 
                              x => x.OrderByDescending(z => z.ObsoleteItemId));
                         if (AttachIds != null)
                         {
@@ -534,7 +534,8 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             {
                                 var image = ws.AddPicture(this.hosting.WebRootPath + imageAddress)
                                             .MoveTo(ws.Cell("C18").CellBelow(), 2, 2)
-                                            .WithSize(320, 200);
+                                            .WithSize(255, 155); // size for production server only
+                                         // .WithSize(320, 200); // size for development servcer only
                             }
 
                             ws.Cell(32, "K").Value = hasData.ApproveToFix.HasValue ? (hasData.ApproveToFix.Value ? "P" : "" ) : "";

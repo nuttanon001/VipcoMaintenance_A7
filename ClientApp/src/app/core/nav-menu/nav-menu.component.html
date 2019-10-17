@@ -92,6 +92,10 @@
               <mat-icon>event_note</mat-icon>
               <span>&nbsp;Item-Histories&nbsp;</span>
             </button>
+            <button mat-menu-item [routerLink]="['/obsolete']" routerLinkActive="active">
+              <mat-icon>delete_foreve</mat-icon>
+              <span>&nbsp;Obsolete&nbsp;</span>
+            </button>
             <button mat-menu-item [routerLink]="['/item/item-by-group']" routerLinkActive="active">
               <mat-icon>tune</mat-icon>
               <span>&nbsp;Group owned item&nbsp;</span>
@@ -99,10 +103,6 @@
             <button mat-menu-item [routerLink]="['/item-type']" routerLinkActive="active">
               <mat-icon>text_fields</mat-icon>
               <span>&nbsp;Type-Item&nbsp;</span>
-            </button>
-            <button mat-menu-item [routerLink]="['/obsolete']" routerLinkActive="active">
-              <mat-icon>delete_foreve</mat-icon>
-              <span>&nbsp;Obsolete&nbsp;</span>
             </button>
             <hr />
             <button mat-menu-item [routerLink]="['/spare-part']" routerLinkActive="active">

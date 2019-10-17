@@ -76,19 +76,23 @@
                     </span>
                     <br />
                     <span>
-                      <button mat-mini-fab color="accent" (click)="onClickSubItem(subItem,1)" matTooltip="Edit">
+                      <button mat-mini-fab color="accent" (click)="onClickSubItem(subItem,1)"
+                              matTooltip="Edit" [disabled]="canEdit(subItem)">
                         <mat-icon>edit</mat-icon>
                       </button>
                       &nbsp;&nbsp;&nbsp;
-                      <button mat-mini-fab color="primary" (click)="onChangeStatus(subItem,1)" matTooltip="Approve">
+                      <button mat-mini-fab color="primary" (click)="onChangeStatus(subItem,1)"
+                              matTooltip="Approve" [disabled]="canClick(subItem)">
                         <mat-icon>done</mat-icon>
                       </button>
                       &nbsp;&nbsp;&nbsp;
-                      <button mat-mini-fab color="warn" (click)="onChangeStatus(subItem,2)" matTooltip="Cancel">
+                      <button mat-mini-fab color="warn" (click)="onChangeStatus(subItem,2)"
+                              matTooltip="Cancel" [disabled]="canClick(subItem)">
                         <mat-icon>close</mat-icon>
                       </button>
                       &nbsp;&nbsp;&nbsp;
-                      <button mat-mini-fab color="primary" (click)="onPrint(subItem)" matTooltip="Print">
+                      <button mat-mini-fab color="primary" (click)="onPrint(subItem)"
+                              matTooltip="Print" [disabled]="canPrint(subItem)">
                         <mat-icon>print</mat-icon>
                       </button>
                     </span>

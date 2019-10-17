@@ -229,4 +229,67 @@ export class ObsoleteItemScheduleComponent
     }, () => this.loading = false, () => this.loading = false);
   }
 
+  canClick(raw?: ObsoleteItem): boolean {
+    if (raw) {
+      if (this.user) {
+        if (raw.Status === StatusObsolete.Wait || raw.Status === StatusObsolete.ApproveLevel1) {
+          // Only sub level 2
+          if (this.user.SubLevel !== 2) {
+            return true;
+          } else {
+            return false;
+          }
+        } else if (raw.Status === StatusObsolete.ApproveLevel2) {
+          // Only sub level 3
+          if (this.user.SubLevel !== 3) {
+            return true;
+          } else {
+            return false;
+          }
+        } else if (raw.Status === StatusObsolete.ApproveLevel3 || raw.Status === StatusObsolete.Cancel) {
+          return true;
+        }
+      }
+    }
+    return true;
+  }
+
+  canPrint(raw?: ObsoleteItem): boolean {
+    if (raw.Status !== StatusObsolete.ApproveLevel3 || this.user.SubLevel !== 3) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  canEdit(raw?: ObsoleteItem): boolean {
+    if (raw) {
+      if (this.user) {
+        if (raw.Status === StatusObsolete.Wait || raw.Status === StatusObsolete.ApproveLevel1) {
+          // Only sub level 2
+          if (this.user.SubLevel !== 1) {
+            return true;
+          } else {
+            return false;
+          }
+        } else if (raw.Status === StatusObsolete.ApproveLevel2) {
+          // Only sub level 3
+          if (this.user.SubLevel !== 2) {
+            return true;
+          } else {
+            return false;
+          }
+        } else if (raw.Status === StatusObsolete.ApproveLevel3) {
+          if (this.user.SubLevel !== 3) {
+            return true;
+          } else {
+            return false;
+          }
+        } else if (raw.Status === StatusObsolete.Cancel) {
+          return true;
+        }
+      }
+    }
+    return true;
+  }
 }

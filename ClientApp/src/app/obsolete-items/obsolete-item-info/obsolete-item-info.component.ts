@@ -440,6 +440,7 @@ export class ObsoleteItemInfoComponent
               this.InfoValue.ItemId = item.ItemId;
               this.InfoValue.ItemCode = item.ItemCode;
               this.InfoValue.ItemName = item.Name;
+              this.InfoValue.FixedAsset = item.Property2 ? parseFloat(item.Property2) : 0;
               // Debug here
               // console.log(this.Item.RegisterDate, this.InfoValue.ObsoleteDate);
 

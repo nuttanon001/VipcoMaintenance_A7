@@ -436,6 +436,7 @@ namespace VipcoMaintenance.Controllers
                                         ,[im].[Model]
                                         ,[im].[ItemId]
                                         ,[im].[Property]
+                                        ,[im].[Property2]
                                         ,[im].[EmpResponsible]
                                         ,[im].[GroupMis]
                                         ,[im].[RegisterDate]
