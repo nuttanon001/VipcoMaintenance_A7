@@ -47,6 +47,7 @@ export class ItemEditComponent extends BaseEditComponent<Item, ItemService> {
   branchs: Array<Branch>;
   itemTypes: Array<ItemType>;
   itemStatus: Array<{ Label: string, Value: number }>
+  maxDate = new Date();
   // on get data by key
   onGetDataByKey(value?: Item): void {
     // WorkGroup
@@ -62,6 +63,9 @@ export class ItemEditComponent extends BaseEditComponent<Item, ItemService> {
       this.service.getOneKeyNumber(value)
         .subscribe(dbData => {
           this.editValue = dbData;
+          if (this.editValue.CancelDate) {
+            this.maxDate = this.editValue.CancelDate;
+          }
         }, error => console.error(error), () => this.buildForm());
     } else {
       this.editValue = {

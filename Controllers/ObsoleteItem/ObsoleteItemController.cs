@@ -99,9 +99,14 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                 var hasData = await this.dapper.GetFirstEntity<ObsoleteItemViewModel>(sqlCommand);
                 // Get lifetime
-                hasData.Lifetime = hasData.RegisterDate != null && hasData.ObsoleteDate != null ?
-                this.CalcLiftTime(hasData.RegisterDate.Value, hasData.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
-
+                if (hasData.RegisterDate != null && hasData.ObsoleteDate != null)
+                {
+                    if (hasData.RegisterDate <= hasData.ObsoleteDate)
+                    {
+                        hasData.Lifetime = hasData.RegisterDate != null && hasData.ObsoleteDate != null ?
+                            this.CalcLiftTime(hasData.RegisterDate.Value, hasData.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
+                    }
+                }
                 return new JsonResult(hasData,this.DefaultJsonSettings);
             }
             catch(Exception ex)

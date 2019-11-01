@@ -110,7 +110,7 @@
             <div class="left-content">
               <mat-form-field>
                 <input matInput [matDatepicker]="RegisterDate" placeholder="RegisterDate"
-                       id="RegisterDate" formControlName="RegisterDate">
+                       id="RegisterDate" formControlName="RegisterDate" [max]="maxDate">
                 <mat-datepicker-toggle matSuffix [for]="RegisterDate"></mat-datepicker-toggle>
                 <mat-datepicker #RegisterDate readonly></mat-datepicker>
               </mat-form-field>
@@ -119,7 +119,7 @@
             <div class="right-content">
               <mat-form-field>
                 <input matInput [matDatepicker]="CancelDate" placeholder="CancelDate"
-                       id="CancelDate" formControlName="CancelDate">
+                       id="CancelDate" formControlName="CancelDate" disabled readonly>
                 <mat-datepicker-toggle matSuffix [for]="CancelDate"></mat-datepicker-toggle>
                 <mat-datepicker #CancelDate readonly></mat-datepicker>
               </mat-form-field>

@@ -219,7 +219,7 @@ export class ObsoleteItemScheduleComponent
   // On Print file
   onPrint(raw?: ObsoleteItem): void {
     // Only ApproveLevel3
-    if (raw.Status !== StatusObsolete.ApproveLevel3 || this.user.SubLevel !== 3) {
+    if (raw.Status !== StatusObsolete.ApproveLevel2 || this.user.SubLevel !== 3) {
       this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
       return;
     }
@@ -255,7 +255,7 @@ export class ObsoleteItemScheduleComponent
   }
 
   canPrint(raw?: ObsoleteItem): boolean {
-    if (raw.Status !== StatusObsolete.ApproveLevel3 || this.user.SubLevel !== 3) {
+    if (raw.Status !== StatusObsolete.ApproveLevel2 || this.user.SubLevel !== 3) {
       return true;
     } else {
       return false;

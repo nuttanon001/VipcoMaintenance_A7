@@ -69,6 +69,9 @@ namespace VipcoMaintenance.Controllers
         {
             if (Scroll != null)
             {
+                if (!string.IsNullOrEmpty(Scroll.Filter))
+                    Scroll.Filter = Scroll.Filter.Trim();
+
                 // Filter
                 var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
                                     : Scroll.Filter.Split(null);
