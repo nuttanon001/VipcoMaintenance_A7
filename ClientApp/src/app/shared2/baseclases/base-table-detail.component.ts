@@ -53,9 +53,6 @@ export class BaseTableDetailComponent<Model> implements OnInit, OnChanges, After
   }
 
   ngOnChanges() {
-    //debug here
-    // console.log(JSON.stringify(this.dataRows));
-
     this.dataSource = new MatTableDataSource<Model>(this.dataRows);
     this.resultsLength = this.dataRows ? this.dataRows.length : 0;
   }

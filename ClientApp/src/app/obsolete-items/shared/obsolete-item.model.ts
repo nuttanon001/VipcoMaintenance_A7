@@ -81,5 +81,6 @@ export enum StatusObsolete {
   ApproveLevel2,
   ApproveLevel3,
   FixOnly,
-  Cancel
+  Cancel,
+  Completed
 }

@@ -31,6 +31,7 @@ import { ObsoleteItemDialogComponent } from './obsolete-item-dialog/obsolete-ite
 import { ObsoleteItemInfoDialogComponent } from './obsolete-item-dialog/obsolete-item-info-dialog/obsolete-item-info-dialog.component';
 import { ItemMk2DialogComponent } from './item-mk2-dialog/item-mk2-dialog.component';
 import { ItemMk2TableComponent } from './item-mk2-dialog/item-mk2-table/item-mk2-table.component';
+import { ItemHistoriesDialogComponent } from './obsolete-item-dialog/item-histories-dialog/item-histories-dialog.component';
 
 @NgModule({
   imports: [
@@ -65,8 +66,9 @@ import { ItemMk2TableComponent } from './item-mk2-dialog/item-mk2-table/item-mk2
     ItemMaintenViewDialogComponent,
     ObsoleteItemDialogComponent,
     ObsoleteItemInfoDialogComponent,
+    ItemHistoriesDialogComponent,
     ItemMk2DialogComponent,
-    ItemMk2TableComponent
+    ItemMk2TableComponent,
   ],
   providers: [
     DialogsService,
@@ -92,6 +94,7 @@ import { ItemMk2TableComponent } from './item-mk2-dialog/item-mk2-table/item-mk2
     ItemMaintenViewDialogComponent,
     ObsoleteItemDialogComponent,
     ObsoleteItemInfoDialogComponent,
+    ItemHistoriesDialogComponent,
     ItemMk2DialogComponent,
     ItemMk2TableComponent
   ],

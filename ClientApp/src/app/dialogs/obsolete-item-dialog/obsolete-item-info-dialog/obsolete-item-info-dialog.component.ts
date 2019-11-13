@@ -1,9 +1,15 @@
+// Angular Core
 import { Component, OnInit } from '@angular/core';
+// Components
 import { BaseInfoDialogComponent } from 'src/app/shared2/baseclases/base-info-dialog-component';
+// Models
+import { AttachFile } from 'src/app/obsolete-items/shared/attach-file.model';
 import { ObsoleteItem } from 'src/app/obsolete-items/shared/obsolete-item.model';
 import { typeField, inputType } from 'src/app/shared2/dynamic-form/field-config.model';
+// Services
+import { ItemService } from 'src/app/items/shared/item.service';
 import { ObsoleteItemService } from 'src/app/obsolete-items/shared/obsolete-item.service';
-import { AttachFile } from 'src/app/obsolete-items/shared/attach-file.model';
+import { ItemHistories } from 'src/app/items/shared/item-histories.model';
 
 @Component({
   selector: 'app-obsolete-item-info-dialog',
@@ -13,9 +19,13 @@ import { AttachFile } from 'src/app/obsolete-items/shared/attach-file.model';
 export class ObsoleteItemInfoDialogComponent
   extends BaseInfoDialogComponent<ObsoleteItem> {
 
-  constructor(private service:ObsoleteItemService) { super(); }
+  constructor(
+    private service: ObsoleteItemService,
+    private serviceItem:ItemService
+  ) { super(); }
 
   ItemImage?: string;
+  ItemHistories?: Array<ItemHistories>;
 
   ngOnInit(): void {
     if (this.InfoValue) {
@@ -30,6 +40,7 @@ export class ObsoleteItemInfoDialogComponent
     }
     // Override
     super.ngOnInit();
+    this.getItemHistories();
   }
   // BuildForm
   buildForm(): void {
@@ -171,5 +182,19 @@ export class ObsoleteItemInfoDialogComponent
         value: this.InfoValue.ComplateByNameThai,
       },
     ];
+  }
+
+  // Get item histories
+  getItemHistories(): void {
+    if (this.InfoValue) {
+      if (this.InfoValue.ItemId) {
+        this.serviceItem.getItemHistories2(this.InfoValue.ItemId)
+          .subscribe((itemHistories: Array<ItemHistories>) => {
+            if (itemHistories) {
+              this.ItemHistories = itemHistories.slice();
+            }
+          });
+      }
+    }
   }
 }

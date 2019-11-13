@@ -486,6 +486,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     var hasData = await this.dapper.GetFirstEntity<ObsoleteItemViewModel>(new SqlCommandViewModel
                     {
                         SelectCommand = $@" ob.ObsoleteItemId,
+                                            ob.Status,
                                             ob.ObsoleteNo,
                                             '( ' + ob.Approve1NameThai + ' )' AS [Approve1NameThai],
                                             ob.Approve2NameThai,
@@ -512,6 +513,16 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                     if (hasData != null)
                     {
+                        if (hasData.Status == StatusObsolete.ApproveLevel3)
+                        {
+                            await this.dapper.ExecuteReturnNoResult(new SqlCommandViewModel
+                            {
+                                UpdateCommand = $@" [dbo].[ObsoleteItem]",
+                                SelectCommand = $@" [Status] = 7",
+                                WhereCommand = $@" [ObsoleteItemId] = {key}"
+                            });
+                        }
+
                         var imageAddress = "";
                         var AttachIds = await this.repositoryHasAttach.GetFirstOrDefaultAsync
                             (x => x.AttachFileId, x => x.ObsoleteItemId == key, 

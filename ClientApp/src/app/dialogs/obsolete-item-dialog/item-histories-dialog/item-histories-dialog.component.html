@@ -1,0 +1,123 @@
+<div class="mat-elevation-z8">
+  <mat-table #table [dataSource]="dataSource" matSort matSortDisableClear>
+    <!-- Generic column definition -->
+    <ng-container *ngFor="let column of columns" [matColumnDef]="column.columnField">
+      <mat-header-cell *matHeaderCellDef mat-sort-header class="bg-light">
+        <strong>{{ column.columnName }}</strong>
+      </mat-header-cell>
+      <!--<mat-cell *matCellDef="let row">{{ column.cell(row) }}</mat-cell>-->
+      <ng-container>
+        <mat-cell *matCellDef="let row">
+          <ng-container *ngIf="column.canEdit;else ElseRow">
+            <!--Start switch-->
+            <ng-container [ngSwitch]="column.inputType">
+              <!--Number input-->
+              <ng-container *ngSwitchCase="'1'">
+                <mat-form-field apparence="legacy">
+                  <input type="number" matInput [disabled]="readOnly"
+                         (blur)="onBlurText(row)"
+                         [(ngModel)]="row[column.columnField]"
+                         (click)="$event.stopPropagation()" />
+                </mat-form-field>
+              </ng-container>
+              <!--Text input-->
+              <ng-container *ngSwitchCase="'2'">
+                <mat-form-field>
+                  <input type="text" matInput [disabled]="readOnly"
+                         (blur)="onBlurText(row)"
+                         [(ngModel)]="row[column.columnField]"
+                         (click)="$event.stopPropagation()" />
+                </mat-form-field>
+              </ng-container>
+              <!--Date Input-->
+              <ng-container *ngSwitchCase="'3'">
+                <mat-form-field>
+                  <input matInput [disabled]="readOnly" [matDatepicker]="pDate"
+                         (blur)="onBlurText(row)"
+                         [(ngModel)]="row[column.columnField]"
+                         (click)="$event.stopPropagation()">
+                  <mat-datepicker-toggle matSuffix [for]="pDate"></mat-datepicker-toggle>
+                  <mat-datepicker #pDate></mat-datepicker>
+                </mat-form-field>
+              </ng-container>
+              <!--Else input-->
+              <ng-template *ngSwitchDefault>
+                <span class="mobile-label">{{ column.columnName }}:</span>
+                {{ column.cell(row) }}
+              </ng-template>
+            </ng-container>
+            <!--End switch-->
+          </ng-container>
+          <ng-template #ElseRow>
+            <span class="mobile-label">{{ column.columnName }}:</span>
+            {{ column.cell(row) }}
+          </ng-template>
+          <!--
+            <ng-container *ngIf="column.columnField === 'Description' || column.columnField === 'Remark';else ElseRow">
+              <mat-form-field>
+                <input type="text" matInput [disabled]="readOnly"
+                        #inputBox (blur)="onBlurText(inputBox.value,row)"
+                        [(ngModel)]="row[column.columnField]"
+                        (click)="$event.stopPropagation()">
+              </mat-form-field>
+            </ng-container>
+            <ng-template #ElseRow>
+              {{ column.cell(row) }}
+            </ng-template>
+          -->
+        </mat-cell>
+      </ng-container>
+
+      <!--
+      <mat-footer-cell *matFooterCellDef class="bg-light">
+        <strong>{{ column.columnName }}</strong>
+      </mat-footer-cell>
+      -->
+    </ng-container>
+
+    <!-- Command Column -->
+    <ng-container matColumnDef="Command">
+      <mat-header-cell *matHeaderCellDef class="bg-light">
+        <!--
+        <button mat-icon-button color="primary" (click)="onActionClick(undefined,1)"
+                [disabled]="readOnly" matTooltip="Create">
+          <mat-icon>add</mat-icon>
+        </button>
+        -->
+      </mat-header-cell>
+
+      <mat-cell *matCellDef="let row">
+        <!--
+        <div>
+          <button mat-icon-button color="warn" (click)="onActionClick(row,0)"
+                  [disabled]="readOnly" matTooltip="Remove">
+            <mat-icon>clear</mat-icon>
+          </button>
+        </div>
+        -->
+      </mat-cell>
+
+      <!--<mat-footer-cell *matFooterCellDef class="bg-light"></mat-footer-cell>-->
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+    <!-- No more highlight select row
+    [ngClass]="{'mat-row-highlight': selectedRow === row}"
+    -->
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             (click)="selection.toggle(row)"
+             style="cursor:pointer"></mat-row>
+
+    <!--<mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>-->
+
+    <!-- Group header -->
+    <!--
+    <ng-container matColumnDef="groupHeader">
+      <mat-cell colspan="999" *matCellDef="let groupBy"><strong>Starts with </strong></mat-cell>
+    </ng-container>
+
+    <tr mat-row *matRowDef="let row; columns: ['groupHeader']; when: isGroup"> </tr>
+    -->
+
+  </mat-table>
+</div>

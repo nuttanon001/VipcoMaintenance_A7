@@ -17,6 +17,15 @@
         <img [src]="ItemImage" class="size-img" />
       </ng-container>
     </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>
+        <strong><b>Item Histories</b></strong>
+      </ng-template>
+      <ng-container *ngIf="ItemHistories">
+        <app-item-histories-dialog [dataRows]="ItemHistories">
+        </app-item-histories-dialog>
+      </ng-container>
+    </mat-step>
   </mat-horizontal-stepper>
 </div>
 

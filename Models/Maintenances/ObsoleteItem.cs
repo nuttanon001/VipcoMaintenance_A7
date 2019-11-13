@@ -120,6 +120,7 @@ namespace VipcoMaintenance.Models.Maintenances
         ApproveLevel2,
         ApproveLevel3,
         FixOnly,
-        Cancel
+        Cancel,
+        Completed
     }
 }

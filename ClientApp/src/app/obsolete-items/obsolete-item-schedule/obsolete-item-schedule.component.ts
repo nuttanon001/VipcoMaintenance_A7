@@ -44,6 +44,9 @@ export class ObsoleteItemScheduleComponent
   @Output() filter: EventEmitter<Scroll> = new EventEmitter<Scroll>();
 
   ngOnInit(): void {
+    this.sizeForm = 280;
+    this.tableHeight = (window.innerHeight - this.sizeForm) + "px";
+
     if (this.OptionFilter) {
       this.scroll = this.OptionFilter;
     }
@@ -62,6 +65,7 @@ export class ObsoleteItemScheduleComponent
         { label: "Wait", value: 1 },
         { label: "ApproveLevel 2", value: 3 },
         { label: "ApproveLevel 3", value: 4 },
+        { label: "Completed", value: 7 },
         { label: "Rejected", value: 5 },
         { label: "Cancel", value: 6 }
       ];
@@ -219,13 +223,20 @@ export class ObsoleteItemScheduleComponent
   // On Print file
   onPrint(raw?: ObsoleteItem): void {
     // Only ApproveLevel3
-    if (raw.Status !== StatusObsolete.ApproveLevel2 || this.user.SubLevel !== 3) {
+    if (this.user.SubLevel !== 3) {
       this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
       return;
+    } else {
+      if (!(raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 || raw.Status === StatusObsolete.Completed)) {
+        this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+        return;
+      } 
     }
+
     this.service.getPaperReport(raw.ObsoleteItemId).subscribe(data => {
       // console.log(data);
       this.loading = false;
+      this.onGetData(this.scroll);
     }, () => this.loading = false, () => this.loading = false);
   }
 
@@ -255,10 +266,14 @@ export class ObsoleteItemScheduleComponent
   }
 
   canPrint(raw?: ObsoleteItem): boolean {
-    if (raw.Status !== StatusObsolete.ApproveLevel2 || this.user.SubLevel !== 3) {
+    if (this.user.SubLevel !== 3 ) {
       return true;
     } else {
-      return false;
+      if (raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 || raw.Status === StatusObsolete.Completed) {
+        return false;
+      } else {
+        return true
+      }
     }
   }
 

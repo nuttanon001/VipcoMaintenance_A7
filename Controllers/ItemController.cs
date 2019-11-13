@@ -609,6 +609,35 @@ namespace VipcoMaintenance.Controllers
             return BadRequest(new { message });
         }
 
+        [HttpGet("ItemHistories")]
+        public async Task<IActionResult> GetItemHistories(int? key)
+        {
+            if (key > 0)
+            {
+                var sqlCommand = new SqlCommandViewModel()
+                {
+                    SelectCommand = $@"[R].[Description] AS [Fail]
+                                        ,[M].[Description] AS [Fix]
+                                        ,[R].[RequireDate] AS [Date]
+                                        ,[R].[RequireDateTime]
+                                        ,[M].[Remark]
+                                        ,[M].[ItemMaintenanceId]",
+                    FromCommand = $@"[dbo].[RequireMaintenance] AS [R]
+                                    LEFT OUTER JOIN [dbo].[ItemMaintenance] AS [M]
+                                        ON [M].[RequireMaintenanceId] = [R].[RequireMaintenanceId]",
+                    WhereCommand = $@"[R].[ItemId] = {key} AND [R].[RequireStatus] != 4",
+                    OrderCommand = "[R].[RequireDate] DESC"
+                    
+                };
+
+                var hasData = await this.dapper.GetListEntites<ItemHistorieViewModel>(sqlCommand);
+                if (hasData.Any())
+                    return new JsonResult(hasData, this.DefaultJsonSettings);
+            }
+
+            return NoContent();
+        }
+
         [HttpGet("ItemHistoriesExport")]
         public async Task<IActionResult> ItemHistoriesExport(int? key)
         {

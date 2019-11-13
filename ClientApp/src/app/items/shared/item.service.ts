@@ -15,7 +15,9 @@ import { ItemByGroup } from "./item-by-group.model";
 import { ItemHistoriesOption } from "./item-histories-option.model";
 import { ItemHistories } from "./item-histories.model";
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ItemService extends BaseRestService<Item> {
   constructor(
     http: HttpClient,
@@ -29,13 +31,20 @@ export class ItemService extends BaseRestService<Item> {
       httpErrorHandler
     )
   }
+
+  getItemHistories2(itemId?: number): Observable<Array<ItemHistories>> {
+    const options = itemId ? { params: new HttpParams().set("key", itemId.toString()) } : {};
+    return this.http.get<Array<ItemHistories>>(this.baseUrl + "ItemHistories/", options)
+      .pipe(catchError(this.handleError(this.serviceName + "get item histories", <Array<ItemHistories>>{})));
+  }
+
   /** item histories maintenance */
   getItemHistories(itemOption: ItemHistoriesOption): Observable<Array<ItemHistories>> {
     return this.http.post<Array<ItemHistories>>(this.baseUrl + "ItemHistories/", JSON.stringify(itemOption), {
       headers: new HttpHeaders({
         "Content-Type": "application/json",
       }),
-    }).pipe(catchError(this.handleError(this.serviceName + "/get item history", new Array<ItemHistories>())));
+    }).pipe(catchError(this.handleError(this.serviceName + "get item history", new Array<ItemHistories>())));
   }
   /** update with key number */
   updateChangeGroupOfItem(item: Array<Item>, ByEmp: string, Group: string): Observable<any> {

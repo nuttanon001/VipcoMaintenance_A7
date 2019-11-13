@@ -26,7 +26,6 @@
       </button>
     </div>
   </form>
-
   <div *ngIf="needReset" class="loading-shade">
     <mat-spinner *ngIf="needReset"></mat-spinner>
   </div>
@@ -67,12 +66,13 @@
                       [ngClass]="{'text-danger': subItem.Status === 6 ,
                           'text-success': subItem.Status === 4 ,
                           'text-warning' : subItem.Status === 3 ,
+                          'text-primary' : subItem.Status === 7 ,
                           'text-secondary' : subItem.Status === 1 || subItem.Status === 2}">
                     <span (click)="onClickSubItem(subItem,0)" style="cursor:pointer">
                       <strong>{{subItem.ObsoleteNo || 'Unknow'}}</strong>
                       <br />
                       Code: {{subItem.ItemCode || ''}}{{subItem.ItemName ? ' | Name: ' + subItem.ItemName : ''}}
-                      || <i class="text-primary">Status {{subItem.StatusString}}</i> 
+                      || <i class="text-primary">Status {{subItem.StatusString}}</i>
                     </span>
                     <br />
                     <span>
@@ -96,7 +96,7 @@
                         <mat-icon>print</mat-icon>
                       </button>
                     </span>
-                    <br/>
+                    <br />
                   </li>
                 </ol>
               </ng-template>
