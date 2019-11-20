@@ -183,12 +183,130 @@ namespace VipcoMaintenance.Controllers
             return null;
         }
 
+        private async Task<List<ItemViewModel>> GetData2(ScrollViewModel scroll)
+        {
+            if (scroll != null)
+            {
+                string sWhere = "";
+                string sSort = "";
+
+                #region Where
+
+                // Filter
+                var filters = string.IsNullOrEmpty(scroll.Filter) ? new string[] { "" }
+                                    : scroll.Filter.Split(null);
+
+                foreach (string temp in filters)
+                {
+                    if (string.IsNullOrEmpty(temp))
+                        continue;
+
+                    string keyword = temp.ToLower();
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") +
+                                                    $@"(LOWER([b].[Name]) LIKE '%{keyword}%'
+                                                        OR LOWER([i].[Description]) LIKE '%{keyword}%'
+                                                        OR LOWER([i].[ItemCode]) LIKE '%{keyword}%'
+                                                        OR LOWER([i].[Name]) LIKE '%{keyword}%')";
+                }
+
+                if (scroll.WhereId.HasValue)
+                {
+                    if (scroll.WhereId > 0)
+                        sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[t].[ItemTypeId] = '{scroll.WhereId}'";
+                }
+
+                if (!string.IsNullOrEmpty(scroll.Where))
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[i].[Creator] = '{scroll.WhereId}'";
+
+                if (scroll.Where2Id.HasValue)
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[i].[ItemStatus] != '3'";
+
+                if (scroll.SDate.HasValue)
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[i].RegisterDate >= '{scroll.SDate.Value.ToString("yyyy-MM-dd")}'";
+
+                if (scroll.EDate.HasValue)
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"[i].RegisterDate <= '{scroll.EDate.Value.ToString("yyyy-MM-dd")}'";
+
+                #endregion
+
+                #region Sort
+
+                switch (scroll.SortField)
+                {
+                    case "ItemCode":
+                        if (scroll.SortOrder == -1)
+                            sSort = $"[i].[ItemCode] DESC";
+                        else
+                            sSort = $"[i].[ItemCode] ASC";
+                        break;
+
+                    case "Name":
+                        if (scroll.SortOrder == -1)
+                            sSort = $"[i].[EmpCode] DESC";
+                        else
+                            sSort = $"[i].[EmpCode] ASC";
+                        break;
+
+                    case "ItemTypeString":
+                        if (scroll.SortOrder == -1)
+                            sSort = $"[t].[Name] DESC";
+                        else
+                            sSort = $"[t].[Name] ASC";
+                        break;
+
+                    default:
+                        sSort = $"[i].[ItemCode] ASC";
+                        break;
+                }
+
+                #endregion
+
+                var sqlCommnad = new SqlCommandViewModel()
+                {
+                    SelectCommand = $@" [i].[ItemId]
+                                        ,[i].[ItemCode]
+                                        ,[i].[Name]
+                                        ,[i].[Model]
+                                        ,[i].[Property]
+                                        ,[i].[EmpResponsible]
+                                        ,[i].[GroupMis]
+                                        ,[i].[RegisterDate]
+                                        ,[i].[CancelDate]
+                                        ,[b].[Name] AS [BranchString]
+                                        ,[g].[GroupDesc] AS [GroupMisString]
+                                        ,[t].[Name] AS [ItemTypeString]
+                                        ,[el].[Namethai] AS [EmpResposibleString]",
+                    FromCommand = $@" [VipcoMaintenanceDataBase].[dbo].[Item] i
+                                        LEFT OUTER JOIN [VipcoMaintenanceDataBase].[dbo].[Branch] b
+                                            ON [b].[BranchId] = [i].[BranchId] 
+                                        LEFT OUTER JOIN [VipcoMaintenanceDataBase].[dbo].[ItemType] t
+                                            ON [t].[ItemTypeId] = [i].[ItemTypeId]
+                                        LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] el
+                                            ON [el].[EmpCode] = [i].[EmpResponsible]
+                                        LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[EmployeeGroupMIS] g
+                                            ON [g].[GroupMIS] = [i].[GroupMis]",
+                    WhereCommand = sWhere,
+                    OrderCommand = sSort,
+                };
+
+                var result = await this.dapper.GetEntitiesAndTotal<ScrollViewModel, ItemViewModel>
+                    (sqlCommnad, new ScrollViewModel { Skip = scroll.Skip ?? 0, Take = scroll.Take ?? 50 });
+
+                var dbData = result.Entities;
+                scroll.TotalRow = result.TotalRow;
+                // return json result
+                return dbData;
+            }
+            return null;
+        }
+
         #endregion
 
         // GET: api/Item/5
         [HttpGet("GetKeyNumber")]
         public override async Task<IActionResult> Get(int key)
         {
+            /*
             var HasItem = await this.repository.GetFirstOrDefaultAsync(
                 z => new ItemViewModel
                 {
@@ -229,7 +347,34 @@ namespace VipcoMaintenance.Controllers
                 HasItem.ItemImage = HasItem.ItemImage;
                 return new JsonResult(HasItem, this.DefaultJsonSettings);
             }
-            return BadRequest();
+            */
+
+            if (key > 0)
+            {
+                var sqlCommand = new SqlCommandViewModel()
+                {
+                    SelectCommand = $@" [i].*
+                                        ,[t].[Name] AS [ItemTypeString]
+                                        ,[b].[Name] AS [BranchString]
+                                        ,[g].[GroupDesc] AS [GroupMisString]
+                                        ,[el].[Namethai] AS [EmpResposibleString]",
+                    FromCommand = $@" [VipcoMaintenanceDataBase].[dbo].[Item] i
+                                        LEFT OUTER JOIN [VipcoMaintenanceDataBase].[dbo].[Branch] b
+                                            ON [b].[BranchId] = [i].[BranchId] 
+                                        LEFT OUTER JOIN [VipcoMaintenanceDataBase].[dbo].[ItemType] t
+                                            ON [t].[ItemTypeId] = [i].[ItemTypeId]
+                                        LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] el
+                                            ON [el].[EmpCode] = [i].[EmpResponsible]
+                                        LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[EmployeeGroupMIS] g
+                                            ON [g].[GroupMIS] = [i].[GroupMis]",
+                    WhereCommand = $@" [i].[ItemId] = '{key}'"
+                };
+
+                var hasData = await this.dapper.GetFirstEntity<ItemViewModel>(sqlCommand);
+                return new JsonResult(hasData, this.DefaultJsonSettings);
+            }
+
+            return NoContent();
         }
 
         // GET: api/Item/ItemByGroup
@@ -346,7 +491,7 @@ namespace VipcoMaintenance.Controllers
             var Message = "";
             try
             {
-                var MapDatas = await this.GetData(Scroll);
+                var MapDatas = await this.GetData2(Scroll);
                 return new JsonResult(new ScrollDataViewModel<ItemViewModel>(Scroll, MapDatas), this.DefaultJsonSettings);
             }
             catch (Exception ex)
@@ -482,7 +627,7 @@ namespace VipcoMaintenance.Controllers
             var Message = "";
             try
             {
-                var MapDatas = await this.GetData(Scroll);
+                var MapDatas = await this.GetData2(Scroll);
                 if (MapDatas.Any())
                 {
                     var table = new DataTable();
@@ -586,6 +731,7 @@ namespace VipcoMaintenance.Controllers
             {
                 if (Option != null)
                 {
+                    /*
                     var HasData = await this.repositoryRequireMaintenance.GetToListAsync(x => new ItemHistorieViewModel
                     {
                         Fail = x.Description,
@@ -598,8 +744,26 @@ namespace VipcoMaintenance.Controllers
                                                      x.RequireStatus != RequireStatus.Cancel,
                                                 x => x.OrderByDescending(z => z.RequireDate),
                                                 x => x.Include(z => z.ItemMaintenance));
-                    if (HasData.Any())
-                        return new JsonResult(HasData, this.DefaultJsonSettings);
+                    */
+
+                    var sqlCommand = new SqlCommandViewModel()
+                    {
+                        SelectCommand = $@"[R].[Description] AS [Fail]
+                                        ,[M].[Description] AS [Fix]
+                                        ,[R].[RequireDate] AS [Date]
+                                        ,[R].[RequireDateTime]
+                                        ,[M].[Remark]
+                                        ,[M].[ItemMaintenanceId]",
+                        FromCommand = $@"[dbo].[RequireMaintenance] AS [R]
+                                    LEFT OUTER JOIN [dbo].[ItemMaintenance] AS [M]
+                                        ON [M].[RequireMaintenanceId] = [R].[RequireMaintenanceId]",
+                        WhereCommand = $@"[R].[ItemId] = {Option.ItemId} AND [R].[RequireStatus] != 4",
+                        OrderCommand = "[R].[RequireDate] DESC"
+                    };
+
+                    var hasData = await this.dapper.GetListEntites<ItemHistorieViewModel>(sqlCommand);
+                    if (hasData.Any())
+                        return new JsonResult(hasData, this.DefaultJsonSettings);
                 }
             }
             catch (Exception ex)
@@ -652,6 +816,7 @@ namespace VipcoMaintenance.Controllers
 
                     if (dbItem != null)
                     {
+                        /*
                         var HasData = await this.repositoryRequireMaintenance
                             .GetToListAsync(x => new ItemHistorieViewModel
                             {
@@ -663,6 +828,23 @@ namespace VipcoMaintenance.Controllers
                             }, x => x.ItemId == dbItem.ItemId && x.RequireStatus != RequireStatus.Cancel,
                             x => x.OrderByDescending(z => z.RequireDate),
                             x => x.Include(z => z.ItemMaintenance));
+                        */
+
+                        var sqlCommand = new SqlCommandViewModel()
+                        {
+                            SelectCommand = $@"[R].[Description] AS [Fail]
+                                        ,[M].[Description] AS [Fix]
+                                        ,[R].[RequireDate] AS [Date]
+                                        ,[R].[RequireDateTime]
+                                        ,[M].[Remark]
+                                        ,[M].[ItemMaintenanceId]",
+                            FromCommand = $@"[dbo].[RequireMaintenance] AS [R]
+                                    LEFT OUTER JOIN [dbo].[ItemMaintenance] AS [M]
+                                        ON [M].[RequireMaintenanceId] = [R].[RequireMaintenanceId]",
+                            WhereCommand = $@"[R].[ItemId] = {dbItem.ItemId} AND [R].[RequireStatus] != 4",
+                            OrderCommand = "[R].[RequireDate] DESC"
+                        };
+                        var HasData = await this.dapper.GetListEntites<ItemHistorieViewModel>(sqlCommand);
 
                         var mapItem = this.mapper.Map<Item, ItemViewModel>(dbItem);
                         var memory = new MemoryStream();

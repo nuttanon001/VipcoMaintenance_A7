@@ -26,14 +26,9 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
   datasource: Array<Model>;
   totalRecords: number;
   loading: boolean;
-  subscription: Subscription;
   columns: Array<MyColumn>;
   columnUppers: Array<MyColumn>;
   columnLowers: Array<MyColumn>;
-  //TimeReload
-  message: number = 0;
-  count: number = 0;
-  time: number = 300;
   // ScrollData
   scroll: Scroll;
   reportForm: FormGroup;
@@ -48,12 +43,7 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
   }
 
   // destroy
-  ngOnDestroy(): void {
-    if (this.subscription) {
-      // prevent memory leak when component destroyed
-      this.subscription.unsubscribe();
-    }
-  }
+  ngOnDestroy(): void { }
 
   // build form
   buildForm(): void {
@@ -153,26 +143,6 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
     // this.loading = true;
     this.buildForm();
     this.onGetData(this.scroll);
-  }
-
-  // reload data
-  reloadData(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-
-    // console.log('reloaddata');
-    this.subscription = interval(1000).pipe(
-      map((x) => x + 1)
-    ).subscribe(x => {
-      this.message = this.time - x;
-      this.count = (x / this.time) * 100;
-      if (x === this.time) {
-        if (this.reportForm.value) {
-          this.onGetData(this.reportForm.value);
-        }
-      }
-    });
   }
 
   // Open Dialog

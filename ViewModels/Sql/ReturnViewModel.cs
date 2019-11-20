@@ -7,7 +7,7 @@ namespace VipcoMaintenance.ViewModels
 {
     public class ReturnViewModel<Entity>
     {
-        public ICollection<Entity> Entities { get; set; } = new List<Entity>();
+        public List<Entity> Entities { get; set; } = new List<Entity>();
         public int? TotalRow { get; set; }
     }
 }
