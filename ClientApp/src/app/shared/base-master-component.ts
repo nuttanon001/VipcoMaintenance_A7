@@ -2,19 +2,18 @@
 import {
   OnInit, OnDestroy,
   ElementRef, ViewChild, ViewContainerRef
-} from "@angular/core";
+} from '@angular/core';
 // rxjs
-import "rxjs/Rx";
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
+import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 // classes
-import { BaseModel } from "./base-model.model";
-import { ScrollData } from "./scroll-data.model";
-import { Scroll } from "./scroll.model";
-import { BaseRestService } from "./base-rest.service";
+import { BaseModel } from './base-model.model';
+import { ScrollData } from './scroll-data.model';
+import { Scroll } from './scroll.model';
+import { BaseRestService } from './base-rest.service';
 // services
-import { DialogsService } from "../dialogs/shared/dialogs.service";
-import { AuthService } from "../core/auth/auth.service";
+import { DialogsService } from '../dialogs/shared/dialogs.service';
+import { AuthService } from '../core/auth/auth.service';
 
 export abstract class BaseMasterComponent<Model extends BaseModel, Service extends BaseRestService<Model>>
   implements OnInit, OnDestroy {
@@ -24,7 +23,7 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
   constructor(
     protected service: Service,
     protected comService: any,
-    protected authService:AuthService,
+    protected authService: AuthService,
     protected dialogsService: DialogsService,
     protected viewContainerRef: ViewContainerRef,
   ) { }
@@ -80,6 +79,7 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
   // angular hook
   ngOnDestroy(): void {
     if (this.subscription1) {
+      // tslint:disable-next-line:no-unused-expression
       this.subscription1.unsubscribe;
     }
   }
@@ -112,7 +112,7 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
 
   // on save complete
   onSaveComplete(): void {
-    this.dialogsService.context("System message", "Save completed.", this.viewContainerRef)
+    this.dialogsService.context('System message', 'Save completed.', this.viewContainerRef)
       .subscribe(result => {
         this.canSave = false;
         this.ShowEdit = false;
@@ -144,34 +144,34 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
   }
 
   // on insert data
-  //abstract onInsertToDataBase(value: Model): void;
+  // abstract onInsertToDataBase(value: Model): void;
   onInsertToDataBase(value: Model): void {
     if (this.authService.getAuth) {
-      value["Creator"] = this.authService.getAuth.UserName || "";
+      value['Creator'] = this.authService.getAuth.UserName || '';
     }
     // change timezone
     value = this.changeTimezone(value);
     // insert data
     this.service.addModel(value).subscribe(
       (complete: any) => {
-        //debug here
-        //console.log("Complate", JSON.stringify(complete));
+        // debug here
+        // console.log("Complate", JSON.stringify(complete));
         if (complete) {
           this.displayValue = complete;
           this.onSaveComplete();
         } else {
           this.editValue.Creator = undefined;
           this.canSave = true;
-          this.dialogsService.error("Failed !",
-            "Save failed with the following error: Invalid Identifier code !!!", this.viewContainerRef);
+          this.dialogsService.error('Failed !',
+            'Save failed with the following error: Invalid Identifier code !!!', this.viewContainerRef);
         }
       },
       (error: any) => {
         console.error(error);
         this.editValue.Creator = undefined;
         this.canSave = true;
-        this.dialogsService.error("Failed !",
-          "Save failed with the following error: Invalid Identifier code !!!", this.viewContainerRef);
+        this.dialogsService.error('Failed !',
+          'Save failed with the following error: Invalid Identifier code !!!', this.viewContainerRef);
       }
     );
   }
@@ -180,7 +180,7 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
   // abstract onUpdateToDataBase(value: Model): void;
   onUpdateToDataBase(value: Model): void {
     if (this.authService.getAuth) {
-      value["Modifyer"] = this.authService.getAuth.UserName || "";
+      value['Modifyer'] = this.authService.getAuth.UserName || '';
     }
     // debug here
     // console.log("Value is: ",JSON.stringify(value));
@@ -189,22 +189,22 @@ export abstract class BaseMasterComponent<Model extends BaseModel, Service exten
     // update data
     this.service.updateModelWithKey(value).subscribe(
       (complete: any) => {
-        //debug here
-        //console.log("Complate", JSON.stringify(complete));
+        // debug here
+        // console.log("Complate", JSON.stringify(complete));
         if (complete) {
           this.displayValue = complete;
           this.onSaveComplete();
         } else {
           this.canSave = true;
-          this.dialogsService.error("Failed !",
-            "Save failed with the following error: Invalid Identifier code !!!", this.viewContainerRef);
+          this.dialogsService.error('Failed !',
+            'Save failed with the following error: Invalid Identifier code !!!', this.viewContainerRef);
         }
       },
       (error: any) => {
         console.error(error);
         this.canSave = true;
-        this.dialogsService.error("Failed !",
-          "Save failed with the following error: Invalid Identifier code !!!", this.viewContainerRef);
+        this.dialogsService.error('Failed !',
+          'Save failed with the following error: Invalid Identifier code !!!', this.viewContainerRef);
       }
     );
   }

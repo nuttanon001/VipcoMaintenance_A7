@@ -120,6 +120,7 @@ export abstract class BaseScheduleComponent<Model,Service extends BaseRestServic
 
   // reload data
   reloadData(): void {
+    /*
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
@@ -134,6 +135,7 @@ export abstract class BaseScheduleComponent<Model,Service extends BaseRestServic
           }
         }
       });
+    */
   }
 
   // Open Dialog

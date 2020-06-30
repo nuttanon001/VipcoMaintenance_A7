@@ -1,5 +1,5 @@
-import { BaseModel } from "../../shared/base-model.model";
-import { AttachFile } from "../../shared/attach-file.model";
+import { BaseModel } from '../../shared/base-model.model';
+import { AttachFile } from '../../shared/attach-file.model';
 
 export interface RequireMaintenance extends BaseModel {
   RequireMaintenanceId: number;
@@ -40,5 +40,23 @@ export enum RequireStatus {
   InProcess,
   Complate,
   Cancel,
-  MaintenanceResponse
+  MaintenanceResponse,
+}
+
+export interface RequireMTVm {
+  RequireDate?: Date;
+  ItemId?: number;
+  RequireMaintenanceId?: number;
+  MaintenanceApply?: Date;
+  RequireEmp?: string;
+  // MaintenanceTable
+  ItemMaintenanceId?: number;
+  MaintenanceNo?: string;
+  // ItemTable
+  ItemCode?: string;
+  ItemName?: string;
+  TypeName?: string;
+  // Employee
+  NameThai?: string;
+  GroupName?: string;
 }

@@ -1,24 +1,26 @@
-import { Component, OnInit, OnDestroy, ViewContainerRef, ViewEncapsulation } from "@angular/core";
-import { FormBuilder, FormGroup, FormControl, Validators, AbstractControl } from "@angular/forms";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Component, OnInit, OnDestroy, ViewContainerRef, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, FormGroup, FormControl, Validators, AbstractControl } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 // rxjs
-import { Observable, Subscription, interval } from "rxjs";
-import { debounceTime, distinctUntilChanged, map, take } from "rxjs/operators";
+import { Observable, Subscription, interval } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, take, switchMap } from 'rxjs/operators';
 // model
-import { OptionRequireMaintenance } from "../shared/option-require-maintenance.model";
-import { RequireMaintenance } from "../shared/require-maintenance.model";
+import { OptionRequireMaintenance } from '../shared/option-require-maintenance.model';
+import { RequireMaintenance, RequireMTVm } from '../shared/require-maintenance.model';
 // 3rd patry
-import { LazyLoadEvent } from "primeng/primeng";
+import { LazyLoadEvent } from 'primeng/primeng';
 // service
-import { DialogsService } from "../../dialogs/shared/dialogs.service";
-import { AuthService } from "../../core/auth/auth.service";
-import { RequireMaintenService } from "../shared/require-mainten.service";
-import { MyPrimengColumn, ColumnType } from 'src/app/shared/column.model';
+import { DialogsService } from '../../dialogs/shared/dialogs.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { RequireMaintenService } from '../shared/require-mainten.service';
+import { MyPrimengColumn, ColumnType, Format } from 'src/app/shared/column.model';
+import { OptionField } from 'src/app/shared2/dynamic-form/field-config.model';
+import { Scroll } from 'src/app/shared2/basemode/scroll.model';
 
 @Component({
-  selector: "app-require-mainten-schedule",
-  templateUrl: "./require-mainten-schedule.component.html",
-  styleUrls: ["./require-mainten-schedule.component.scss"]
+  selector: 'app-require-mainten-schedule',
+  templateUrl: './require-mainten-schedule.component.html',
+  styleUrls: ['./require-mainten-schedule.component.scss']
 })
 
 export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
@@ -32,34 +34,42 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
   ) {
-    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + 'px';
   }
 
   // Parameter
   // model
   columns: Array<MyPrimengColumn>;
-  totalRecords: number = 0;
+  totalRecords = 0;
   datasource: Array<any>;
   scrollHeight: string;
   subscription: Subscription;
   // time
-  message: number = 0;
-  count: number = 0;
-  time: number = 1800;
+  message = 0;
+  count = 0;
+  time = 1800;
   // value
   status: number | undefined;
-  first: number = 0;
-  pageRow: number = 50;
-  needReset: boolean = false;
+  first = 0;
+  pageRow = 50;
+  needReset = false;
   loading: boolean;
   ProjectString: string;
-  schedule: OptionRequireMaintenance;
-  sizeForm: number = 250;
+  scroll: Scroll;
+  sizeForm = 250;
   // form
   reportForm: FormGroup;
-
+  optionType: OptionField[];
   // called by Angular after jobcard-waiting component initialized
   ngOnInit(): void {
+    if (!this.optionType) {
+      this.optionType = [
+        { label: 'Tools',  value: 1 },
+        { label: 'Machines',  value: 2 },
+        { label: 'Other',  value: 4 },
+      ];
+    }
+
     this.datasource = new Array;
     this.buildForm();
   }
@@ -74,27 +84,36 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
 
   // build form
   buildForm(): void {
-    this.schedule = {
-      Status: this.status || 1,
+    this.scroll = {
+      WhereId: this.status || 1,
     };
 
     this.reportForm = this.fb.group({
-      Filter: [this.schedule.Filter],
-      ProjectId: [this.schedule.ProjectId],
-      ProjectString: [this.ProjectString],
-      SortField: [this.schedule.SortField],
-      SortOrder: [this.schedule.SortOrder],
-      SDate: [this.schedule.SDate],
-      EDate: [this.schedule.EDate],
-      Status: [this.schedule.Status],
-      Skip: [this.schedule.Skip],
-      Take: [this.schedule.Take],
+      Filter: [this.scroll.Filter],
+      SortField: [this.scroll.SortField],
+      SortOrder: [this.scroll.SortOrder],
+      TotalRow: [this.scroll.TotalRow],
+      SDate: [this.scroll.SDate],
+      EDate: [this.scroll.EDate],
+      Where: [this.scroll.Where],
+      WhereId: [this.scroll.WhereId],
+      Where2: [this.scroll.Where2],
+      WhereId2: [this.scroll.WhereId2],
+      Where3: [this.scroll.Where3],
+      WhereId3: [this.scroll.WhereId3],
+      Where4: [this.scroll.Where4],
+      WhereId4: [this.scroll.WhereId4],
+      Where5: [this.scroll.Where5],
+      WhereId5: [this.scroll.WhereId5],
+      OptionString: [''],
+      Skip: [this.scroll.Skip],
+      Take: [this.scroll.Take],
     });
 
     this.reportForm.valueChanges.pipe(debounceTime(250), distinctUntilChanged())
       .subscribe((data: any) => this.onValueChanged(data));
 
-    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get("Filter");
+    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get('Filter');
     if (ControlMoreActivities) {
       ControlMoreActivities.valueChanges
         .pipe(
@@ -108,49 +127,45 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   // on value change
   onValueChanged(data?: any): void {
     if (!this.reportForm) { return; }
-    this.schedule = this.reportForm.value;
-    this.onGetData(this.schedule);
+    this.scroll = this.reportForm.value;
+    this.onGetData(this.scroll);
   }
 
   // get request data
-  onGetData(schedule: OptionRequireMaintenance): void {
+  onGetData(schedule: Scroll): void {
     this.loading = true;
     this.service.getRequireMaintenanceSchedule(schedule)
       .subscribe(dbData => {
-        if (!dbData || !dbData.DataTable) {
+        if (!dbData || !dbData.dataTable) {
           this.totalRecords = 0;
           this.columns = new Array;
           this.datasource = new Array;
-          //this.reloadData();
+          // this.reloadData();
           this.loading = false;
           return;
         }
 
-        this.totalRecords = dbData.TotalRow || 0;
+        this.totalRecords = dbData.totalRow || 0;
         this.columns = new Array;
         this.columns = [
-          { field: 'ItemTypeName', header: 'Group item.', width: 100 },
+          { field: 'RequireDate', header: 'Date', width: 100 , format : Format.Date},
+          { field: 'Tools', header: 'Tools Group', width: 250 , type : ColumnType.Option1},
+          { field: 'Machines', header: 'Machines Group', width: 250 , type : ColumnType.Option1},
+          { field: 'Others', header: 'Others Group', width: 250 , type : ColumnType.Option1},
         ];
-        
-        let i: number = 0;
-        for (let name of dbData.Columns) {
-          this.columns.push({
-            header: name, field: name, width: 250, type: ColumnType.Option1,
-          });
-        }
 
-        this.datasource = dbData.DataTable.slice();
+        this.datasource = dbData.dataTable.slice();
         if (this.needReset) {
           this.first = 0;
           this.needReset = false;
         }
 
-        //this.reloadData();
+        // this.reloadData();
       }, error => {
         this.totalRecords = 0;
         this.columns = new Array;
         this.datasource = new Array;
-        //this.reloadData();
+        // this.reloadData();
       }, () => this.loading = false);
   }
 
@@ -159,7 +174,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    //this.subscription = Observable.interval(1000)
+    // this.subscription = Observable.interval(1000)
     //  .take(this.time).map((x) => x + 1)
     //  .subscribe((x) => {
     //    this.message = this.time - x;
@@ -191,14 +206,14 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   // open dialog
   openDialog(type?: string): void {
     if (type) {
-      if (type === "Project") {
+      if (type === 'Project') {
         this.serviceDialogs.dialogSelectProject(this.viewContainerRef)
           .subscribe(project => {
             if (project) {
               this.needReset = true;
               this.reportForm.patchValue({
-                ProjectId: project.ProjectCodeMasterId,
-                ProjectString: `${project.ProjectCode}/${project.ProjectName}`,
+                WhereId2: project.ProjectCodeMasterId,
+                Where2: `${project.ProjectCode}/${project.ProjectName}`,
               });
             }
           });
@@ -209,10 +224,10 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   // reset
   resetFilter(): void {
     this.datasource = new Array;
-    this.schedule = undefined;
+    this.scroll = undefined;
     this.loading = true;
     this.buildForm();
-    this.onGetData(this.schedule);
+    this.onGetData(this.scroll);
   }
 
   // load Data Lazy
@@ -234,14 +249,14 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   }
 
   // on selected data
-  onSelectRow(master?: RequireMaintenance): void {
+  onSelectRow(master?: RequireMTVm): void {
     if (master) {
       if (master.ItemMaintenanceId) {
-        this.serviceDialogs.dialogSelectItemMaintenance(master.ItemMaintenanceId, this.viewContainerRef,true)
+        this.serviceDialogs.dialogSelectItemMaintenance(master.ItemMaintenanceId, this.viewContainerRef, true)
           .subscribe(condition => {
             if (condition) {
               if (condition === 1) {
-                this.router.navigate(["maintenance/actual-info/", master.ItemMaintenanceId]);
+                this.router.navigate(['maintenance/actual-info/', master.ItemMaintenanceId]);
               }
             }
           });
@@ -253,7 +268,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
                 this.onUpdateRequireMaintenance(master.RequireMaintenanceId);
                 setTimeout(() => { this.onGetData(this.reportForm.value); }, 750);
               } else if (conditionNumber === 1) {
-                this.router.navigate(["maintenance/", master.RequireMaintenanceId]);
+                this.router.navigate(['maintenance/', master.RequireMaintenanceId]);
               }
             }
           });
@@ -262,8 +277,27 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
   }
 
   // RequireMaintenance Has Action
-  onUpdateRequireMaintenance(RequireMaintenanceId:number): void {
-    this.service.actionRequireMaintenance(RequireMaintenanceId, (this.serviceAuth.getAuth.UserName || ""))
+  onUpdateRequireMaintenance(RequireMaintenanceId: number): void {
+    this.service.actionRequireMaintenance(RequireMaintenanceId, (this.serviceAuth.getAuth.UserName || ''))
       .subscribe();
+  }
+
+  // get report data
+  onReport(): void {
+    if (this.reportForm && this.reportForm.valid) {
+      const scorll = this.reportForm.getRawValue() as Scroll;
+
+      this.loading = true;
+      scorll.Skip = 0;
+      scorll.Take = this.totalRecords;
+      this.service.getXlsx(scorll, 'MaintenanceWaitingReport/').subscribe(data => {
+        // console.log(data);
+        this.loading = false;
+      }, () => {
+        this.loading = false;
+        this.serviceDialogs.error('System message', 'Can\'t export file !!!', this.viewContainerRef);
+      }, () => this.loading = false);
+    }
+
   }
 }

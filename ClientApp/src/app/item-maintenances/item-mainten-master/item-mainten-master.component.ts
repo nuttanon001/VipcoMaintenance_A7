@@ -1,17 +1,17 @@
-import { Component, ViewContainerRef, ViewChild } from "@angular/core";
-import { Router, ActivatedRoute, ParamMap } from "@angular/router";
-import { Location } from "@angular/common";
+import { Component, ViewContainerRef, ViewChild, OnInit } from '@angular/core';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Location } from '@angular/common';
 // components
-import { BaseMasterComponent } from "../../shared/base-master-component";
+import { BaseMasterComponent } from '../../shared/base-master-component';
 // models
-import { ItemMaintenance, StatusMaintenance } from "../shared/item-maintenance.model";
+import { ItemMaintenance, StatusMaintenance } from '../shared/item-maintenance.model';
 // services
-import { ItemMaintenService, ItemMaintenCommunicateService } from "../shared/item-mainten.service";
-import { AuthService } from "../../core/auth/auth.service";
-import { DialogsService } from "../../dialogs/shared/dialogs.service";
+import { ItemMaintenService, ItemMaintenCommunicateService } from '../shared/item-mainten.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { DialogsService } from '../../dialogs/shared/dialogs.service';
 // timezone
-import * as moment from "moment-timezone";
-import { ItemMaintenTableComponent } from "../item-mainten-table/item-mainten-table.component";
+import * as moment from 'moment-timezone';
+import { ItemMaintenTableComponent } from '../item-mainten-table/item-mainten-table.component';
 import { User } from 'src/app/users/shared/user.model';
 
 @Component({
@@ -19,7 +19,9 @@ import { User } from 'src/app/users/shared/user.model';
   templateUrl: './item-mainten-master.component.html',
   styleUrls: ['./item-mainten-master.component.scss']
 })
-export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintenance, ItemMaintenService> {
+export class ItemMaintenMasterComponent
+extends BaseMasterComponent<ItemMaintenance, ItemMaintenService>
+implements OnInit {
   constructor(
     service: ItemMaintenService,
     serviceCom: ItemMaintenCommunicateService,
@@ -41,10 +43,10 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
     this.authService.currentUser.subscribe(x => this.currentUser = x);
   }
 
-  //Parameter
-  backToSchedule: boolean = false;
-  noReport: boolean = false;
-  loadReportPaint: boolean = false;
+  // Parameter
+  backToSchedule = false;
+  noReport = false;
+  loadReportPaint = false;
   currentUser?: User;
 
   @ViewChild(ItemMaintenTableComponent)
@@ -55,13 +57,13 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
     super.ngOnInit();
 
     this.route.paramMap.subscribe((param: ParamMap) => {
-      let key: number = Number(param.get("condition") || 0);
-      let itemMaintenanceId: number = Number(param.get("itemmaintenanceid") || 0);
+      const key: number = Number(param.get('condition') || 0);
+      const itemMaintenanceId: number = Number(param.get('itemmaintenanceid') || 0);
       if (key) {
         // can go back to last page
         this.backToSchedule = true;
 
-        let itemMainten: ItemMaintenance = {
+        const itemMainten: ItemMaintenance = {
           ItemMaintenanceId: 0,
           PlanStartDate: new Date,
           PlanEndDate: new Date,
@@ -76,13 +78,12 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
         this.noReport = true;
 
         setTimeout(() => {
-          this.onDetailEdit({
-          ItemMaintenanceId: itemMaintenanceId,
-        })}, 500);
+          this.onDetailEdit({ItemMaintenanceId: itemMaintenanceId});
+        } , 500);
 
-        //this.service.getOneKeyNumber({
+        // this.service.getOneKeyNumber({
         //  ItemMaintenanceId: itemMaintenanceId,
-        //}).subscribe(dbData => {
+        // }).subscribe(dbData => {
         //    setTimeout(() => {
         //      this.onDetailEdit(dbData);
         //    }, 500);
@@ -93,7 +94,7 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
 
   // on change time zone befor update to webapi
   changeTimezone(value: ItemMaintenance): ItemMaintenance {
-    let zone: string = "Asia/Bangkok";
+    const zone = 'Asia/Bangkok';
     if (value !== null) {
       if (value.CreateDate !== null) {
         value.CreateDate = moment.tz(value.CreateDate, zone).toDate();
@@ -115,7 +116,7 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
     if (editValue) {
       if (editValue.StatusMaintenance === StatusMaintenance.Complate) {
         if (!this.currentUser || !this.currentUser.SubLevel || this.currentUser.SubLevel !== 3) {
-          this.dialogsService.error("Access Deny", "การซ่อมบำรุง ดำเนินการแล้วเสร็จไม่สามารถแก้ไขได้ !!!", this.viewContainerRef);
+          this.dialogsService.error('Access Deny', 'การซ่อมบำรุง ดำเนินการแล้วเสร็จไม่สามารถแก้ไขได้ !!!', this.viewContainerRef);
           return;
         }
       }
@@ -141,7 +142,7 @@ export class ItemMaintenMasterComponent extends BaseMasterComponent<ItemMaintena
 
   // on save complete
   onSaveComplete(): void {
-    this.dialogsService.context("System message", "Save completed.", this.viewContainerRef)
+    this.dialogsService.context('System message', 'Save completed.', this.viewContainerRef)
       .subscribe(result => {
         this.canSave = false;
         this.ShowEdit = false;

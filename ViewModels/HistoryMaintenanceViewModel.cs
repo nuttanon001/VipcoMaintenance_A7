@@ -19,5 +19,15 @@ namespace VipcoMaintenance.ViewModels
         public string FinishDateString => this.FinishDate != null ? this.FinishDate.Value.ToString("dd/MM/yyyy HH:mm") : "-";
         public string FinishDateString2 { get; set; }
         public string Description { get; set; }
+        public DateTime? ActualSDate { get; set; }
+        public string ActualSTime { get; set; }
+        public DateTime? ActualEDate { get; set; }
+        public string ActialETime { get; set; }
+        public string StdTime { get; set; }
+        public double StdTimeValue { get; set; }
+
+        public string BdTime { get; set; }
+        public double BdTimeValue { get; set; }
+
     }
 }

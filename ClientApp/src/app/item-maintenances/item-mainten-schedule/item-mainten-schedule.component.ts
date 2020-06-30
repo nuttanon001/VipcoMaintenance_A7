@@ -1,20 +1,20 @@
-import { Component, OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
-import { FormBuilder, FormGroup, AbstractControl } from "@angular/forms";
-import { Router, ActivatedRoute, ParamMap } from "@angular/router";
+import { Component, OnInit, OnDestroy, ViewContainerRef } from '@angular/core';
+import { FormBuilder, FormGroup, AbstractControl } from '@angular/forms';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 // rxjs
-import { Observable, Subscription, interval } from "rxjs";
-import { debounceTime, distinctUntilChanged, map, take } from "rxjs/operators";
+import { Observable, Subscription, interval } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, take } from 'rxjs/operators';
 
 // model
-import { OptionItemMaintenSchedule } from "../shared/option-item-mainten-schedule.model";
-import { ItemMaintenance } from "../shared/item-maintenance.model";
+import { OptionItemMaintenSchedule } from '../shared/option-item-mainten-schedule.model';
+import { ItemMaintenance } from '../shared/item-maintenance.model';
 // 3rd patry
-import { LazyLoadEvent } from "primeng/primeng";
+import { LazyLoadEvent } from 'primeng/primeng';
 // service
-import { AuthService } from "../../core/auth/auth.service";
-import { DialogsService } from "../../dialogs/shared/dialogs.service";
-import { ItemMaintenService, ItemMaintenCommunicateService } from "../shared/item-mainten.service";
-import { RequireMaintenService } from "../../require-maintenances/shared/require-mainten.service";
+import { AuthService } from '../../core/auth/auth.service';
+import { DialogsService } from '../../dialogs/shared/dialogs.service';
+import { ItemMaintenService, ItemMaintenCommunicateService } from '../shared/item-mainten.service';
+import { RequireMaintenService } from '../../require-maintenances/shared/require-mainten.service';
 import { MyPrimengColumn, ColumnType } from 'src/app/shared/column.model';
 
 @Component({
@@ -33,9 +33,8 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
     private viewContainerRef: ViewContainerRef,
     private fb: FormBuilder,
     private router: Router,
-    public route: ActivatedRoute)
-  {
-    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
+    public route: ActivatedRoute) {
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + 'px';
   }
 
   // Parameter
@@ -46,44 +45,44 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
   columnLowers: Array<MyPrimengColumn>;
   columns: Array<MyPrimengColumn>;
   datasource: Array<any>;
-  totalRecords: number = 0;
-  first: number = 0;
-  pageRow: number = 15;
-  needReset: boolean = false;
+  totalRecords = 0;
+  first = 0;
+  pageRow = 15;
+  needReset = false;
   loading: boolean;
   scrollHeight: string;
-  sizeForm: number = 250;
+  sizeForm = 250;
   // subscription
   subscription: Subscription;
   subscription1: Subscription;
   // time
-  message: number = 0;
-  count: number = 0;
-  time: number = 1800;
+  message = 0;
+  count = 0;
+  time = 1800;
   // mode
   mode: number | undefined;
   schedule: OptionItemMaintenSchedule;
   ItemMaintenanceId: number | undefined;
   ItemMaintenanceEdit: ItemMaintenance | undefined;
-  canSave: boolean = false;
+  canSave = false;
   // report
-  isLinkMail: boolean = false;
+  isLinkMail = false;
   loadReport: boolean;
   ReportType?: string;
-  onLoading: boolean = false;
+  onLoading = false;
   // angular hook
   ngOnInit(): void {
     this.loadReport = false;
-    this.ReportType = "";
+    this.ReportType = '';
 
     this.datasource = new Array;
     this.route.paramMap.subscribe((param: ParamMap) => {
-      let key: number = Number(param.get("condition") || 0);
+      const key: number = Number(param.get('condition') || 0);
 
       if (key) {
         this.mode = key;
 
-        let schedule: OptionItemMaintenSchedule = {
+        const schedule: OptionItemMaintenSchedule = {
           Mode: this.mode
         };
 
@@ -147,7 +146,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
       .debounceTime(500)
       .subscribe((data: any) => this.onValueChanged(data));
 
-    const ControlFilter: AbstractControl | undefined = this.reportForm.get("Filter");
+    const ControlFilter: AbstractControl | undefined = this.reportForm.get('Filter');
     if (ControlFilter) {
       ControlFilter.valueChanges
         .pipe(
@@ -210,8 +209,8 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
       return;
     }
 
-    //Debug here Data Schedule
-    //console.log("JsonData", JSON.stringify(dbDataSchedule));
+    // Debug here Data Schedule
+    // console.log("JsonData", JSON.stringify(dbDataSchedule));
 
     this.totalRecords = dbDataSchedule.TotalRow;
 
@@ -220,24 +219,24 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
 
     // column Row1
     this.columnUppers = [
-      { header: "JobNo", rowspan: 2, width: 200 },
-      { header: "GroupMTN", rowspan: 2, width: 150 },
-      { header: "Item", rowspan: 2, width: 200 },
-      { header: "Progress", rowspan: 2, width: 100 }
+      { header: 'JobNo', rowspan: 2, width: 200 },
+      { header: 'GroupMTN', rowspan: 2, width: 150 },
+      { header: 'Item', rowspan: 2, width: 200 },
+      { header: 'Progress', rowspan: 2, width: 100 }
     ];
 
-    for (let month of dbDataSchedule.ColumnsTop) {
+    for (const month of dbDataSchedule.ColumnsTop) {
       this.columnUppers.push({
         header: month.Name,
         colspan: month.Value,
         width: (month.Value * 35),
-        type:ColumnType.Option2
+        type: ColumnType.Option2
       });
     }
     // column Row2
     this.columnLowers = new Array;
 
-    for (let name of dbDataSchedule.ColumnsLow) {
+    for (const name of dbDataSchedule.ColumnsLow) {
       this.columnLowers.push({
         header: name,
         // style: { "width": "25px" }
@@ -246,17 +245,17 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
 
     // column Main
     this.columns = [
-      { header: "JobNo", field: "ProjectMaster", width: 200 },
-      { header: "GroupMTN", field: "GroupMaintenance", width: 150 },
-      { header: "Item", field: "Item", width: 200 },
-      { header: "Progress", field: "Progress", width: 100 }
+      { header: 'JobNo', field: 'ProjectMaster', width: 200 },
+      { header: 'GroupMTN', field: 'GroupMaintenance', width: 150 },
+      { header: 'Item', field: 'Item', width: 200 },
+      { header: 'Progress', field: 'Progress', width: 100 }
     ];
-   
-    let i: number = 0;
-    for (let name of dbDataSchedule.ColumnsAll) {
-      if (name.indexOf("Col") >= -1) {
+
+    let i = 0;
+    for (const name of dbDataSchedule.ColumnsAll) {
+      if (name.indexOf('Col') >= -1) {
         this.columns.push({
-          header: this.columnLowers[i].header, field: name, width:35, type: ColumnType.Option1,
+          header: this.columnLowers[i].header, field: name, width: 35, type: ColumnType.Option1,
         });
         i++;
       }
@@ -328,7 +327,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
   // on select dialog
   onShowDialog(type?: string): void {
     if (type) {
-      if (type === "Employee") {
+      if (type === 'Employee') {
         this.serviceDialogs.dialogSelectEmployee(this.viewContainerRef)
           .subscribe(emp => {
             // console.log(emp);
@@ -340,7 +339,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
               });
             }
           });
-      } else if (type === "Project") {
+      } else if (type === 'Project') {
         this.serviceDialogs.dialogSelectProject(this.viewContainerRef)
           .subscribe(project => {
             if (project) {
@@ -358,7 +357,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
   // on update progress
   onSelectItemMaintenanceId(ItemMaintenanceId?: number): void {
     if (!this.serviceAuth.currentUserValue) {
-      this.serviceDialogs.error("Warning Message", "Please login befor show information.", this.viewContainerRef)
+      this.serviceDialogs.error('Warning Message', 'Please login befor show information.', this.viewContainerRef)
         .subscribe(result => { });
       return;
     }
@@ -380,7 +379,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
         this.serviceDialogs.dialogSelectItemMaintenance(ItemMaintenanceId, this.viewContainerRef);
       }
     } else {
-      this.serviceDialogs.error("Warning Message", "This maintenance not plan yet.", this.viewContainerRef);
+      this.serviceDialogs.error('Warning Message', 'This maintenance not plan yet.', this.viewContainerRef);
     }
   }
 
@@ -389,21 +388,21 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
     this.ItemMaintenanceEdit = undefined;
     this.canSave = false;
   }
- 
+
   // on update data
   onUpdateToDataBase(): void {
     if (this.ItemMaintenanceEdit) {
-      let tempValue: ItemMaintenance = Object.assign({}, this.ItemMaintenanceEdit);
+      const tempValue: ItemMaintenance = Object.assign({}, this.ItemMaintenanceEdit);
 
       if (this.serviceAuth.getAuth) {
-        tempValue.Modifyer = this.serviceAuth.getAuth.UserName || "";
+        tempValue.Modifyer = this.serviceAuth.getAuth.UserName || '';
       }
       // update data
       this.service.updateModelWithKey(tempValue).subscribe(
         (complete: any) => {
-          console.log("complete", JSON.stringify(complete));
+          console.log('complete', JSON.stringify(complete));
           this.serviceDialogs
-            .context("System message", "Save completed.", this.viewContainerRef)
+            .context('System message', 'Save completed.', this.viewContainerRef)
             .subscribe(result => {
               this.onCancelEdit();
               this.onGetTaskMasterSchedule(this.reportForm.value);
@@ -411,8 +410,8 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
         },
         (error: any) => {
           this.canSave = true;
-          this.serviceDialogs.error("Failed !",
-            "Save failed with the following error: Invalid Identifier code !!!", this.viewContainerRef);
+          this.serviceDialogs.error('Failed !',
+            'Save failed with the following error: Invalid Identifier code !!!', this.viewContainerRef);
         }
       );
     }
@@ -430,7 +429,7 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
   // on back from report
   onBack(): void {
     this.loadReport = !this.loadReport;
-    this.ReportType = "";
+    this.ReportType = '';
     setTimeout(() => {
       if (this.ItemMaintenanceEdit) {
         this.serviceCom.toChildEdit(this.ItemMaintenanceEdit);

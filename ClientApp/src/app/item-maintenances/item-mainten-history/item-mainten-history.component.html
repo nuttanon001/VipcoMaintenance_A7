@@ -61,7 +61,12 @@
         <ng-template pTemplate="body" let-rowData let-columns="columns">
           <tr>
             <td *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">
-              <span [innerHtml]="rowData[col.field] || '-'"></span>
+              <ng-container [ngSwitch]="col.format">
+                <span *ngSwitchCase="1" style="float:right">{{rowData[col.field] | number : '1.0-3'}}</span>
+                <span *ngSwitchCase="2">{{rowData[col.field] | date:'dd/MM/yy HH:mm'}}</span>
+                <span *ngSwitchCase="3" style="float:right">{{rowData[col.field] | number : '1.0-2'}} {{rowData[col.field] ? '%' : ''}}</span>
+                <span *ngSwitchDefault [innerHtml]="rowData[col.field] || '-'"></span>
+              </ng-container>
             </td>
           </tr>
         </ng-template>

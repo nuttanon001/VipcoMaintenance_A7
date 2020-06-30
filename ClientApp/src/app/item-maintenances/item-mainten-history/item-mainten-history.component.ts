@@ -8,7 +8,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ItemTypeService } from '../../item-types/shared/item-type.service';
 import { Scroll } from '../../shared/scroll.model';
 import { ScrollData } from '../../shared/scroll-data.model';
-import { ColumnType } from '../../shared/column.model';
+import { ColumnType, Format } from '../../shared/column.model';
 import { ItemType } from '../../item-types/shared/item-type.model';
 
 @Component({
@@ -72,7 +72,10 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
           { field: 'ItemName', header: 'ItemName', width: 250, type: ColumnType.Show },
           { field: 'RequestDateString2', header: 'RequestDate', width: 125, type: ColumnType.Show },
           { field: 'ApplyRequireDateString', header: 'ApplyDate', width: 125, type: ColumnType.Show },
-          { field: 'FinishDateString2', header: 'FinishDate', width: 125, type: ColumnType.Show },
+          { field: 'ActualSDate', header: 'StartDate', width: 125, type: ColumnType.Show, format:Format.Date },
+          { field: 'ActualEDate', header: 'FinishDate', width: 125, type: ColumnType.Show, format: Format.Date },
+          { field: 'BdTime', header: 'BdTime', width: 125, type: ColumnType.Show },
+          { field: 'StdTime', header: 'StdTime', width: 125, type: ColumnType.Show },
           { field: 'Description', header: 'Description', width: 250, type: ColumnType.Show },
         ];
 

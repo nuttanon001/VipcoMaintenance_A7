@@ -1,16 +1,17 @@
 // angular
-import { Component, Output, EventEmitter, Input } from "@angular/core";
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 // models
-import { ItemMaintenance } from "../shared/item-maintenance.model";
-import { RequireMaintenance } from "../../require-maintenances/shared/require-maintenance.model";
-import { ItemMaintenanceHasEmp } from "../shared/item-maintenance-has-emp.model";
-import { RequisitionStock } from "../../inventories/shared/requisition-stock.model";
+import { ItemMaintenance } from '../shared/item-maintenance.model';
+import { RequireMaintenance } from '../../require-maintenances/shared/require-maintenance.model';
+import { ItemMaintenanceHasEmp } from '../shared/item-maintenance-has-emp.model';
+import { RequisitionStock } from '../../inventories/shared/requisition-stock.model';
 // components
-import { BaseViewComponent } from "../../shared/base-view-component";
+import { BaseViewComponent } from '../../shared/base-view-component';
 // services
-import { RequireMaintenService } from "../../require-maintenances/shared/require-mainten.service";
-import { ItemMaintenHasEmpService } from "../shared/item-mainten-has-emp.service";
-import { RequisitionStockService } from "../../inventories/shared/requisition-stock.service";
+import { RequireMaintenService } from '../../require-maintenances/shared/require-mainten.service';
+import { ItemMaintenHasEmpService } from '../shared/item-mainten-has-emp.service';
+import { RequisitionStockService } from '../../inventories/shared/requisition-stock.service';
+import { switchMap, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-item-mainten-view',
@@ -32,32 +33,24 @@ export class ItemMaintenViewComponent extends BaseViewComponent<ItemMaintenance>
   // load more data
   onLoadMoreData(value: ItemMaintenance) {
     if (value) {
-      if (value.RequireMaintenanceId) {
-        this.serviceRequireMainten.getOneKeyNumber({ RequireMaintenanceId: value.RequireMaintenanceId })
-          .subscribe(dbData => {
-            //debug here
-            //console.log(JSON.stringify(dbData));
-            if (dbData) {
-              this.requireMainten = dbData;
-            }
-          })
-      }
-
-      if (value.ItemMaintenanceId) {
-        this.serviceItemMainHasEmp.actionItemMaintenanceHasEmployee(value.ItemMaintenanceId)
-          .subscribe(dbData => {
-            this.itemMainHasEmployees = dbData.slice();
-            //debug here
-            //console.log(JSON.stringify(this.itemMainHasEmployees ));
-          });
-
-        this.serviceRequistionStock.getRequisitionByItemMaintenance(value.ItemMaintenanceId)
-          .subscribe(dbData => {
-            this.requisitionStockes = dbData.slice();
-            //debug here
-            //console.log(JSON.stringify(this.requisitionStockes));
-          });
-      }
+      this.serviceRequireMainten.getOneKeyNumber({RequireMaintenanceId: value.RequireMaintenanceId})
+        .pipe(switchMap((dbRequire?: RequireMaintenance) => {
+          if (dbRequire) {
+            this.requireMainten = dbRequire;
+          }
+          // Get ItemMaintenance Employee
+          return this.serviceItemMainHasEmp.actionItemMaintenanceHasEmployee(value.ItemMaintenanceId);
+        }), switchMap((dbEmp => {
+          if (dbEmp) {
+            this.itemMainHasEmployees = dbEmp.slice();
+          }
+          // Stock
+          return  this.serviceRequistionStock.getRequisitionByItemMaintenance(value.ItemMaintenanceId);
+        })), map((dbStock) => {
+          if (dbStock) {
+            this.requisitionStockes = dbStock.slice();
+          }
+        })).subscribe();
     }
   }
 }

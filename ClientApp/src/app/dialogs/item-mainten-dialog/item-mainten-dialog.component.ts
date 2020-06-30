@@ -1,12 +1,12 @@
-import { Component, OnInit, Inject, ViewChild } from "@angular/core";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material";
+import { Component, OnInit, Inject, ViewChild } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material';
 // models
-import { ItemMaintenance } from "../../item-maintenances/shared/item-maintenance.model";
-//Services
+import { ItemMaintenance } from '../../item-maintenances/shared/item-maintenance.model';
+// Services
 import { RequireMaintenService } from '../../require-maintenances/shared/require-mainten.service';
 import { ItemMaintenHasEmpService } from '../../item-maintenances/shared/item-mainten-has-emp.service';
 import { RequisitionStockService } from '../../inventories/shared/requisition-stock.service';
-import { ItemMaintenService } from "../../item-maintenances/shared/item-mainten.service";
+import { ItemMaintenService } from '../../item-maintenances/shared/item-mainten.service';
 
 @Component({
   selector: 'app-item-mainten-dialog',
@@ -43,7 +43,7 @@ export class ItemMaintenDialogComponent implements OnInit {
         PlanStartDate: new Date
       })
         .subscribe(dbData => {
-          //debug here
+          // debug here
           // console.log(JSON.stringify(dbData));
 
           if (dbData) {
@@ -56,12 +56,12 @@ export class ItemMaintenDialogComponent implements OnInit {
       this.onCancelClick();
     }
   }
-  //On close Click
+  // On close Click
   onCancelClick(): void {
       this.dialogRef.close();
   }
 
-  //On select actual information
+  // On select actual information
   onSelectedValue(command: number): void {
     this.dialogRef.close(command);
   }

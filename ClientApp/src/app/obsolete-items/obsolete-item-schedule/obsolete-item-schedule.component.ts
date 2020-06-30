@@ -240,6 +240,25 @@ export class ObsoleteItemScheduleComponent
     }, () => this.loading = false, () => this.loading = false);
   }
 
+  onReport(): void {
+    if (this.reportForm) {
+      let scorll = this.reportForm.getRawValue() as Scroll;
+
+      if (!scorll.SDate) {
+        this.serviceDialogs.error("Error Message", `Please select date befor export.`, this.viewCon);
+        return;
+      }
+
+      this.loading = true;
+      scorll.Skip = 0;
+      scorll.Take = this.totalRecords;
+      this.service.getXlsx(scorll).subscribe(data => {
+        // console.log(data);
+        this.loading = false;
+      }, () => this.loading = false, () => this.loading = false);
+    }
+  }
+
   canClick(raw?: ObsoleteItem): boolean {
     if (raw) {
       if (this.user) {

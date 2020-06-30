@@ -1,29 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.JsonPatch;
+﻿using AutoMapper;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
-
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Dynamic;
-using System.Threading.Tasks;
 using System.Linq.Expressions;
-using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using VipcoMaintenance.Helper;
+using VipcoMaintenance.Models.Machines;
 using VipcoMaintenance.Models.Maintenances;
 using VipcoMaintenance.Services;
-using VipcoMaintenance.Services.EmailServices;
 using VipcoMaintenance.Services.ExcelExportServices;
 using VipcoMaintenance.ViewModels;
 using VipcoMaintenance.ViewModels.Items;
-
-using AutoMapper;
-using ClosedXML.Excel;
-using VipcoMaintenance.Models.Machines;
-using System.Globalization;
 
 namespace VipcoMaintenance.Controllers.ItemCancel
 {
@@ -34,13 +28,17 @@ namespace VipcoMaintenance.Controllers.ItemCancel
     {
         // Repository
         private readonly IRepositoryMaintenanceMk2<Item> repositoryItem;
+
         private readonly IRepositoryMaintenanceMk2<ObsoleteItemHasAttach> repositoryHasAttach;
         private readonly IRepositoryMachineMk2<AttachFile> repositoryAttach;
         private readonly IRepositoryDapper<ObsoleteItemViewModel> dapper;
+
         // IHost
         private readonly IHostingEnvironment hosting;
+
         // Help
         private readonly ExcelWorkBookService bookService;
+
         // GET: api/ItemHasCancel
         public ObsoleteItemController(IRepositoryMaintenanceMk2<ObsoleteItem> repo,
             IRepositoryMaintenanceMk2<Item> repoItem,
@@ -62,16 +60,17 @@ namespace VipcoMaintenance.Controllers.ItemCancel
             // Helper
             this.bookService = bookService;
         }
+
         #region Private
 
-        readonly Func<DateTime, DateTime, string> CalcLiftTime = (sDate, eDate) =>
-        {
-            var difference = eDate.Subtract(sDate);
-            var age = DateTime.MinValue + difference;
-            return $"{age.Year - 1} ปี {age.Month - 1} เดือน";
-        };
+        private readonly Func<DateTime, DateTime, string> CalcLiftTime = (sDate, eDate) =>
+          {
+              var difference = eDate.Subtract(sDate);
+              var age = DateTime.MinValue + difference;
+              return $"{age.Year - 1} ปี {age.Month - 1} เดือน";
+          };
 
-        #endregion
+        #endregion Private
 
         // GET: api/ItemHasCancel/GetByItem/5
         [HttpGet("GetByItem")]
@@ -107,9 +106,9 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             this.CalcLiftTime(hasData.RegisterDate.Value, hasData.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
                     }
                 }
-                return new JsonResult(hasData,this.DefaultJsonSettings);
+                return new JsonResult(hasData, this.DefaultJsonSettings);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 message = $"Has error {ex.ToString()}";
             }
@@ -147,7 +146,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     Request = x.Request,
                     RequestNameThai = x.RequestNameThai,
                     Status = x.Status,
-                },x => x.ObsoleteItemId == key,null,x => x.Include(z => z.Item));
+                }, x => x.ObsoleteItemId == key, null, x => x.Include(z => z.Item));
             return new JsonResult(HasData, this.DefaultJsonSettings);
         }
 
@@ -275,6 +274,12 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                 else
                     predicate = predicate = x => x.Status != StatusObsolete.Cancel;
 
+                if (Scroll.SDate.HasValue)
+                    predicate = predicate.And(x => x.ObsoleteDate.Value.Date >= Scroll.SDate.Value.Date);
+
+                if (Scroll.EDate.HasValue)
+                    predicate = predicate.And(x => x.ObsoleteDate.Value.Date <= Scroll.EDate.Value.Date);
+
                 if (Scroll != null)
                 {
                     // Filter
@@ -295,7 +300,6 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                     // Option
                     // WhereId filter itemId
-        
 
                     // Where filter DocNo
                     //if (string.IsNullOrEmpty(Scroll.Where))
@@ -314,14 +318,14 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                 var hasData = await this.repository.GetToListAsync(
                         x => new ObsoleteItemViewModel
                         {
-                           ObsoleteNo = x.ObsoleteNo ?? "",
-                           ItemCode = x.Item.ItemCode,
-                           ItemName = x.Item.Name,
-                           ItemId = x.ItemId,
-                           ObsoleteItemId = x.ObsoleteItemId,
-                           ObsoleteDate = x.ObsoleteDate.Value.Date,
-                           CreateDate = x.CreateDate,
-                           Status = x.Status,
+                            ObsoleteNo = x.ObsoleteNo ?? "",
+                            ItemCode = x.Item.ItemCode,
+                            ItemName = x.Item.Name,
+                            ItemId = x.ItemId,
+                            ObsoleteItemId = x.ObsoleteItemId,
+                            ObsoleteDate = x.ObsoleteDate.Value.Date,
+                            CreateDate = x.CreateDate,
+                            Status = x.Status,
                         },
                         predicate, x => x.OrderByDescending(z => z.ObsoleteDate),
                         z => z.Include(x => x.Item), Scroll.Skip ?? 0, Scroll.Take ?? 50
@@ -357,7 +361,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     if (dataTable.Any())
                     {
                         return new JsonResult(
-                            new ScrollDataViewModel<ObsoleteItemScheduleViewModel>(Scroll,dataTable), this.DefaultJsonSettings);
+                            new ScrollDataViewModel<ObsoleteItemScheduleViewModel>(Scroll, dataTable), this.DefaultJsonSettings);
                     }
                 }
                 else
@@ -365,7 +369,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     return NoContent();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 message = $"Has error {ex.ToString()}";
             }
@@ -466,7 +470,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     return new JsonResult(hasData, this.DefaultJsonSettings);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 message = $"Has error {ex.ToString()}";
             }
@@ -508,7 +512,6 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                                             LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[EmployeeGroupMIS] wg
                                                 ON im.GroupMis = wg.GroupMIS",
                         WhereCommand = $@"ob.ObsoleteItemId = {key}"
-                       
                     });
 
                     if (hasData != null)
@@ -525,7 +528,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                         var imageAddress = "";
                         var AttachIds = await this.repositoryHasAttach.GetFirstOrDefaultAsync
-                            (x => x.AttachFileId, x => x.ObsoleteItemId == key, 
+                            (x => x.AttachFileId, x => x.ObsoleteItemId == key,
                              x => x.OrderByDescending(z => z.ObsoleteItemId));
                         if (AttachIds != null)
                         {
@@ -551,10 +554,10 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                                 var image = ws.AddPicture(this.hosting.WebRootPath + imageAddress)
                                             .MoveTo(ws.Cell("C18").CellBelow(), 2, 2)
                                             .WithSize(255, 155); // size for production server only
-                                         // .WithSize(320, 200); // size for development servcer only
+                                                                 // .WithSize(320, 200); // size for development servcer only
                             }
 
-                            ws.Cell(32, "K").Value = hasData.ApproveToFix.HasValue ? (hasData.ApproveToFix.Value ? "P" : "" ) : "";
+                            ws.Cell(32, "K").Value = hasData.ApproveToFix.HasValue ? (hasData.ApproveToFix.Value ? "P" : "") : "";
                             ws.Cell(34, "K").Value = hasData.ApproveToObsolete.HasValue ? (hasData.ApproveToObsolete.Value ? "P" : "") : "";
 
                             foreach (var hField in hasData.GetType().GetProperties())
@@ -565,7 +568,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                                 var ignore = new List<string>() {
                                     "Approve1", "Approve1Date" ,
                                     "Request" , "ApproveToFix" ,
-                                    "ApproveToObsolete" 
+                                    "ApproveToObsolete"
                                 };
 
                                 if (ignore.Contains(name))
@@ -584,7 +587,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                                 else if (value is double && value != null)
                                 {
                                     double temp = (double)value;
-                                    value = string.Format("{0:#,##0.00}",temp);
+                                    value = string.Format("{0:#,##0.00}", temp);
                                 }
 
                                 var filter = $"data:{name}";
@@ -612,7 +615,177 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return BadRequest(new { message });
+        }
+
+        [HttpPost("GetSummanyReport")]
+        public async Task<IActionResult> ObsoleteItemGetSummanyReport([FromBody] ScrollViewModel condition)
+        {
+            var message = $"Data not been found.";
+
+            try
+            {
+                if (condition.SDate.HasValue)
+                {
+                    var hasData = await this.dapper.GetListEntites<ObsoleteReportVM>(new SqlCommandViewModel()
+                    {
+                        SelectCommand = $@"ROW_NUMBER() OVER(ORDER BY [OB].[ObsoleteItemId] ASC) AS No
+                                    ,[I].[Name]
+                                    ,[I].[Description]
+                                    ,[I].[Brand]
+                                    ,[I].[Model]
+                                    ,[I].[RegisterDate]
+                                    ,[I].[ItemCode]
+                                    ,[I].[Property]
+                                    ,[OB].[ObsoleteNo]
+                                    ,[OB].[ObsoleteDate]
+                                    ,[OB].[Description] AS [ObDescription]",
+                        FromCommand = $@"[dbo].[ObsoleteItem] OB
+                                    LEFT OUTER JOIN [dbo].[Item] AS [I]
+                                        ON [I].[ItemId] = [OB].[ItemId]",
+                        WhereCommand = $@"[OB].[Status] = 7
+                                        AND [OB].[ObsoleteDate] >= '{condition.SDate.Value.ToString("yyyy-MM-dd")}'
+                                        {(condition.EDate != null ? $"AND [OB].[ObsoleteDate] <= '{condition.EDate.Value.ToString("yyyy-MM-dd")}'" : "")}"
+                    });
+
+                    if (hasData.Any())
+                    {
+                        var memory = new MemoryStream();
+                        using (var workbook = this.bookService.Create(this.hosting.WebRootPath + "/reports/VFW-MTN-001-1.xlsx"))
+                        {
+                            var workSheet = workbook.Worksheet(1);
+                            //สรุปรายการขออนุมัติจำหน่ายยกเลิกใช้งานเครื่องมือ  เครื่องจักร   ประจำเดือน _________
+                            workSheet.Cell(1, 2).Value = $"สรุปรายการขออนุมัติจำหน่ายยกเลิกใช้งานเครื่องมือ เครื่องจักร ตั้งแต่ \"{condition.SDate?.ToString("dd MMM yy")}\" ถึง \"{condition.EDate?.ToString("dd MMM yy") ?? DateTime.Today.ToString("dd MMM yy")}\"";
+                            // 1st 24
+                            // 2nd 19
+                            var rowNumber = 6;
+
+                            foreach (var item in hasData)
+                            {
+                                workSheet.Cell(rowNumber, 1).AddToNamed("Mybb").Value = item.No;
+                                workSheet.Cell(rowNumber, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                                workSheet.Range(rowNumber, 2, rowNumber,4).Merge().AddToNamed("Mybb").Value = $"{item.Name} {item.Description}";
+                                workSheet.Cell(rowNumber, 5).AddToNamed("Mybb").Value = item.Brand;
+                                workSheet.Cell(rowNumber, 6).AddToNamed("Mybb").Value = item.Model;
+                                workSheet.Cell(rowNumber, 7).AddToNamed("Mybb").Value = item.RegisterDate;
+                                workSheet.Cell(rowNumber, 8).AddToNamed("Mybb").Value = item.ItemCode;
+                                workSheet.Cell(rowNumber, 9).AddToNamed("Mybb").Value = item.Property;
+                                workSheet.Cell(rowNumber, 10).AddToNamed("Mybb").Value = item.ObsoleteNo;
+
+                                workSheet.Cell(rowNumber, 11).AddToNamed("Mybb").Value = item.ObsoleteDate;
+
+                                workSheet.Cell(rowNumber, 12).AddToNamed("Mybb").Value = "";
+                                workSheet.Range(rowNumber, 13, rowNumber, 15).Merge().AddToNamed("Mybb").Value = item.ObDescription;
+
+                                rowNumber++;
+                            }
+
+                            // Footer
+                            rowNumber++;
+                            workSheet.Cell(rowNumber, 1).Value = "จัดทำโดย :";
+                            workSheet.Cell(rowNumber, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            workSheet.Cell(rowNumber, 6).Value = "ตรวจสอบโดย :";
+                            workSheet.Cell(rowNumber, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            workSheet.Cell(rowNumber, 11).Value = "ผู้อนุมัติโดย :";
+                            workSheet.Cell(rowNumber, 11).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                            rowNumber++;
+                            workSheet.Cell(rowNumber, 2).Value = "(";
+                            workSheet.Cell(rowNumber, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                            workSheet.Cell(rowNumber, 2).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 2).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 3).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 3).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 4).Value = ")";
+                            workSheet.Cell(rowNumber, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            workSheet.Cell(rowNumber, 4).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 4).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 7).Value = "(";
+                            workSheet.Cell(rowNumber, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                            workSheet.Cell(rowNumber, 7).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 7).Style.Border.BottomBorderColor = XLColor.Black;
+                            
+                            workSheet.Cell(rowNumber, 8).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 8).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 9).Value = ")";
+                            workSheet.Cell(rowNumber, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            workSheet.Cell(rowNumber, 9).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 9).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 12).Value = "(";
+                            workSheet.Cell(rowNumber, 12).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                            workSheet.Cell(rowNumber, 12).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 12).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 13).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 13).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            workSheet.Cell(rowNumber, 14).Value = ")";
+                            workSheet.Cell(rowNumber, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                            workSheet.Cell(rowNumber, 14).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            workSheet.Cell(rowNumber, 14).Style.Border.BottomBorderColor = XLColor.Black;
+
+                            rowNumber++;
+                            workSheet.Range(rowNumber, 2, rowNumber, 4).Merge();
+                            workSheet.Range(rowNumber, 2, rowNumber, 4).Value = "หัวหน้างาน / เจ้าหน้าที่สโตร์เครื่องมือ";
+                            workSheet.Range(rowNumber, 2, rowNumber, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                            workSheet.Range(rowNumber, 7, rowNumber, 9).Merge();
+                            workSheet.Range(rowNumber, 7, rowNumber, 9).Value = "หัวหน้าหน่วยงาน";
+                            workSheet.Range(rowNumber, 7, rowNumber, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                            workSheet.Range(rowNumber, 12, rowNumber, 14).Merge();
+                            workSheet.Range(rowNumber, 12, rowNumber, 14).Value = "ผู้บริหาร / ผู้จัดการ";
+                            workSheet.Range(rowNumber, 12, rowNumber, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                            workSheet.Range(6, 1, rowNumber, 14).Style.Font.FontName = "AngsanaUPC";
+                            workSheet.Range(6, 1, rowNumber, 14).Style.Font.FontSize = 11;
+
+                            var bbStyle = workbook.Style;
+                            bbStyle.Border.TopBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.TopBorderColor = XLColor.Black;
+
+                            bbStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.LeftBorderColor = XLColor.Black;
+
+                            bbStyle.Border.RightBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.RightBorderColor = XLColor.Black;
+
+                            bbStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.BottomBorderColor = XLColor.Black;
+
+                            bbStyle.Font.FontName = "AngsanaUPC";
+                            bbStyle.Font.FontSize = 10;
+
+                            workbook.NamedRanges.NamedRange("Mybb").Ranges.Style = bbStyle;
+                            // var protection = ws.Protect("12365478");
+                            // ws.Rows().AdjustToContents();
+
+                            // workSheet.Columns(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            workSheet.Columns(7, 7).Style.NumberFormat.Format = "dd/MM/yyyy";
+                            workSheet.Columns(11, 11).Style.NumberFormat.Format = "dd/MM/yyyy";
+
+                            workSheet.SheetView.View = XLSheetViewOptions.PageBreakPreview;
+                            // Print CenterHorizontally
+                            workSheet.PageSetup.CenterHorizontally = true;
+                            workbook.SaveAs(memory);
+                        }
+
+                        memory.Position = 0;
+                        return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
             {
                 message = $"Has error {ex.ToString()}";
             }
@@ -627,7 +800,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
         public async Task<IActionResult> GetAttach(int key)
         {
             var AttachIds = await this.repositoryHasAttach.GetToListAsync(
-                x => x.AttachFileId, x => x.ObsoleteItemId == key,x => x.OrderByDescending(z => z.ObsoleteItemHasAttachId));
+                x => x.AttachFileId, x => x.ObsoleteItemId == key, x => x.OrderByDescending(z => z.ObsoleteItemHasAttachId));
             if (AttachIds != null)
             {
                 var DataAttach = await this.repositoryAttach.GetToListAsync(x => x, x => AttachIds.Contains(x.AttachFileId));
@@ -683,7 +856,6 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                 }
 
                 return Ok(new { count = 1, size, filePath1 });
-
             }
             catch (Exception ex)
             {
@@ -726,11 +898,10 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                         }
                     }
                 }
-
             }
             return NotFound(new { Error = "Not found attach file." });
         }
 
-        #endregion
+        #endregion ATTACH
     }
 }

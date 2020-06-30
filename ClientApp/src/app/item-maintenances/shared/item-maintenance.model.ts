@@ -1,6 +1,6 @@
-import { BaseModel } from "../../shared/base-model.model";
-import { RequisitionStock } from "../../inventories/shared/requisition-stock.model";
-import { ItemMaintenanceHasEmp } from "./item-maintenance-has-emp.model";
+import { BaseModel } from '../../shared/base-model.model';
+import { RequisitionStock } from '../../inventories/shared/requisition-stock.model';
+import { ItemMaintenanceHasEmp } from './item-maintenance-has-emp.model';
 
 export interface ItemMaintenance extends BaseModel {
   ItemMaintenanceId: number;
@@ -24,7 +24,7 @@ export interface ItemMaintenance extends BaseModel {
   TypeMaintenanceId?: number;
   RequisitionStockSps?: Array<RequisitionStock>;
   ItemMainHasEmployees?: Array<ItemMaintenanceHasEmp>;
-  //ViewModel
+  // ViewModel
   ItemCode?: string;
   MaintenanceEmpString?: string;
   TypeMaintenanceString?: string;

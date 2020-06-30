@@ -29,8 +29,8 @@ export interface FieldConfig {
 }
 
 export interface ReturnValue<Model> {
-  value?: Model,
-  valid?: boolean
+  value?: Model;
+  valid?: boolean;
 }
 
 export interface OptionField {
@@ -39,34 +39,34 @@ export interface OptionField {
 }
 
 export enum inputType {
-  text = "text",
-  number = "number",
-  time = "time",
-  mail = "mail",
+  text = 'text',
+  number = 'number',
+  time = 'time',
+  mail = 'mail',
 }
 
 export enum typeField {
-  textarea = "textarea",
-  input = "input",
-  inputclick = "inputclick",
-  button = "button",
-  select = "select",
-  date = "date",
-  dateevent = "dateevent",
-  radiobutton = "radiobutton",
-  checkbox = "checkbox",
-  autocomplete = "autocomplete",
-  empty = "empty"
+  textarea = 'textarea',
+  input = 'input',
+  inputclick = 'inputclick',
+  button = 'button',
+  select = 'select',
+  date = 'date',
+  dateevent = 'dateevent',
+  radiobutton = 'radiobutton',
+  checkbox = 'checkbox',
+  autocomplete = 'autocomplete',
+  empty = 'empty'
 }
 
 export enum ValidatorField {
-  min = "min",
-  max = "max",
-  required = "required",
-  requiredTrue = "requiredTrue", // This validator is commonly used for required checkboxes.
-  email = "email",
-  minLength = "minLength",
-  maxLength = "maxLength",
-  pattern = "pattern",
-  nullValidator = "nullValidator", // Validator that performs no operation.
+  min = 'min',
+  max = 'max',
+  required = 'required',
+  requiredTrue = 'requiredTrue', // This validator is commonly used for required checkboxes.
+  email = 'email',
+  minLength = 'minLength',
+  maxLength = 'maxLength',
+  pattern = 'pattern',
+  nullValidator = 'nullValidator', // Validator that performs no operation.
 }

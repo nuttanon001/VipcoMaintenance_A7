@@ -3,12 +3,17 @@
     <mat-spinner *ngIf="isLoadingResults"></mat-spinner>
   </div>
   <div class="mx-2">
+    <mat-form-field>
+      <input type="text" matInput placeholder="Start with code..."
+             maxlength="10" [formControl]="codeForm">
+    </mat-form-field>
+    &nbsp;&nbsp;&nbsp;
     <search-box [isDisabled]="isDisabled"></search-box>
   </div>
 
-  <mat-table #table [dataSource]="dataSource" matSort matSortActive="Name" matSortDisableClear matSortDirection="asc">
+  <mat-table #table [dataSource]="dataSource" matSort matSortActive="Code" matSortDisableClear matSortDirection="desc">
     <!--- Note that these columns can be defined in any order.
-    The actual rendered columns are set as a property on the row definition" -->
+  The actual rendered columns are set as a property on the row definition" -->
     <!-- Checkbox Column -->
     <ng-container matColumnDef="select">
       <mat-header-cell *matHeaderCellDef>
@@ -21,6 +26,13 @@
       </mat-cell>
     </ng-container>
 
+    <!-- Code Column -->
+    <ng-container matColumnDef="Code">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Code
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.Code }}</mat-cell>
+    </ng-container>
     <!-- Name Column -->
     <ng-container matColumnDef="Name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>

@@ -369,7 +369,7 @@ export class ObsoleteItemInfoComponent
 
   // Set communicate
   SetCommunicatetoParent(): void {
-    if (this.isValid) {
+    if (this.isValid && this.ItemImage) {
       this.communicateService.toParent(this.InfoValue);
       return;
     }
@@ -533,7 +533,8 @@ export class ObsoleteItemInfoComponent
     var myReader: FileReader = new FileReader();
 
     myReader.onloadend = (e) => {
-      this.ItemImage = myReader.result ;
+      this.ItemImage = myReader.result;
+      this.SetCommunicatetoParent();
     }
     myReader.readAsDataURL(file);
   }

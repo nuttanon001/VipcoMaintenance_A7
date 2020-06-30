@@ -104,7 +104,6 @@ export class ObsoleteItemService extends BaseRestService<ObsoleteItem> {
   }
 
   // ===================== End Upload File ===========================\\
-
   getPaperReport(masterId: number, subReport: string = "GetReport/"): Observable<any> {
     let url: string = this.baseUrl + subReport;
     return this.http.get(url, {
@@ -113,6 +112,19 @@ export class ObsoleteItemService extends BaseRestService<ObsoleteItem> {
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }),
       params: new HttpParams().set("key", masterId.toString()),
+      responseType: 'blob' // <-- changed to blob 
+    }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
+  }
+
+
+  getXlsx(scroll: Scroll, subReport: string = "GetSummanyReport/"): Observable<any> {
+    let url: string = this.baseUrl + subReport;
+
+    return this.http.post(url, JSON.stringify(scroll), {
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }),
       responseType: 'blob' // <-- changed to blob 
     }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }

@@ -1,9 +1,9 @@
-import { OnInit, Input } from "@angular/core";
+import { OnInit, Input } from '@angular/core';
 
 export abstract class BaseViewComponent<Model> implements OnInit {
   public _displayValue: Model;
   // input
-  @Input("displayValue")
+  @Input('displayValue')
   set displayValue(setInput: Model) {
     this._displayValue = setInput;
     if (setInput) {

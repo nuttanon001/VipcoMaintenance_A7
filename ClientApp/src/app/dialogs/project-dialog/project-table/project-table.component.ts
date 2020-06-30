@@ -21,7 +21,7 @@ export class ProjectTableComponent extends CustomMatTableComponent<ProjectMaster
   ) {
     super(service, authService);
     this.displayedColumns = ["select", "ProjectCode", "ProjectName"];
-
+  
   }
 }
 

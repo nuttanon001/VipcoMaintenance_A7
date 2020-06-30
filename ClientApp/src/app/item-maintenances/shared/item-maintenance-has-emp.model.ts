@@ -1,4 +1,4 @@
-import { BaseModel } from "../../shared/base-model.model";
+import { BaseModel } from '../../shared/base-model.model';
 
 export interface ItemMaintenanceHasEmp extends BaseModel {
   ItemMainHasEmployeeId: number;
@@ -8,6 +8,6 @@ export interface ItemMaintenanceHasEmp extends BaseModel {
   ItemMaintenanceId?: number;
   // Employee
   EmpCode?: string;
-  //ViewModel
+  // ViewModel
   ItemMainEmpString?: string;
 }

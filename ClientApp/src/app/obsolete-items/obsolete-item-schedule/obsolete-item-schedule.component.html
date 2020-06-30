@@ -20,9 +20,31 @@
     </div>
 
     <div>
+     <i class="fa fa-calendar-o" aria-hidden="true"></i>
+      <mat-form-field>
+        <input matInput [matDatepicker]="SDate" placeholder="Choose from a date"
+               formControlName="SDate" [max]="reportForm.controls.EDate.value">
+        <mat-datepicker-toggle matSuffix [for]="SDate"></mat-datepicker-toggle>
+        <mat-datepicker #SDate></mat-datepicker>
+      </mat-form-field>
+      &nbsp;&ndash;&nbsp;
+      <mat-form-field>
+        <input matInput [matDatepicker]="EDate" placeholder="Choose to a date"
+               formControlName="EDate" [min]="reportForm.controls.SDate.value">
+        <mat-datepicker-toggle matSuffix [for]="EDate"></mat-datepicker-toggle>
+        <mat-datepicker #EDate></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <div>
       <button mat-mini-fab color="warn" (click)="resetFilter()"
               matTooltipPosition="left" matTooltip="Reset all filter">
         <mat-icon>clear</mat-icon>
+      </button>
+
+      <button mat-mini-fab color="accent" (click)="onReport()" [disabled]="loading"
+              matTooltipPosition="left" matTooltip="Export" style="margin-left:10px;">
+        <mat-icon>file_download</mat-icon>
       </button>
     </div>
   </form>

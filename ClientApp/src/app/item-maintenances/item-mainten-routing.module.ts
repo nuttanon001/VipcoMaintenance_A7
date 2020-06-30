@@ -1,7 +1,7 @@
-//Angular Core
+// Angular Core
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-//Components
+// Components
 import { ItemMaintenCenterComponent } from './item-mainten-center.component';
 import { ItemMaintenMasterComponent } from './item-mainten-master/item-mainten-master.component';
 import { ItemMaintenScheduleComponent } from './item-mainten-schedule/item-mainten-schedule.component';
@@ -12,41 +12,41 @@ import { ItemMaintenHistoryComponent } from './item-mainten-history/item-mainten
 import { ItemMaintenanceListComponent } from './item-maintenance-list/item-maintenance-list.component';
 
 const routes: Routes = [{
-  path: "",
+  path: '',
   component: ItemMaintenCenterComponent,
   children: [
     {
-      path: "item-mainlist",
+      path: 'item-mainlist',
       component: ItemMaintenanceListComponent,
     },
     {
-      path: "schedule",
+      path: 'schedule',
       component: ItemMaintenScheduleComponent,
     },
     {
-      path: "schedule/:condition",
+      path: 'schedule/:condition',
       component: ItemMaintenScheduleComponent,
     },
     {
-      path: "actual-info/:itemmaintenanceid",
+      path: 'actual-info/:itemmaintenanceid',
       component: ItemMaintenMasterComponent,
       canActivate: [AuthGuard]
     },
     {
-      path: "link-mail/:condition",
+      path: 'link-mail/:condition',
       component: ItemManitenLinkMailComponent,
     },
     {
-      path: "history1",
+      path: 'history1',
       component: ItemMaintenHistoryComponent,
     },
     {
-      path: ":condition",
+      path: ':condition',
       component: ItemMaintenMasterComponent,
       canActivate: [AuthGuard]
     },
     {
-      path: "",
+      path: '',
       component: ItemMaintenMasterComponent,
       canActivate: [AuthGuard]
     }
