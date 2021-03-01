@@ -24,7 +24,8 @@ import { switchMap, map } from 'rxjs/operators';
   styleUrls: ['./obsolete-item-schedule.component.scss']
 })
 export class ObsoleteItemScheduleComponent
-  extends BaseScheduleComponent<ObsoleteItem, ObsoleteItemService> {
+  extends BaseScheduleComponent<ObsoleteItem, ObsoleteItemService>
+  implements OnInit {
   constructor(service: ObsoleteItemService,
     fb: FormBuilder,
     viewRef: ViewContainerRef,
@@ -40,12 +41,13 @@ export class ObsoleteItemScheduleComponent
   user?: User;
   option?: Array<OptionField>;
   @Input() OptionFilter: Scroll;
-  @Output() returnSelectedWith: EventEmitter<{ data: ObsoleteItem, option: number }> = new EventEmitter<{ data: ObsoleteItem, option: number }>();
+  @Output() returnSelectedWith: EventEmitter<{ data: ObsoleteItem, option: number }> =
+  new EventEmitter<{ data: ObsoleteItem, option: number }>();
   @Output() filter: EventEmitter<Scroll> = new EventEmitter<Scroll>();
 
   ngOnInit(): void {
     this.sizeForm = 280;
-    this.tableHeight = (window.innerHeight - this.sizeForm) + "px";
+    this.tableHeight = (window.innerHeight - this.sizeForm) + 'px';
 
     if (this.OptionFilter) {
       this.scroll = this.OptionFilter;
@@ -62,12 +64,12 @@ export class ObsoleteItemScheduleComponent
 
     if (!this.option) {
       this.option = [
-        { label: "Wait", value: 1 },
-        { label: "ApproveLevel 2", value: 3 },
-        { label: "ApproveLevel 3", value: 4 },
-        { label: "Completed", value: 7 },
-        { label: "Rejected", value: 5 },
-        { label: "Cancel", value: 6 }
+        { label: 'Wait', value: 1 },
+        { label: 'ApproveLevel 2', value: 3 },
+        { label: 'ApproveLevel 3', value: 4 },
+        { label: 'Completed', value: 7 },
+        { label: 'Rejected', value: 5 },
+        { label: 'Cancel', value: 6 }
       ];
     }
 
@@ -107,8 +109,8 @@ export class ObsoleteItemScheduleComponent
         // new Column Array
         this.columns = new Array;
         this.columns = [
-          { header: "Date", field: "ObsoleteDate", width: 110, format: Format.Date },
-          { header: "Infomation", field: "ObsoleteItems", width: 550 },
+          { header: 'Date', field: 'ObsoleteDate', width: 110, format: Format.Date },
+          { header: 'Infomation', field: 'ObsoleteItems', width: 550 },
         ];
 
         if (dbData.Data) {
@@ -129,14 +131,14 @@ export class ObsoleteItemScheduleComponent
   }
 
   onShowDialog(type?: string): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 
   /**
    * Return item have click to master
    * @param subItem
    */
-  onClickSubItem(subItem?: any,option?: number): void {
+  onClickSubItem(subItem?: any, option?: number): void {
     if (subItem) {
       this.returnSelectedWith
         .emit({
@@ -152,33 +154,34 @@ export class ObsoleteItemScheduleComponent
     }
   }
 
-  result?: any;
+  // result?: any;
 
   // On Change status
   onChangeStatus(raw?: ObsoleteItem, status?: number) {
     if (raw && status) {
       if (this.user) {
-        let update: ObsoleteItem = { ObsoleteItemId : 0};
+        const update: ObsoleteItem = { ObsoleteItemId : 0};
 
-        for (let key in raw) { update[key] = raw[key]; }
+        // tslint:disable-next-line: forin
+        for (const key in raw) { update[key] = raw[key]; }
 
         // Update user modifyer
-        update.Modifyer = this.user.UserName || "";
+        update.Modifyer = this.user.UserName || '';
 
         if (update.Status === StatusObsolete.Wait || update.Status === StatusObsolete.ApproveLevel1) {
           // Only sub level 2
           if (this.user.SubLevel !== 2) {
-            this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+            this.serviceDialogs.error('Access Deny', 'Access is restricted', this.viewCon).subscribe();
             return;
           }
         } else if (update.Status === StatusObsolete.ApproveLevel2) {
           // Only sub level 3
           if (this.user.SubLevel !== 3) {
-            this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+            this.serviceDialogs.error('Access Deny', 'Access is restricted', this.viewCon).subscribe();
             return;
           }
         } else if (update.Status === StatusObsolete.ApproveLevel3 || update.Status === StatusObsolete.Cancel) {
-          this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+          this.serviceDialogs.error('Access Deny', 'Access is restricted', this.viewCon).subscribe();
           return;
         }
 
@@ -190,11 +193,11 @@ export class ObsoleteItemScheduleComponent
             update.Status = StatusObsolete.ApproveLevel3;
           }
           // Send to info
-          this.onClickSubItem(update,2);
+          this.onClickSubItem(update, 2);
 
         } else if (status === 2) {
           //
-          this.serviceDialogs.confirm("System Messsage", "Do you want to delete this item.", this.viewCon)
+          this.serviceDialogs.confirm('System Messsage', 'Do you want to delete this item.', this.viewCon)
             .pipe(switchMap((result1: boolean) => {
               if (result1) {
                 if (update.Status === StatusObsolete.Wait || update.Status === StatusObsolete.ApproveLevel1) {
@@ -206,13 +209,13 @@ export class ObsoleteItemScheduleComponent
                 }
                 return this.service.updateStatus(update);
               } else {
-                return empty;
+                return of(undefined);
               }
             }), map((data) => {
               if (data) {
-                return this.serviceDialogs.context("System Message", "Update Complated.", this.viewCon);
+                return this.serviceDialogs.context('System Message', 'Update Complated.', this.viewCon);
               } else {
-                return this.serviceDialogs.error("System Message", "Update Failed.", this.viewCon);
+                return this.serviceDialogs.error('System Message', 'Update Failed.', this.viewCon);
               }
             })).subscribe(() => this.resetFilter());
         }
@@ -224,28 +227,33 @@ export class ObsoleteItemScheduleComponent
   onPrint(raw?: ObsoleteItem): void {
     // Only ApproveLevel3
     if (this.user.SubLevel !== 3) {
-      this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+      this.serviceDialogs.error('Access Deny', 'Access is restricted', this.viewCon).subscribe();
       return;
     } else {
-      if (!(raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 || raw.Status === StatusObsolete.Completed)) {
-        this.serviceDialogs.error("Access Deny", "Access is restricted", this.viewCon).subscribe();
+      if (!(raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 ||
+        raw.Status === StatusObsolete.Completed)) {
+        this.serviceDialogs.error('Access Deny', 'Access is restricted', this.viewCon).subscribe();
         return;
-      } 
+      }
     }
 
+    this.loading = true;
     this.service.getPaperReport(raw.ObsoleteItemId).subscribe(data => {
       // console.log(data);
       this.loading = false;
       this.onGetData(this.scroll);
-    }, () => this.loading = false, () => this.loading = false);
+    }, () => {
+      this.loading = false;
+      this.serviceDialogs.error('Error Message', 'Error Message', this.viewCon).subscribe();
+    }, () => this.loading = false);
   }
 
   onReport(): void {
     if (this.reportForm) {
-      let scorll = this.reportForm.getRawValue() as Scroll;
+      const scorll = this.reportForm.getRawValue() as Scroll;
 
       if (!scorll.SDate) {
-        this.serviceDialogs.error("Error Message", `Please select date befor export.`, this.viewCon);
+        this.serviceDialogs.error('Error Message', `Please select date befor export.`, this.viewCon);
         return;
       }
 
@@ -288,10 +296,11 @@ export class ObsoleteItemScheduleComponent
     if (this.user.SubLevel !== 3 ) {
       return true;
     } else {
-      if (raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 || raw.Status === StatusObsolete.Completed) {
+      if (raw.Status === StatusObsolete.ApproveLevel2 || raw.Status === StatusObsolete.ApproveLevel3 ||
+        raw.Status === StatusObsolete.Completed) {
         return false;
       } else {
-        return true
+        return true;
       }
     }
   }

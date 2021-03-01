@@ -519,8 +519,8 @@ namespace VipcoMaintenance.Controllers
                         GetData.Max(x => x?.MaintenanceApply) ?? null,
                     };
 
-                    DateTime? MinDate = ListDate.Min();
-                    DateTime? MaxDate = ListDate.Max();
+                    DateTime? MinDate = ListDate.Where(x => x.Value != null && x.Value.Year > (DateTime.Today.Year - 3)).Min();
+                    DateTime? MaxDate = ListDate.Where(x => x.Value != null && x.Value.Year < (DateTime.Today.Year + 1)).Max();
 
                     if (MinDate == null && MaxDate == null)
                         return NotFound(new { Error = "Data not found" });
@@ -590,18 +590,21 @@ namespace VipcoMaintenance.Controllers
                         // For Plan1
                         if (Data?.PlanStartDate != null && Data?.PlanEndDate != null)
                         {
-                            // If Same Date can't loop
-                            if (Data?.PlanStartDate.Value.Date == Data?.PlanEndDate.Value.Date)
+                            if ((Data.PlanEndDate.Value - Data.PlanStartDate.Value).Days < 60)
                             {
-                                if (ColumnGroupBtm.Any(x => x.Key == Data?.PlanStartDate.Value.Date))
-                                    rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == Data?.PlanStartDate.Value.Date).Value, 1);
-                            }
-                            else
-                            {
-                                foreach (DateTime day in EachDate.EachDate(Data.PlanStartDate.Value, Data.PlanEndDate.Value))
+                                // If Same Date can't loop
+                                if (Data?.PlanStartDate.Value.Date == Data?.PlanEndDate.Value.Date)
                                 {
-                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
-                                        rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date).Value, 1);
+                                    if (ColumnGroupBtm.Any(x => x.Key == Data?.PlanStartDate.Value.Date))
+                                        rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == Data?.PlanStartDate.Value.Date).Value, 1);
+                                }
+                                else
+                                {
+                                    foreach (DateTime day in EachDate.EachDate(Data.PlanStartDate.Value, Data.PlanEndDate.Value))
+                                    {
+                                        if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                                            rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date).Value, 1);
+                                    }
                                 }
                             }
                         }
@@ -610,34 +613,36 @@ namespace VipcoMaintenance.Controllers
                         if (Data?.ActualStartDate != null)
                         {
                             var EndDate = Data?.ActualEndDate ?? (MaxDate > DateTime.Today ? DateTime.Today : MaxDate);
-                            if (Data?.ActualStartDate.Value.Date > EndDate.Value.Date)
-                                EndDate = Data?.ActualStartDate;
-                            // If Same Date can't loop 
-                            if (Data?.ActualStartDate.Value.Date == EndDate.Value.Date)
-                            {
-                                if (ColumnGroupBtm.Any(x => x.Key == Data?.ActualStartDate.Value.Date))
-                                {
-                                    var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == Data?.ActualStartDate.Value.Date);
-                                    // if Have Plan change value to 3
-                                    if (rowData.Keys.Any(x => x == Col.Value))
-                                        rowData[Col.Value] = 3;
-                                    else // else Don't have plan value is 2
-                                        rowData.Add(Col.Value, 2);
-                                }
-                            }
-                            else
-                            {
-                                foreach (DateTime day in EachDate.EachDate(Data.ActualStartDate.Value, EndDate.Value))
-                                {
-                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
-                                    {
-                                        var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date);
 
+                            if((EndDate.Value.Date - Data?.ActualStartDate.Value.Date).Value.Days < 50)
+                            {
+                                // If Same Date can't loop 
+                                if (Data?.ActualStartDate.Value.Date == EndDate.Value.Date)
+                                {
+                                    if (ColumnGroupBtm.Any(x => x.Key == Data?.ActualStartDate.Value.Date))
+                                    {
+                                        var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == Data?.ActualStartDate.Value.Date);
                                         // if Have Plan change value to 3
                                         if (rowData.Keys.Any(x => x == Col.Value))
                                             rowData[Col.Value] = 3;
                                         else // else Don't have plan value is 2
                                             rowData.Add(Col.Value, 2);
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (DateTime day in EachDate.EachDate(Data.ActualStartDate.Value, EndDate.Value))
+                                    {
+                                        if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                                        {
+                                            var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date);
+
+                                            // if Have Plan change value to 3
+                                            if (rowData.Keys.Any(x => x == Col.Value))
+                                                rowData[Col.Value] = 3;
+                                            else // else Don't have plan value is 2
+                                                rowData.Add(Col.Value, 2);
+                                        }
                                     }
                                 }
                             }

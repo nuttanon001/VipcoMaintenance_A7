@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --base-href=/maintenance/",
+    "build": "ng build --base-href=/maintenance/ --outputHashing=all",
     "build:ssr": "ng run VipcoMaintenance:server:dev",
     "test": "ng test",
     "lint": "ng lint",

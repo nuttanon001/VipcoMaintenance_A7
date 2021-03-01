@@ -1,17 +1,17 @@
-import { Component, OnInit } from "@angular/core";
-import { FormGroup } from "@angular/forms";
-import { FieldConfig } from "../field-config.model";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { FieldConfig } from '../field-config.model';
 import { Subscription } from 'rxjs';
 import { ShareService } from '../../share.service';
-import { filter } from "rxjs/operators";
+import { filter } from 'rxjs/operators';
 
 // Component
 @Component({
-  selector: "app-date",
+  selector: 'app-date',
   template: `
   <mat-form-field [formGroup]="group" class="app-date">
     <input matInput [matDatepicker]="picker" [formControlName]="field.name" [placeholder]="field.label"
-          [readonly]="field.readonly">
+          [readonly]="field.readonly" [min]="field.min" [max]="field.max">
     <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="field.readonly"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
     <mat-hint></mat-hint>
@@ -52,7 +52,7 @@ import { filter } from "rxjs/operators";
   }
 `]
 })
-export class DateComponent implements OnInit {
+export class DateComponent implements OnInit, OnDestroy {
   field: FieldConfig;
   group: FormGroup;
   subscription: Subscription;
@@ -62,13 +62,13 @@ export class DateComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.subscription = this.serviceShared.toChild$.pipe(filter((item) => this.field.name == item.name)).
+    this.subscription = this.serviceShared.toChild$.pipe(filter((item) => this.field.name === item.name)).
       subscribe(item => {
         // console.log(item);
         // Patch Value
         if (this.field.continue) {
           const value = this.group.get(this.field.name).value;
-          this.group.get(this.field.name).patchValue((value ? value + "," : "") + item.value);
+          this.group.get(this.field.name).patchValue((value ? value + ',' : '') + item.value);
         } else {
           this.group.get(this.field.name).patchValue(item.value);
         }

@@ -64,11 +64,15 @@ namespace VipcoMaintenance.Controllers.ItemCancel
         #region Private
 
         private readonly Func<DateTime, DateTime, string> CalcLiftTime = (sDate, eDate) =>
-          {
-              var difference = eDate.Subtract(sDate);
-              var age = DateTime.MinValue + difference;
-              return $"{age.Year - 1} ปี {age.Month - 1} เดือน";
-          };
+        {
+            if (eDate > sDate)
+            {
+                var difference = eDate.Subtract(sDate);
+                var age = DateTime.MinValue + difference;
+                return $"{age.Year - 1} ปี {age.Month - 1} เดือน";
+            }
+            return $"0 ปี 0 เดือน";
+        };
 
         #endregion Private
 
@@ -667,24 +671,27 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                             foreach (var item in hasData)
                             {
-                                workSheet.Cell(rowNumber, 1).AddToNamed("Mybb").Value = item.No;
+                                if (item == null)
+                                    continue;
+
+                                workSheet.Cell(rowNumber, 1).AddToNamed("Mybb").Value = item.No ?? 0;
                                 workSheet.Cell(rowNumber, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                workSheet.Range(rowNumber, 2, rowNumber,4).Merge().AddToNamed("Mybb").Value = $"{item.Name} {item.Description}";
-                                workSheet.Cell(rowNumber, 5).AddToNamed("Mybb").Value = item.Brand;
-                                workSheet.Cell(rowNumber, 6).AddToNamed("Mybb").Value = item.Model;
-                                workSheet.Cell(rowNumber, 7).AddToNamed("Mybb").Value = item.RegisterDate;
-                                workSheet.Cell(rowNumber, 8).AddToNamed("Mybb").Value = item.ItemCode;
-                                workSheet.Cell(rowNumber, 9).AddToNamed("Mybb").Value = item.Property;
-                                workSheet.Cell(rowNumber, 10).AddToNamed("Mybb").Value = item.ObsoleteNo;
-
-                                workSheet.Cell(rowNumber, 11).AddToNamed("Mybb").Value = item.ObsoleteDate;
-
+                                workSheet.Range(rowNumber, 2, rowNumber,4).Merge().AddToNamed("Mybb").Value = $"{(string.IsNullOrEmpty(item.Name) ? "" : item.Name)} {(string.IsNullOrEmpty(item.Description) ? "" : item.Description)}";
+                                workSheet.Cell(rowNumber, 5).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Brand) ? "" : item.Brand;
+                                workSheet.Cell(rowNumber, 6).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Model) ? "" : item.Model;
+                                workSheet.Cell(rowNumber, 7).AddToNamed("Mybb").Value = item.RegisterDate != null && item.RegisterDate < DateTime.Now && item.RegisterDate > DateTime.MinValue ? item.RegisterDate : new DateTime();
+                                workSheet.Cell(rowNumber, 8).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ItemCode) ? "" : item.ItemCode;
+                                workSheet.Cell(rowNumber, 9).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Property) ? "" : item.Property;
+                                workSheet.Cell(rowNumber, 10).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ObsoleteNo) ? "" : item.ObsoleteNo;
+                                workSheet.Cell(rowNumber, 11).AddToNamed("Mybb").Value = item.ObsoleteDate != null && item.ObsoleteDate <= DateTime.Now ? item.ObsoleteDate : new DateTime();
                                 workSheet.Cell(rowNumber, 12).AddToNamed("Mybb").Value = "";
-                                workSheet.Range(rowNumber, 13, rowNumber, 15).Merge().AddToNamed("Mybb").Value = item.ObDescription;
+                                workSheet.Cell(rowNumber, 13).AddToNamed("Mybb").Value = item.RegisterDate != null && item.ObsoleteDate != null ?
+                                    this.CalcLiftTime(item.RegisterDate.Value, item.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
+                                workSheet.Range(rowNumber, 14, rowNumber, 15).Merge().AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ObDescription) ? "" : item.ObDescription;
 
                                 rowNumber++;
                             }
-
+                            
                             // Footer
                             rowNumber++;
                             workSheet.Cell(rowNumber, 1).Value = "จัดทำโดย :";
@@ -747,8 +754,8 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             workSheet.Range(rowNumber, 12, rowNumber, 14).Value = "ผู้บริหาร / ผู้จัดการ";
                             workSheet.Range(rowNumber, 12, rowNumber, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                            workSheet.Range(6, 1, rowNumber, 14).Style.Font.FontName = "AngsanaUPC";
-                            workSheet.Range(6, 1, rowNumber, 14).Style.Font.FontSize = 11;
+                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontName = "AngsanaUPC";
+                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontSize = 11;
 
                             var bbStyle = workbook.Style;
                             bbStyle.Border.TopBorder = XLBorderStyleValues.Thin;
@@ -765,8 +772,9 @@ namespace VipcoMaintenance.Controllers.ItemCancel
 
                             bbStyle.Font.FontName = "AngsanaUPC";
                             bbStyle.Font.FontSize = 10;
-
                             workbook.NamedRanges.NamedRange("Mybb").Ranges.Style = bbStyle;
+                            
+
                             // var protection = ws.Protect("12365478");
                             // ws.Rows().AdjustToContents();
 
@@ -774,9 +782,9 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             workSheet.Columns(7, 7).Style.NumberFormat.Format = "dd/MM/yyyy";
                             workSheet.Columns(11, 11).Style.NumberFormat.Format = "dd/MM/yyyy";
 
-                            workSheet.SheetView.View = XLSheetViewOptions.PageBreakPreview;
+                            // workSheet.SheetView.View = XLSheetViewOptions.PageBreakPreview;
                             // Print CenterHorizontally
-                            workSheet.PageSetup.CenterHorizontally = true;
+                            // workSheet.PageSetup.CenterHorizontally = true;
                             workbook.SaveAs(memory);
                         }
 

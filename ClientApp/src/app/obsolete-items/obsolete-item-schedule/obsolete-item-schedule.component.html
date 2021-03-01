@@ -48,14 +48,14 @@
       </button>
     </div>
   </form>
-  <div *ngIf="needReset" class="loading-shade">
-    <mat-spinner *ngIf="needReset"></mat-spinner>
+  <div *ngIf="loading" class="loading-shade">
+    <mat-spinner *ngIf="loading"></mat-spinner>
   </div>
   <div class="detail">
-    <table *ngIf="!needReset" id="table1">
+    <table *ngIf="!loading" id="table1">
       <!-- 70vh -->
       <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
-               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]" (onSort)="onSort()"
+               [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]"
                [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true"
                [scrollHeight]="tableHeight" [style]="{width:'95vw'}">
         <ng-template pTemplate="colgroup" let-columns>

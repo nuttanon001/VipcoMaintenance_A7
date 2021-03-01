@@ -1,16 +1,16 @@
-import { OnInit, OnDestroy, ViewContainerRef, HostListener } from "@angular/core";
-import { FormBuilder, FormGroup, AbstractControl } from "@angular/forms";
-import { BaseRestService } from "./base-rest.service";
-import { DialogsService } from "../../dialogs/shared/dialogs.service";
+import { OnInit, OnDestroy, ViewContainerRef, HostListener } from '@angular/core';
+import { FormBuilder, FormGroup, AbstractControl } from '@angular/forms';
+import { BaseRestService } from './base-rest.service';
+import { DialogsService } from '../../dialogs/shared/dialogs.service';
 // 3rd_party
-import { Subscription, Observable, interval } from "rxjs";
-import { LazyLoadEvent } from "primeng/primeng";
-import { debounceTime, distinctUntilChanged, map } from "rxjs/operators";
+import { Subscription, Observable, interval } from 'rxjs';
+import { LazyLoadEvent } from 'primeng/primeng';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 // Model
-import { MyColumn } from "../basemode/my-colmun.model";
-import { Scroll } from "../basemode/scroll.model";
+import { MyColumn } from '../basemode/my-colmun.model';
+import { Scroll } from '../basemode/scroll.model';
 // Func
-import { debounceFunc } from "../basefunc/delay-func";
+import { debounceFunc } from '../basefunc/delay-func';
 
 export abstract class BaseScheduleComponent<Model, Service extends BaseRestService<Model>> implements OnInit, OnDestroy {
   constructor(
@@ -19,10 +19,10 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
     public viewCon: ViewContainerRef,
     public serviceDialogs: DialogsService
   ) {
-    this.tableHeight = (window.innerHeight - this.sizeForm) + "px";
+    this.tableHeight = (window.innerHeight - this.sizeForm) + 'px';
   }
 
-  //Parameter
+  // Parameter
   datasource: Array<Model>;
   totalRecords: number;
   loading: boolean;
@@ -32,11 +32,11 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
   // ScrollData
   scroll: Scroll;
   reportForm: FormGroup;
-  first: number = 0;
-  pageRow: number = 50;
-  needReset: boolean = false;
-  tableHeight: string = "50px";;
-  sizeForm: number = 220;
+  first = 0;
+  pageRow = 50;
+  needReset = false;
+  tableHeight = '50px';
+  sizeForm = 220;
 
   ngOnInit() {
     this.buildForm();
@@ -68,7 +68,7 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
       WhereId4: [this.scroll.WhereId4],
       Where5: [this.scroll.Where5],
       WhereId5: [this.scroll.WhereId5],
-      OptionString: [""],
+      OptionString: [''],
       Skip: [this.scroll.Skip],
       Take: [this.scroll.Take],
     });
@@ -76,7 +76,7 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
     this.reportForm.valueChanges.pipe(debounceTime(250), distinctUntilChanged())
       .subscribe((data: any) => this.onValueChanged(data));
 
-    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get("Filter");
+    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get('Filter');
     if (ControlMoreActivities) {
       ControlMoreActivities.valueChanges
         .pipe(
@@ -86,7 +86,7 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
           });
     }
 
-    const ControlMoreActivities2: AbstractControl | undefined = this.reportForm.get("WhereId2");
+    const ControlMoreActivities2: AbstractControl | undefined = this.reportForm.get('WhereId2');
     if (ControlMoreActivities2) {
       ControlMoreActivities2.valueChanges
         .pipe(
@@ -154,6 +154,6 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
     // console.log("innerWidth", event.target.innerWidth);
     // console.log("innerHeight", event.target.innerHeight);
 
-    this.tableHeight = (event.target.innerHeight - this.sizeForm) + "px";
+    this.tableHeight = (event.target.innerHeight - this.sizeForm) + 'px';
   }
 }

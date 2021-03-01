@@ -26,6 +26,8 @@ export interface FieldConfig {
   prefix?: boolean;
   text_perfix?: string;
   validations?: Validator[];
+  min?: any;
+  max?: any;
 }
 
 export interface ReturnValue<Model> {
