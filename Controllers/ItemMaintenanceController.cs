@@ -27,15 +27,18 @@ namespace VipcoMaintenance.Controllers
     [Route("api/[controller]")]
     public class ItemMaintenanceController : GenericController<ItemMaintenance>
     {
-        private readonly IRepositoryMaintenanceMk2<RequisitionStockSp> repositoryRequisition;
-        private readonly IRepositoryMaintenanceMk2<MovementStockSp> repositoryMovement;
-        private readonly IRepositoryMaintenanceMk2<ItemMainHasEmployee> repositoryItemMainEmp;
-        private readonly IRepositoryMaintenanceMk2<RequireMaintenance> repositoryRequire;
-        private readonly IRepositoryMachineMk2<ProjectCodeMaster> repositoryProject;
-        private readonly IRepositoryMachineMk2<Employee> repositoryEmp;
-        private readonly IRepositoryMachineMk2<EmployeeGroupMis> repositoryEmpGroup;
-        private readonly IHostingEnvironment hosting;
-        private readonly IEmailSender emailSender;
+        private readonly IRepositoryMaintenanceMk2<RequisitionStockSp> _repoRequisition;
+        private readonly IRepositoryMaintenanceMk2<MovementStockSp> _repoMovement;
+        private readonly IRepositoryMaintenanceMk2<ItemMainHasEmployee> _repoItemMainEmp;
+        private readonly IRepositoryMaintenanceMk2<RequireMaintenance> _repoRequire;
+        private readonly IRepositoryMachineMk2<ProjectCodeMaster> _repoProject;
+        private readonly IRepositoryMachineMk2<Employee> _repoEmp;
+        private readonly IRepositoryMachineMk2<EmployeeGroupMis> _repoGroup;
+        // Dapper
+        private readonly IRepositoryDapper<ItemMaintenance> _dapper;
+        // Other
+        private readonly IHostingEnvironment _hosting;
+        private readonly IEmailSender _email;
         //Helper
 
         // Controller
@@ -48,22 +51,25 @@ namespace VipcoMaintenance.Controllers
             IRepositoryMachineMk2<ProjectCodeMaster> repoProject,
             IRepositoryMachineMk2<Employee> repoEmp,
             IRepositoryMachineMk2<EmployeeGroupMis> repoEmpGroup,
+            IRepositoryDapper<ItemMaintenance> dapper,
             IEmailSender email,
             IHostingEnvironment hosting,
             IMapper map) : base(repo, map)
         {
             // Repositiory
-            this.repositoryItemMainEmp = repoItemMainEmp;
-            this.repositoryMovement = repoMovement;
-            this.repositoryRequisition = repoRequistion;
-            this.repositoryProject = repoProject;
-            this.repositoryRequire = repoRequire;
-            this.repositoryEmp = repoEmp;
-            this.repositoryEmpGroup = repoEmpGroup;
+            _repoItemMainEmp = repoItemMainEmp;
+            _repoMovement = repoMovement;
+            _repoRequisition = repoRequistion;
+            _repoProject = repoProject;
+            _repoRequire = repoRequire;
+            _repoEmp = repoEmp;
+            _repoGroup = repoEmpGroup;
+            // Dapper
+            _dapper = dapper;
             // Helpper
-            this.emailSender = email;
+            _email = email;
             // Host
-            this.hosting = hosting;
+            _hosting = hosting;
         }
        
         /// <summary>
@@ -76,7 +82,7 @@ namespace VipcoMaintenance.Controllers
         private async Task<bool> UpdateRequireMaintenance(int RequireMaintenanceId,
             string ByEmp, RequireStatus status = RequireStatus.InProcess)
         {
-            var RequireData = await this.repositoryRequire.GetAsync(RequireMaintenanceId);
+            var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
             if (RequireData != null)
             {
                 var SendMail = RequireData.MaintenanceApply == null;
@@ -86,12 +92,12 @@ namespace VipcoMaintenance.Controllers
                 RequireData.ModifyDate = DateTime.Now;
                 RequireData.Modifyer = ByEmp;
 
-                var Complate = await this.repositoryRequire.UpdateAsync(RequireData, RequireData.RequireMaintenanceId);
+                var Complate = await this._repoRequire.UpdateAsync(RequireData, RequireData.RequireMaintenanceId);
                 if (SendMail && Complate != null)
                 {
-                    var EmpName = (await this.repositoryEmp.GetAsync(Complate.RequireEmp)).NameThai ?? "ไม่ระบุ";
+                    var EmpName = (await this._repoEmp.GetAsync(Complate.RequireEmp)).NameThai ?? "ไม่ระบุ";
 
-                    if (this.emailSender.IsValidEmail(Complate.MailApply))
+                    if (this._email.IsValidEmail(Complate.MailApply))
                     {
                         var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
                                         "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
@@ -113,7 +119,7 @@ namespace VipcoMaintenance.Controllers
                             Subject = "Notification mail from VIPCO Maintenance SYSTEM."
                         };
 
-                        return await this.emailSender.SendMail(mail);
+                        return await this._email.SendMail(mail);
                     }
                 }
             }
@@ -128,12 +134,12 @@ namespace VipcoMaintenance.Controllers
         /// <returns></returns>
         private async Task<bool> MaintenanceComplateEmail(int RequireMaintenanceId)
         {
-            var RequireData = await this.repositoryRequire.GetAsync(RequireMaintenanceId);
+            var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
             if (RequireData != null)
             {
-                var EmpName = (await this.repositoryEmp.GetAsync(RequireData.RequireEmp)).NameThai ?? "ไม่ระบุ";
+                var EmpName = (await this._repoEmp.GetAsync(RequireData.RequireEmp)).NameThai ?? "ไม่ระบุ";
 
-                if (this.emailSender.IsValidEmail(RequireData.MailApply))
+                if (this._email.IsValidEmail(RequireData.MailApply))
                 {
                     var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
                                     "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
@@ -155,7 +161,7 @@ namespace VipcoMaintenance.Controllers
                         Subject = "Notification mail from VIPCO Maintenance SYSTEM."
                     };
 
-                    return await this.emailSender.SendMail(mail);
+                    return await this._email.SendMail(mail);
                 }
             }
 
@@ -199,10 +205,14 @@ namespace VipcoMaintenance.Controllers
             return result;
         };
 
-        readonly Func<DateTime?, DateTime?, (string,double)> CalcStd = (DateTime? sDate, DateTime? eDate) =>
+        readonly Func<DateTime?, DateTime?, (string time,double timeValue)> CalcStd = (DateTime? sDate, DateTime? eDate) =>
           {
               if (sDate != null && eDate != null)
               {
+                  // If hour more then 21 add new day to sDate
+                  if (sDate.Value.Hour > 21)
+                      sDate = new DateTime(sDate.Value.Year, sDate.Value.Month, sDate.Value.Day + 1, 8, 0, 0);
+
                   var totalMinutes = (eDate.Value - sDate.Value).TotalMinutes;
                   int weekend = 0;
                   for (var i = sDate.Value; i < eDate.Value; i = i.AddDays(1))
@@ -213,7 +223,7 @@ namespace VipcoMaintenance.Controllers
                   var workingDays = ((int)(eDate.Value.Date - sDate.Value.Date).TotalDays) - weekend;
                   var afternon = sDate.Value.Hour < 12 && eDate.Value.Hour > 12 && workingDays == 0 ? 1 : 0;
 
-                  TimeSpan spWorkMin = TimeSpan.FromMinutes((totalMinutes - ((16 * workingDays) * 60)));
+                  TimeSpan spWorkMin = TimeSpan.FromMinutes((totalMinutes - ((12 * workingDays) * 60)));
                   return (string.Format("{0:00}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes),spWorkMin.TotalMinutes);
               }
               else
@@ -221,8 +231,7 @@ namespace VipcoMaintenance.Controllers
                   return ("0:00",0);
               }
           };
-
-
+        
         #region GetMethod
 
         // GET: api/ItemMaintenance/5
@@ -266,6 +275,29 @@ namespace VipcoMaintenance.Controllers
             return BadRequest();
         }
 
+        //GET: api/ItemMaintenance/EmployeeMaintenance
+        [HttpGet("GetEmpMaintenance")]
+        public async Task<IActionResult> EmployeeMaintenance()
+        {
+            var hasData = await _dapper.GetListEntites<EmpMaintenance2Vm>(new SqlCommandViewModel()
+            {
+                SelectCommand = "e.EmpCode,e.NameThai AS EmpName",
+                FromCommand = $@"[dbo].[ItemMainHasEmployee] h
+LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] e
+	ON h.EmpCode = e.EmpCode
+LEFT OUTER JOIN [dbo].[ItemMaintenance] m
+	ON h.ItemMaintenanceId = m.ItemMaintenanceId",
+                WhereCommand = "m.StatusMaintenance != 6",
+                GroupCommand = "e.NameThai,e.EmpCode",
+                OrderCommand = "e.NameThai"
+            });
+
+            if (hasData != null)
+                return new JsonResult(hasData, this.DefaultJsonSettings);
+            else 
+                return NoContent();
+        }
+
         // GET: api/ItemMaintenance/ItemMaintenanceReport
         [HttpGet("ItemMaintenanceReport")]
         public async Task<IActionResult> ItemMaintenanceReport(int key)
@@ -283,8 +315,8 @@ namespace VipcoMaintenance.Controllers
 
                 if (ItemMain != null)
                 {
-                    var WorkGroupName = (await this.repositoryEmpGroup.GetAsync(ItemMain.RequireMaintenance.GroupMIS))?.GroupDesc ?? "";
-                    var RequireMaintenBy = (await this.repositoryEmp.GetAsync(ItemMain.RequireMaintenance.RequireEmp))?.NameThai ?? "";
+                    var WorkGroupName = (await this._repoGroup.GetAsync(ItemMain.RequireMaintenance.GroupMIS))?.GroupDesc ?? "";
+                    var RequireMaintenBy = (await this._repoEmp.GetAsync(ItemMain.RequireMaintenance.RequireEmp))?.NameThai ?? "";
                     // Get ReportOverTimeMaster
                     var ReportItemMaintenance = new
                     {
@@ -307,7 +339,7 @@ namespace VipcoMaintenance.Controllers
 
                     foreach (var MainBy in ItemMain.ItemMainHasEmployees)
                     {
-                        var EmpString = (await this.repositoryEmp.GetAsync(MainBy.EmpCode)).NameThai;
+                        var EmpString = (await this._repoEmp.GetAsync(MainBy.EmpCode)).NameThai;
                         ReportItemMaintenance.MaintenBy.Add(new
                         {
                             MainBy.EmpCode,
@@ -545,7 +577,7 @@ namespace VipcoMaintenance.Controllers
                     Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
 
                     var listEmps = QueryData.Select(z => z.RequireEmpCode).Distinct().ToList();
-                    var emps = await this.repositoryEmp.GetToListAsync(x => new { x.EmpCode, x.NameThai }, x => listEmps.Contains(x.EmpCode));
+                    var emps = await this._repoEmp.GetToListAsync(x => new { x.EmpCode, x.NameThai }, x => listEmps.Contains(x.EmpCode));
 
                     foreach (var item in QueryData)
                     {
@@ -806,7 +838,7 @@ namespace VipcoMaintenance.Controllers
                         var ProjectMaster = "NoData";
                         if (Data?.ProjectCodeMasterId != null)
                         {
-                            var ProjectData = await this.repositoryProject.
+                            var ProjectData = await this._repoProject.
                                         GetAsync(Data.ProjectCodeMasterId ?? 0);
                             ProjectMaster = ProjectData != null ? $"{ProjectData.ProjectCode}/{ProjectData.ProjectName}" : "-";
                         }
@@ -982,8 +1014,8 @@ namespace VipcoMaintenance.Controllers
             else
             {
                 // Find requisition of item maintenance
-                var dbRequisition = await this.repositoryRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
-                var dbItemMainHasEmp = await this.repositoryItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
+                var dbRequisition = await this._repoRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
+                var dbItemMainHasEmp = await this._repoItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
 
                 //Remove requisition if edit remove it
                 foreach (var item in dbRequisition)
@@ -992,7 +1024,7 @@ namespace VipcoMaintenance.Controllers
                     {
                         if (item.MovementStockSpId.HasValue)
                         {
-                            var hasMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
+                            var hasMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
                             if (hasMovement != null)
                             {
                                 // Cancel Status
@@ -1000,17 +1032,17 @@ namespace VipcoMaintenance.Controllers
                                 hasMovement.ModifyDate = record.ModifyDate;
                                 hasMovement.Modifyer = record.Modifyer;
                                 // Update
-                                await this.repositoryMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
+                                await this._repoMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
                             }
                         }
-                        await this.repositoryRequisition.DeleteAsync(item.RequisitionStockSpId);
+                        await this._repoRequisition.DeleteAsync(item.RequisitionStockSpId);
                     }
                 }
 
                 foreach (var item in dbItemMainHasEmp)
                 {
                     if (!record.ItemMainHasEmployees.Any(x => x.ItemMainHasEmployeeId == item.ItemMainHasEmployeeId))
-                        await this.repositoryItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
+                        await this._repoItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
                 }
 
                 //Update ItemMainHasEmployee or New ItemMainHasEmployee
@@ -1020,13 +1052,13 @@ namespace VipcoMaintenance.Controllers
                         continue;
 
                     if (item.ItemMainHasEmployeeId > 0)
-                        await this.repositoryItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
+                        await this._repoItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
                     else
                     {
                         if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
                             item.ItemMaintenanceId = record.ItemMaintenanceId;
 
-                        await this.repositoryItemMainEmp.AddAsync(item);
+                        await this._repoItemMainEmp.AddAsync(item);
                     }
                 }
 
@@ -1039,7 +1071,7 @@ namespace VipcoMaintenance.Controllers
                     if (item.RequisitionStockSpId > 0)
                     {
                         // Update movement
-                        var editMovement = await this.repositoryMovement.GetAsync(item.MovementStockSpId.Value);
+                        var editMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
                         if (editMovement != null)
                         {
                             editMovement.ModifyDate = item.ModifyDate;
@@ -1048,9 +1080,9 @@ namespace VipcoMaintenance.Controllers
                             editMovement.Quantity = item.Quantity;
                             editMovement.SparePartId = item.SparePartId;
 
-                            await this.repositoryMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
+                            await this._repoMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
                         }
-                        await this.repositoryRequisition.UpdateAsync(item, item.RequisitionStockSpId);
+                        await this._repoRequisition.UpdateAsync(item, item.RequisitionStockSpId);
                     }
                     else
                     {
@@ -1066,7 +1098,7 @@ namespace VipcoMaintenance.Controllers
                             Quantity = item.Quantity,
                             SparePartId = item.SparePartId,
                         };
-                        await this.repositoryRequisition.AddAsync(item);
+                        await this._repoRequisition.AddAsync(item);
                     }
                 }
             }
@@ -1092,6 +1124,7 @@ namespace VipcoMaintenance.Controllers
         }
         #endregion
 
+        #region Report
 
         // POST: api/ItemMaintenance/ReportList
         [HttpPost("ReportList")]
@@ -1128,19 +1161,19 @@ namespace VipcoMaintenance.Controllers
                         ItemName = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.Name ?? "-",
                         Description = item.Description ?? "-",
                         RequestDate = item.RequireMaintenance.RequireDate,
-                        RequestDateString2 = string.IsNullOrEmpty(item.RequireMaintenance.RequireDateTime) ? item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy HH:mm") : 
-                                             item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy") + " " + item.RequireMaintenance.RequireDateTime, 
-                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply.HasValue ? 
-                            (item.RequireMaintenance.MaintenanceApply.Value >= addHour ? item.RequireMaintenance.MaintenanceApply.Value.AddHours(8) : item.RequireMaintenance.MaintenanceApply) 
+                        RequestDateString2 = string.IsNullOrEmpty(item.RequireMaintenance.RequireDateTime) ? item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy HH:mm") :
+                                             item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy") + " " + item.RequireMaintenance.RequireDateTime,
+                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply.HasValue ?
+                            (item.RequireMaintenance.MaintenanceApply.Value >= addHour ? item.RequireMaintenance.MaintenanceApply.Value.AddHours(8) : item.RequireMaintenance.MaintenanceApply)
                             : item.RequireMaintenance.MaintenanceApply,
                         ActualSDate = item.ActualStartDate,
                         ActualSTime = item.ActualStartDateTime,
                         ActualEDate = item.ActualEndDate,
                         ActialETime = item.ActualEndDateTime,
-                        BdTime = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate,item.ActualEndDate).Item1 : "0:00",
+                        BdTime = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item1 : "0:00",
                         BdTimeValue = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item2 : 0,
-                        StdTime = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate,item.ActualEndDate).Item1 : "0:00",
-                        StdTimeValue = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate,item.ActualEndDate).Item2 : 0,
+                        StdTime = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item1 : "0:00",
+                        StdTimeValue = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item2 : 0,
                         FinishDate = item.ActualEndDate,
                         FinishDateString2 = item.ActualEndDate.HasValue ? (string.IsNullOrEmpty(item.ActualEndDateTime) ? item.ActualEndDate.Value.ToString("dd/MM/yyyy HH:mm") : item.ActualEndDate.Value.ToString("dd/MM/yyyy") + " " + item.ActualEndDateTime) : ""
                     },
@@ -1149,7 +1182,7 @@ namespace VipcoMaintenance.Controllers
 
                 if (HasData != null)
                 {
-                    var ReportList = HasData.ToList();  
+                    var ReportList = HasData.ToList();
                     if (ReportList.Any())
                     {
                         if (mode.IndexOf("Export") != -1)
@@ -1187,7 +1220,7 @@ namespace VipcoMaintenance.Controllers
                                 );
                             }
 
-                            var templateFolder = this.hosting.WebRootPath + "/files/";
+                            var templateFolder = this._hosting.WebRootPath + "/files/";
                             var fileExcel = templateFolder + $"export.xlsx";
 
                             using (XLWorkbook wb = new XLWorkbook())
@@ -1235,5 +1268,120 @@ namespace VipcoMaintenance.Controllers
 
             return BadRequest(new { Error = Message });
         }
+
+        [HttpPost("ReportManhour")]
+        public async Task<IActionResult> ReportManhour([FromBody] ScrollViewModel option, string mode = "")
+        {
+            var message = "";
+            try
+            {
+                var sWhere = "StatusMaintenance != 6 AND h.ItemMainHasEmployeeId IS NOT NULL ";
+
+                if (!string.IsNullOrEmpty(option.Where))
+                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"h.EmpCode = '{option.Where}'";
+                /*
+                if (option.Where2Id.HasValue)
+                    sWhere = string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"m.TypeMaintenanceId = {option.Where2Id}";
+                */
+                if (option.SDate.HasValue)
+                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"CAST(m.ActualStartDate AS date) >= '{option.SDate.Value.ToString("yyyy-MM-dd")}'";
+
+                if (option.EDate.HasValue)
+                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"(CAST(m.ActualEndDate AS date) <= '{option.EDate.Value.ToString("yyyy-MM-dd")}' OR m.ActualEndDate IS NULL)";
+
+                var sqlCommand = new SqlCommandViewModel()
+                {
+                    SelectCommand = $@"e.NameThai AS EmployeeName,
+i.[Name] AS ItemName,
+i.ItemCode,
+t.[Name] AS ItemType,
+m.ActualStartDate AS SDate,
+m.ActualEndDate AS EDate",
+                    FromCommand = $@"[dbo].[ItemMaintenance] m
+LEFT OUTER JOIN [dbo].[RequireMaintenance] r
+	ON m.RequireMaintenanceId = r.RequireMaintenanceId
+LEFT OUTER JOIN [dbo].[Item] i
+	ON r.ItemId = i.ItemId
+LEFT OUTER JOIN [dbo].[ItemType] t
+	ON t.ItemTypeId = i.ItemTypeId
+LEFT OUTER JOIN [dbo].[ItemMainHasEmployee] h
+	ON h.ItemMaintenanceId = m.ItemMaintenanceId
+LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] e
+	ON e.EmpCode = h.EmpCode",
+                    WhereCommand = sWhere,
+                };
+
+                if (mode.IndexOf("Export") != -1)
+                {
+                    var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
+                    var table = new DataTable();
+                    //Adding the Columns
+                    table.Columns.AddRange(new DataColumn[]
+                    {
+                            new DataColumn("EmployeeName", typeof(string)),
+                            new DataColumn("ItemName", typeof(string)),
+                            new DataColumn("ItemCode",typeof(string)),
+                            new DataColumn("ItemType",typeof(string)),
+                            new DataColumn("StartDate",typeof(DateTime)),
+                            new DataColumn("FinishDate",typeof(DateTime)),
+                            new DataColumn("StdTime",typeof(string)),
+                    });
+
+                    //Adding the Rows
+                    foreach (var item in hasData)
+                    {
+                        item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0);
+                        table.Rows.Add(
+                            item.EmployeeName,
+                            item.ItemName,
+                            item.ItemCode,
+                            item.ItemType,
+                            item.SDate,
+                            item.EDate,
+                            item.StdHour?.time ?? "0:00"
+                        );
+                    }
+
+                    var memory = new MemoryStream();
+                    using (XLWorkbook wb = new XLWorkbook())
+                    {
+                        var wsFreeze = wb.Worksheets.Add("EmployeeStandard");
+                        var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
+
+                        // set table total
+                        tableSource.Theme = XLTableTheme.TableStyleMedium9;
+                        tableSource.ShowTotalsRow = true;
+                        // Set Horizontal
+                        tableSource.Field(6).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                        // Set summary
+                        var spWorkMin = TimeSpan.FromMinutes(hasData.Sum(x => x.StdHour?.timeValue ?? 0));
+                        tableSource.Field(6).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
+
+                        wsFreeze.Columns().AdjustToContents();
+                        wsFreeze.SheetView.FreezeRows(1);
+                        wb.SaveAs(memory);
+                    }
+                    memory.Position = 0;
+
+                    return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+                }
+                else
+                {
+                    var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
+                    hasData.ForEach(item => item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0));
+                    return new JsonResult(new ScrollDataViewModel<EmpMaintenanceVm>(option, hasData), this.DefaultJsonSettings);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                message = $"Has error {ex.ToString()}";
+            }
+
+            return BadRequest(new { error = message });
+        }
+
+        #endregion
+
     }
 }

@@ -27,6 +27,7 @@ import { ItemManitenLinkMailComponent } from './item-maniten-link-mail/item-mani
 import { ItemMaintenHistoryComponent } from './item-mainten-history/item-mainten-history.component';
 import { ItemTypeService } from '../item-types/shared/item-type.service';
 import { ItemMaintenanceListComponent } from './item-maintenance-list/item-maintenance-list.component';
+import { ItemMaintenManhourComponent } from './item-mainten-manhour/item-mainten-manhour.component';
 // Shared
 //import { ItemMaintenEmployeeTableComponent } from './item-mainten-employee-table/item-mainten-employee-table.component';
 //import { ItemMaintenRequisitionTableComponent } from './item-mainten-requisition-table/item-mainten-requisition-table.component';
@@ -52,7 +53,8 @@ import { ItemMaintenanceListComponent } from './item-maintenance-list/item-maint
     ItemMaintenScheduleComponent,
     ItemManitenLinkMailComponent,
     ItemMaintenHistoryComponent,
-    ItemMaintenanceListComponent
+    ItemMaintenanceListComponent,
+    ItemMaintenManhourComponent
     // Shared
     //ItemMaintenHasRequireComponent,
     //ItemMaintenRequisitionTableComponent,

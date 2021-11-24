@@ -14,4 +14,9 @@ export interface User {
   Token?: string;
   SubLevel?: number;
   ValidTo?: Date;
+  AuthMenu?: MenuUser[];
+}
+
+export interface MenuUser {
+  MenuId?: number;
 }

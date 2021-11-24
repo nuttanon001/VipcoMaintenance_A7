@@ -1,16 +1,16 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
-import { Router } from "@angular/router";
-import { MatMenuTrigger } from "@angular/material";
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { MatMenuTrigger } from '@angular/material';
 // service
 // unmark this if AuthService complete
-import { AuthService } from "../../core/auth/auth.service";
+import { AuthService } from '../../core/auth/auth.service';
 // model
-import { User } from "../../users/shared/user.model";
+import { User } from '../../users/shared/user.model';
 
 @Component({
-  selector: "app-nav-menu",
-  templateUrl: "./nav-menu.component.html",
-  styleUrls: ["../../shared/styles/navmenu.style.scss"],
+  selector: 'app-nav-menu',
+  templateUrl: './nav-menu.component.html',
+  styleUrls: ['../../shared/styles/navmenu.style.scss'],
 })
 export class NavMenuComponent implements OnInit {
   constructor(
@@ -24,10 +24,10 @@ export class NavMenuComponent implements OnInit {
     });
   }
   // Parameter
-  @ViewChild("mainMenu") mainMenu: MatMenuTrigger;
-  @ViewChild("subMenu") subMenu: MatMenuTrigger;
-  @ViewChild("subMenu2") subMenu2: MatMenuTrigger;
-  @ViewChild("userMenu") userMenu: MatMenuTrigger;
+  @ViewChild('mainMenu') mainMenu: MatMenuTrigger;
+  @ViewChild('subMenu') subMenu: MatMenuTrigger;
+  @ViewChild('subMenu2') subMenu2: MatMenuTrigger;
+  @ViewChild('userMenu') userMenu: MatMenuTrigger;
   currentUser: User;
 
   ngOnInit(): void {
@@ -76,9 +76,9 @@ export class NavMenuComponent implements OnInit {
 
   get userName(): string {
     if (this.currentUser) {
-      return " " + this.currentUser.NameThai + " ";
+      return ' ' + this.currentUser.NameThai + ' ';
     }
-    //return "";
+    // return "";
   }
 
   // on menu close
@@ -86,18 +86,18 @@ export class NavMenuComponent implements OnInit {
   menuOnCloseMenu(except?: number): void {
     if (except) {
 
-      //if (except === 1) {
+      // if (except === 1) {
       //  this.subMenu.closeMenu();
       //  this.subMenu2.closeMenu();
-      //} else if (except === 2) {
+      // } else if (except === 2) {
       //  this.mainMenu.closeMenu();
       //  this.subMenu2.closeMenu();
-      //} else if (except === 3) {
+      // } else if (except === 3) {
       //  this.mainMenu.closeMenu();
       //  this.subMenu.closeMenu();
-      //}
+      // }
 
-      //console.log("close",except);
+      // console.log("close",except);
       if (except === 1 && this.mainMenu) {
         this.mainMenu.closeMenu();
       } else if (except === 2 && this.subMenu) {
@@ -114,7 +114,7 @@ export class NavMenuComponent implements OnInit {
   // on menu open
   // =============================================\\
   menuOnOpenMenu(include?: number): void {
-    //console.log("Open",include);
+    // console.log("Open",include);
 
     if (include) {
       if (include === 1 && this.mainMenu) {
@@ -159,6 +159,6 @@ export class NavMenuComponent implements OnInit {
   // =============================================\\
   onLogOut(): void {
     this.authService.logout();
-    this.router.navigate(["login"]);
+    this.router.navigate(['login']);
   }
 }

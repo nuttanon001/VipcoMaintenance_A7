@@ -669,30 +669,105 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             // 2nd 19
                             var rowNumber = 6;
 
+                            #region Style
+
+                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontName = "AngsanaUPC";
+                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontSize = 11;
+
+                            var bbStyle = workbook.Style;
+                            bbStyle.Border.TopBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.TopBorderColor = XLColor.Black;
+
+                            bbStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.LeftBorderColor = XLColor.Black;
+
+                            bbStyle.Border.RightBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.RightBorderColor = XLColor.Black;
+
+                            bbStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
+                            bbStyle.Border.BottomBorderColor = XLColor.Black;
+
+                            bbStyle.Font.FontName = "AngsanaUPC";
+                            bbStyle.Font.FontSize = 10;
+
+                            #endregion
+
+                            // Body
+                            #region Body
+
                             foreach (var item in hasData)
                             {
                                 if (item == null)
                                     continue;
 
-                                workSheet.Cell(rowNumber, 1).AddToNamed("Mybb").Value = item.No ?? 0;
+                                workSheet.Cell(rowNumber, 1).Value = item.No ?? 0;
+                                workSheet.Cell(rowNumber, 1).Style = bbStyle;
                                 workSheet.Cell(rowNumber, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                workSheet.Range(rowNumber, 2, rowNumber,4).Merge().AddToNamed("Mybb").Value = $"{(string.IsNullOrEmpty(item.Name) ? "" : item.Name)} {(string.IsNullOrEmpty(item.Description) ? "" : item.Description)}";
-                                workSheet.Cell(rowNumber, 5).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Brand) ? "" : item.Brand;
-                                workSheet.Cell(rowNumber, 6).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Model) ? "" : item.Model;
-                                workSheet.Cell(rowNumber, 7).AddToNamed("Mybb").Value = item.RegisterDate != null && item.RegisterDate < DateTime.Now && item.RegisterDate > DateTime.MinValue ? item.RegisterDate : new DateTime();
-                                workSheet.Cell(rowNumber, 8).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ItemCode) ? "" : item.ItemCode;
-                                workSheet.Cell(rowNumber, 9).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.Property) ? "" : item.Property;
-                                workSheet.Cell(rowNumber, 10).AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ObsoleteNo) ? "" : item.ObsoleteNo;
-                                workSheet.Cell(rowNumber, 11).AddToNamed("Mybb").Value = item.ObsoleteDate != null && item.ObsoleteDate <= DateTime.Now ? item.ObsoleteDate : new DateTime();
-                                workSheet.Cell(rowNumber, 12).AddToNamed("Mybb").Value = "";
+
+                                workSheet.Cell(rowNumber, 2).Value = $"{(string.IsNullOrEmpty(item.Name) ? "" : item.Name)} {(string.IsNullOrEmpty(item.Description) ? "" : item.Description)}";
+                                workSheet.Range(rowNumber, 2, rowNumber, 4).Merge().Style = bbStyle;
+
+                                workSheet.Cell(rowNumber, 5).Value = string.IsNullOrEmpty(item.Brand) ? "" : item.Brand;
+                                workSheet.Cell(rowNumber, 5).Style = bbStyle;
+
+                                workSheet.Cell(rowNumber, 6).Value = string.IsNullOrEmpty(item.Model) ? "" : item.Model;
+                                workSheet.Cell(rowNumber, 6).Style = bbStyle;
+
+                                var rDate = item.RegisterDate != null && item.RegisterDate < DateTime.Now && item.RegisterDate > DateTime.MinValue ? item.RegisterDate : new DateTime(1950, 01, 01);
+
+                                workSheet.Cell(rowNumber, 7).Value = rDate;
+                                workSheet.Cell(rowNumber, 7).Style = bbStyle;
+                                workSheet.Cell(rowNumber, 7).Style.NumberFormat.SetNumberFormatId((int)XLPredefinedFormat.DateTime.DayMonthYear4WithSlashes);
+                                if (rDate.Value.Year == 1950)
+                                {
+                                    workSheet.Cell(rowNumber, 7).Style.Font.FontColor = XLColor.Red;
+                                    workSheet.Cell(rowNumber, 7).Style.Font.Bold = true;
+                                }
+
+                                workSheet.Cell(rowNumber, 8).Value = string.IsNullOrEmpty(item.ItemCode) ? "" : item.ItemCode;
+                                workSheet.Cell(rowNumber, 8).Style = bbStyle;
+
+                                workSheet.Cell(rowNumber, 9).Value = string.IsNullOrEmpty(item.Property) ? "" : item.Property;
+                                workSheet.Cell(rowNumber, 9).Style = bbStyle;
+
+                                workSheet.Cell(rowNumber, 10).Value = string.IsNullOrEmpty(item.ObsoleteNo) ? "" : item.ObsoleteNo;
+                                workSheet.Cell(rowNumber, 10).Style = bbStyle;
+
+                                var oDate = item.ObsoleteDate != null && item.ObsoleteDate <= DateTime.Now ? item.ObsoleteDate : new DateTime(1950, 01, 01);
+                                workSheet.Cell(rowNumber, 11).Value = oDate;
+                                workSheet.Cell(rowNumber, 11).Style = bbStyle;
+                                workSheet.Cell(rowNumber, 11).Style.NumberFormat.SetNumberFormatId((int)XLPredefinedFormat.DateTime.DayMonthYear4WithSlashes);
+                                if (oDate.Value.Year == 1950)
+                                {
+                                    workSheet.Cell(rowNumber, 11).Style.Font.FontColor = XLColor.Red;
+                                    workSheet.Cell(rowNumber, 11).Style.Font.Bold = true;
+                                }
+
+                                workSheet.Cell(rowNumber, 12).Value = "";
+                                workSheet.Cell(rowNumber, 12).Style = bbStyle;
+
+                                /*
                                 workSheet.Cell(rowNumber, 13).AddToNamed("Mybb").Value = item.RegisterDate != null && item.ObsoleteDate != null ?
                                     this.CalcLiftTime(item.RegisterDate.Value, item.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
-                                workSheet.Range(rowNumber, 14, rowNumber, 15).Merge().AddToNamed("Mybb").Value = string.IsNullOrEmpty(item.ObDescription) ? "" : item.ObDescription;
+                                */
+
+                                var sAge = item.RegisterDate != null && item.ObsoleteDate != null ?
+                                    this.CalcLiftTime(item.RegisterDate.Value, item.ObsoleteDate.Value.DateTime) : "0 ปี 0 เดือน";
+
+                                workSheet.Cell(rowNumber, 13).Value = sAge;
+                                workSheet.Cell(rowNumber, 13).Style = bbStyle;
+
+                                workSheet.Cell(rowNumber, 14).Value = string.IsNullOrEmpty(item.ObDescription) ? "" : item.ObDescription;
+                                workSheet.Range(rowNumber, 14, rowNumber, 15).Merge().Style = bbStyle;
 
                                 rowNumber++;
                             }
-                            
+
+                            #endregion
+
                             // Footer
+                            #region Footer
+
                             rowNumber++;
                             workSheet.Cell(rowNumber, 1).Value = "จัดทำโดย :";
                             workSheet.Cell(rowNumber, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -719,7 +794,7 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             workSheet.Cell(rowNumber, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                             workSheet.Cell(rowNumber, 7).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                             workSheet.Cell(rowNumber, 7).Style.Border.BottomBorderColor = XLColor.Black;
-                            
+
                             workSheet.Cell(rowNumber, 8).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
                             workSheet.Cell(rowNumber, 8).Style.Border.BottomBorderColor = XLColor.Black;
 
@@ -754,37 +829,21 @@ namespace VipcoMaintenance.Controllers.ItemCancel
                             workSheet.Range(rowNumber, 12, rowNumber, 14).Value = "ผู้บริหาร / ผู้จัดการ";
                             workSheet.Range(rowNumber, 12, rowNumber, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontName = "AngsanaUPC";
-                            workSheet.Range(6, 1, rowNumber, 15).Style.Font.FontSize = 11;
-
-                            var bbStyle = workbook.Style;
-                            bbStyle.Border.TopBorder = XLBorderStyleValues.Thin;
-                            bbStyle.Border.TopBorderColor = XLColor.Black;
-
-                            bbStyle.Border.LeftBorder = XLBorderStyleValues.Thin;
-                            bbStyle.Border.LeftBorderColor = XLColor.Black;
-
-                            bbStyle.Border.RightBorder = XLBorderStyleValues.Thin;
-                            bbStyle.Border.RightBorderColor = XLColor.Black;
-
-                            bbStyle.Border.BottomBorder = XLBorderStyleValues.Thin;
-                            bbStyle.Border.BottomBorderColor = XLColor.Black;
-
-                            bbStyle.Font.FontName = "AngsanaUPC";
-                            bbStyle.Font.FontSize = 10;
-                            workbook.NamedRanges.NamedRange("Mybb").Ranges.Style = bbStyle;
-                            
+                            #endregion
 
                             // var protection = ws.Protect("12365478");
                             // ws.Rows().AdjustToContents();
 
                             // workSheet.Columns(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            
+                            /*
                             workSheet.Columns(7, 7).Style.NumberFormat.Format = "dd/MM/yyyy";
                             workSheet.Columns(11, 11).Style.NumberFormat.Format = "dd/MM/yyyy";
+                            */
 
-                            // workSheet.SheetView.View = XLSheetViewOptions.PageBreakPreview;
+                            workSheet.SheetView.View = XLSheetViewOptions.PageBreakPreview;
                             // Print CenterHorizontally
-                            // workSheet.PageSetup.CenterHorizontally = true;
+                            workSheet.PageSetup.CenterHorizontally = true;
                             workbook.SaveAs(memory);
                         }
 

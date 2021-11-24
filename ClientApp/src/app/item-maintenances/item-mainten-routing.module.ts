@@ -10,6 +10,7 @@ import { ItemManitenLinkMailComponent } from './item-maniten-link-mail/item-mani
 import { AuthGuard } from '../core/auth/auth-guard.service';
 import { ItemMaintenHistoryComponent } from './item-mainten-history/item-mainten-history.component';
 import { ItemMaintenanceListComponent } from './item-maintenance-list/item-maintenance-list.component';
+import { ItemMaintenManhourComponent } from './item-mainten-manhour/item-mainten-manhour.component';
 
 const routes: Routes = [{
   path: '',
@@ -39,6 +40,10 @@ const routes: Routes = [{
     {
       path: 'history1',
       component: ItemMaintenHistoryComponent,
+    },
+    {
+      path: 'manhour',
+      component: ItemMaintenManhourComponent,
     },
     {
       path: ':condition',

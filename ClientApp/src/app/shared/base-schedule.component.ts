@@ -1,37 +1,37 @@
-import { OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
-import { FormBuilder, FormGroup, AbstractControl } from "@angular/forms";
-import { BaseRestService } from "./base-rest.service";
-import { DialogsService } from "../dialogs/shared/dialogs.service";
-import { Subscription, Observable } from "rxjs";
-import { MyPrimengColumn } from "./column.model";
-import { Scroll } from "./scroll.model";
-import { LazyLoadEvent } from "primeng/primeng";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { OnInit, OnDestroy, ViewContainerRef } from '@angular/core';
+import { FormBuilder, FormGroup, AbstractControl } from '@angular/forms';
+import { BaseRestService } from './base-rest.service';
+import { DialogsService } from '../dialogs/shared/dialogs.service';
+import { Subscription, Observable } from 'rxjs';
+import { MyPrimengColumn } from './column.model';
+import { Scroll } from './scroll.model';
+import { LazyLoadEvent } from 'primeng/primeng';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-export abstract class BaseScheduleComponent<Model,Service extends BaseRestService<Model>> implements OnInit, OnDestroy {
+export abstract class BaseScheduleComponent<Model, Service extends BaseRestService<Model>> implements OnInit, OnDestroy {
   constructor(
     public service: Service,
     public fb: FormBuilder,
     public viewCon: ViewContainerRef,
-    public serviceDialogs:DialogsService
+    public serviceDialogs: DialogsService
   ) { }
 
-  //Parameter
+  // Parameter
   datasource: Array<Model>;
   totalRecords: number;
   loading: boolean;
   subscription: Subscription;
   columns: Array<MyPrimengColumn>;
   columnUppers: Array<MyPrimengColumn>;
-  //TimeReload
-  message: number = 0;
-  count: number = 0;
-  time: number = 300;
+  // TimeReload
+  message = 0;
+  count = 0;
+  time = 300;
   // ScrollData
   scroll: Scroll;
   reportForm: FormGroup;
-  first: number = 0;
-  needReset: boolean = false;
+  first = 0;
+  needReset = false;
 
   ngOnInit() {
     this.buildForm();
@@ -67,7 +67,7 @@ export abstract class BaseScheduleComponent<Model,Service extends BaseRestServic
     this.reportForm.valueChanges.pipe(debounceTime(250), distinctUntilChanged())
       .subscribe((data: any) => this.onValueChanged(data));
 
-    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get("Filter");
+    const ControlMoreActivities: AbstractControl | undefined = this.reportForm.get('Filter');
     if (ControlMoreActivities) {
       ControlMoreActivities.valueChanges
         .pipe(
@@ -140,5 +140,5 @@ export abstract class BaseScheduleComponent<Model,Service extends BaseRestServic
 
   // Open Dialog
   abstract onShowDialog(type?: string): void;
- 
+
 }

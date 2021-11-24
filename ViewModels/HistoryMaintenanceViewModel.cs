@@ -30,4 +30,22 @@ namespace VipcoMaintenance.ViewModels
         public double BdTimeValue { get; set; }
 
     }
+
+    public class EmpMaintenanceVm
+    {
+        public string EmployeeName { get; set; }
+        public string ItemCode { get; set; }
+        public string ItemName { get; set; }
+        public string ItemType { get; set; }
+        public DateTime? SDate { get; set; }
+        public DateTime? EDate { get; set; }
+        public (string time,double timeValue)? StdHour { get; set; }
+        public string StdHourStr => StdHour != null ? StdHour.Value.time : "0:00";
+    }
+
+    public class EmpMaintenance2Vm
+    {
+        public string EmpCode { get; set; }
+        public string EmpName { get; set; }
+    }
 }

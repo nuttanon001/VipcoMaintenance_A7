@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 // rxjs
-import { Observable, BehaviorSubject } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 // model
-import { User } from '../../users/shared/user.model';
+import { MenuUser, User } from '../../users/shared/user.model';
 
 
 @Injectable()
 export class AuthService {
   userName: string;
   authKey = 'auth';
+  tempUser?: User;
   // store the URL so we can redirect after logging in
   redirectUrl: string;
   private currentUserSubject: BehaviorSubject<User>;
@@ -33,13 +34,13 @@ export class AuthService {
 
     // debug
     // console.log("Login");
-
+    /*
     return this.http.post<User>
       ('api/User/Login/', JSON.stringify(user), httpOptions)
       .pipe(
-      map((user1) => {
+        shareReplay(),
+        map((user1) => {
         // this.setAuth = dbUser;
-        // this.userName = dbUser.UserName; //data.UserName;
         if (user1 && user1.Token) {
           // store user details and jwt token in local storage to keep user logged in between page refreshes
           localStorage.setItem('currentUser', JSON.stringify(user1));
@@ -47,6 +48,40 @@ export class AuthService {
         }
         return user1;
       })).shareReplay();
+    */
+
+    return this.http.post<User>
+      ('api/User/Login/', JSON.stringify(user), httpOptions)
+      .pipe(
+        shareReplay(),
+        // tslint:disable-next-line:no-shadowed-variable
+        switchMap((user) => {
+          // Template user
+          this.tempUser = user;
+          if (this.tempUser) {
+            const options = this.tempUser ? { params: new HttpParams().set('key', this.tempUser.EmpCode) } : {};
+            return this.http.get<MenuUser[]>('http://192.168.2.31/extends-sagex3/api/UserDetail/GetMenu', options);
+          } else {
+            const noMenu: Array<MenuUser> = [];
+            return of(noMenu);
+          }
+        }), map((menus: Array<MenuUser>) => {
+          // debug here
+          // console.log(JSON.stringify(menus));
+          if (menus) {
+            // debug here
+            // console.log("Has menu");
+            this.tempUser.AuthMenu = menus.slice();
+          }
+
+          if (this.tempUser && this.tempUser.Token) {
+            // store user details and jwt token in local storage to keep user logged in between page refreshes
+            localStorage.setItem('currentUser', JSON.stringify(this.tempUser));
+            this.currentUserSubject.next(this.tempUser);
+          }
+
+          return this.tempUser;
+        }));
     /*
       We are calling shareReplay to prevent the receiver of this Observable from accidentally
       triggering multiple POST requests due to multiple subscriptions.

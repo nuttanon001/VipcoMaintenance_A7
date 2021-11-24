@@ -66,7 +66,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
       this.optionType = [
         { label: 'Tools',  value: 1 },
         { label: 'Machines',  value: 2 },
-        { label: 'Other',  value: 4 },
+        { label: 'Other & Service',  value: 4 },
       ];
     }
 
@@ -133,6 +133,9 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
 
   // get request data
   onGetData(schedule: Scroll): void {
+    // debug here
+    // console.log(schedule);
+
     this.loading = true;
     this.service.getRequireMaintenanceSchedule(schedule)
       .subscribe(dbData => {
@@ -151,7 +154,7 @@ export class RequireMaintenScheduleComponent implements OnInit, OnDestroy {
           { field: 'RequireDate', header: 'Date', width: 100 , format : Format.Date},
           { field: 'Tools', header: 'Tools Group', width: 250 , type : ColumnType.Option1},
           { field: 'Machines', header: 'Machines Group', width: 250 , type : ColumnType.Option1},
-          { field: 'Others', header: 'Others Group', width: 250 , type : ColumnType.Option1},
+          { field: 'Others', header: 'Others & Service Group', width: 250 , type : ColumnType.Option1},
         ];
 
         this.datasource = dbData.dataTable.slice();

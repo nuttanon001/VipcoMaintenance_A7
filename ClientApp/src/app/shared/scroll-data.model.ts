@@ -1,4 +1,4 @@
-﻿import { Scroll } from "./scroll.model";
+﻿import { Scroll } from './scroll.model';
 
 /**
  * An array of data with an associated page object used for paging

@@ -25,6 +25,11 @@
         </a>
       </li>
       <li class="nav-item mx-1" *ngIf="GetLevel1">
+        <a class="nav-link" [routerLink]="['/item/item-history']" routerLinkActive="active">
+          <span>Histories</span>
+        </a>
+      </li>
+      <li class="nav-item mx-1" *ngIf="GetLevel1">
         <!--(mouseover)="menuOnOpenMenu(1)"-->
         <!--  #mainMenu="matMenuTrigger" [matMenuTriggerFor]="menu1"
           (mouseover)="menuOnOpenMenu(1)" -->
@@ -62,6 +67,10 @@
             <button mat-menu-item [routerLink]="['/maintenance']" routerLinkActive="active">
               <mat-icon>build</mat-icon>
               <span>&nbsp;Maintenance&nbsp;</span>
+            </button>
+            <button mat-menu-item [routerLink]="['/maintenance/manhour']">
+              <mat-icon>account_circle</mat-icon>
+              <span>&nbsp;Maintenance-Manhour&nbsp;</span>
             </button>
             <button mat-menu-item [routerLink]="['/maintenance/history1']">
               <mat-icon>history</mat-icon>

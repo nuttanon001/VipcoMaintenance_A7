@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewContainerRef } from '@angular/core';
+import { Component, HostListener, OnInit, ViewContainerRef } from '@angular/core';
 import { BaseScheduleComponent } from '../../shared/base-schedule.component';
 import { ItemMaintenExport } from '../shared/item-mainten-export.model';
 import { ItemMaintenService } from '../shared/item-mainten.service';
@@ -10,6 +10,7 @@ import { Scroll } from '../../shared/scroll.model';
 import { ScrollData } from '../../shared/scroll-data.model';
 import { ColumnType, Format } from '../../shared/column.model';
 import { ItemType } from '../../item-types/shared/item-type.model';
+import { debounceFunc } from 'src/app/items/item-master-list/item-master-list.component';
 
 @Component({
   selector: 'app-item-mainten-history',
@@ -38,12 +39,12 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
         this.itemTypes = dbItemType ? dbItemType.slice() : new Array;
       });
 
-    this.scrollHeight = (window.innerHeight - this.sizeForm) + "px"; 
+    this.scrollHeight = (window.innerHeight - this.sizeForm) + 'px';
   }
 
   itemTypes: Array<ItemType>;
   scrollHeight: string;
-  sizeForm: number = 230;
+  sizeForm = 230;
 
   // get request data
   onGetData(schedule: Scroll): void {
@@ -72,7 +73,7 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
           { field: 'ItemName', header: 'ItemName', width: 250, type: ColumnType.Show },
           { field: 'RequestDateString2', header: 'RequestDate', width: 125, type: ColumnType.Show },
           { field: 'ApplyRequireDateString', header: 'ApplyDate', width: 125, type: ColumnType.Show },
-          { field: 'ActualSDate', header: 'StartDate', width: 125, type: ColumnType.Show, format:Format.Date },
+          { field: 'ActualSDate', header: 'StartDate', width: 125, type: ColumnType.Show, format: Format.Date },
           { field: 'ActualEDate', header: 'FinishDate', width: 125, type: ColumnType.Show, format: Format.Date },
           { field: 'BdTime', header: 'BdTime', width: 125, type: ColumnType.Show },
           { field: 'StdTime', header: 'StdTime', width: 125, type: ColumnType.Show },
@@ -114,7 +115,7 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
 
   // Open Dialog
   onShowDialog(type?: string): void {
-    if (type.indexOf("Employee") !== -1) {
+    if (type.indexOf('Employee') !== -1) {
       this.serviceDialogs.dialogSelectEmployee(this.viewCon)
         .subscribe(employee => {
           this.reportForm.patchValue({
@@ -132,7 +133,16 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
       this.service.getExportXlsx(scorll).subscribe(data => {
         // console.log(data);
         this.loading = false;
-      }, () => { },() => this.loading = false);
+      }, () => { }, () => this.loading = false);
     }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  @debounceFunc()
+  onResize(event) {
+    // console.log("innerWidth", event.target.innerWidth);
+    // console.log("innerHeight", event.target.innerHeight);
+
+    this.scrollHeight = event.target.innerHeight - this.sizeForm + 'px';
   }
 }

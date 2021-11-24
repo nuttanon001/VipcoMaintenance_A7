@@ -116,9 +116,13 @@ namespace VipcoMaintenance.Controllers
                 sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"req.ProjectCodeMasterId = {option.WhereId2}";
             // Option TypeMaintenance
             if (option.WhereId3.HasValue)
-                sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"typ.ItemTypeId = {option.WhereId3}";
-
-
+            {
+                if (option.WhereId3 == 4) 
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"typ.ItemTypeId IN (3,4)";
+                else
+                    sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"typ.ItemTypeId = {option.WhereId3}";
+            }
+            
             // Option Status
             if (option.WhereId.HasValue)
                 sWhere += (string.IsNullOrEmpty(sWhere) ? " " : " AND ") + $"req.RequireStatus NOT IN (3,4)";
@@ -722,6 +726,9 @@ namespace VipcoMaintenance.Controllers
                                             getData.Machines.Add(item);
                                             break;
                                         case "Other":
+                                            getData.Others.Add(item);
+                                            break;
+                                        case "Service":
                                             getData.Others.Add(item);
                                             break;
                                     }
