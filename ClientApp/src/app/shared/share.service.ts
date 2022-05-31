@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { Workgroup } from "../work-groups/shared/workgroup.model";
-import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class ShareService {
@@ -14,10 +14,7 @@ export class ShareService {
 
   // Get WorkGroup
   getWorkGroup(): Observable<Workgroup> {
-    return Observable.create(observer => {
-      observer.next(this.WorkGroup);
-      observer.complete();
-    });
+    return of(this.WorkGroup);
   }
   // Set WorkGroup
   setWorkGroup(workGroup: Workgroup): void {

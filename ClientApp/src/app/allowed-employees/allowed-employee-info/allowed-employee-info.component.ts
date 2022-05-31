@@ -13,8 +13,8 @@ import { EmployeeService } from 'src/app/employees/shared/employee.service';
 import { AllowedEmployeeService } from '../shared/allowed-employee.service';
 import { AllowedEmployeeCommunicateService } from '../shared/allowed-employee-communicate.service';
 // Rxjs
-import { empty } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-allowed-employee-info',
@@ -52,11 +52,13 @@ export class AllowedEmployeeInfoComponent
           if (dbData.EmpCode) {
             return this.serviceEmp.getOneKeyString({ EmpCode: dbData.EmpCode });
           } else {
-            return empty();
+            return of(undefined);
           }
         }))
-        .subscribe(dbData => {
+        .subscribe((dbData: Employee) => {
+          if (dbData) {
           this.InfoValue.NameThai = dbData.NameThai;
+          }
         }, error => console.error(error), () => {
           if (this.isCopying) {
             this.InfoValue.EmpCode = "";

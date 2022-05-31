@@ -6,8 +6,6 @@ import { SparePart } from "../../spare-parts/shared/spare-part.model";
 // service
 import { SparePartService } from "../../spare-parts/shared/spare-part.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // base-component
 import { BaseDialogComponent } from "../../shared/base-dialog.component";
 

@@ -52,7 +52,7 @@ $font-color: black;
   }
 }
 
-:host /deep/ .size-24 button svg {
+:host   .size-24 button svg {
   width: 24px;
   height: 24px;
   transform: scale(2);

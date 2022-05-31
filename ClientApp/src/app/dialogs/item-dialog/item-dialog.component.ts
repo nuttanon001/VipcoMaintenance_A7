@@ -6,8 +6,6 @@ import { Item } from "../../items/shared/item.model";
 // service
 import { ItemService } from "../../items/shared/item.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // base-component
 import { BaseDialogComponent } from "../../shared/base-dialog.component";
 import { ItemTypeService } from "../../item-types/shared/item-type.service";

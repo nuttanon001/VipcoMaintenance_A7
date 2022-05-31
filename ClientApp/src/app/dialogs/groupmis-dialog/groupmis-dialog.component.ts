@@ -6,8 +6,6 @@ import { EmployeeGroupMis } from "../../employees/shared/employee-group-mis.mode
 // service
 import { EmployeeGroupMisService } from "../../employees/shared/employee-group-mis.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // base-component
 import { BaseDialogComponent } from "../../shared/base-dialog.component";
 

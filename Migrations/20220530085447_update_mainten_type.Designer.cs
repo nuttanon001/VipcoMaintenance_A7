@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VipcoMaintenance.Models.Maintenances;
 
 namespace VipcoMaintenance.Migrations
 {
     [DbContext(typeof(MaintenanceContext))]
-    partial class MaintenanceContextModelSnapshot : ModelSnapshot
+    [Migration("20220530085447_update_mainten_type")]
+    partial class update_mainten_type
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

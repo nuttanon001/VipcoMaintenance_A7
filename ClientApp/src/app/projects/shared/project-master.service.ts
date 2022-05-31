@@ -7,10 +7,10 @@ import { ProjectMaster } from "./project-master.model";
 // component
 import { BaseRestService } from "../../shared/base-rest.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
 import { Scroll } from 'src/app/shared2/basemode/scroll.model';
 import { ScrollData } from 'src/app/shared2/basemode/scroll-data.model';
 import { catchError } from 'rxjs/operators';
+import { Observable } from "rxjs";
 
 @Injectable()
 export class ProjectMasterService extends BaseRestService<ProjectMaster> {

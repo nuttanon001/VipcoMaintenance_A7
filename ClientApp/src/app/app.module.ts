@@ -1,5 +1,4 @@
 import { NgModule } from "@angular/core";
-import { HttpModule } from "@angular/http";
 import { RouterModule } from "@angular/router";
 import { CommonModule } from "@angular/common";
 import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
@@ -39,7 +38,6 @@ import { ErrorInterceptorService } from './core/auth/error-interceptor.service';
   ],
   imports: [
     // Angular Core
-    HttpModule,
     FormsModule,
     CommonModule,
     HttpClientModule,
@@ -76,7 +74,7 @@ import { ErrorInterceptorService } from './core/auth/error-interceptor.service';
       {
         path: "obsolete",
         loadChildren: './obsolete-items/obsolete-item.module#ObsoleteItemModule',
-        canActivate: [AuthGuard], 
+        canActivate: [AuthGuard],
       },
       {
         path: "work-group",

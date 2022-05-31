@@ -4,14 +4,13 @@ import {
   HttpParams
 } from '@angular/common/http';
 // rxjs
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
 import { catchError, retry, tap } from 'rxjs/operators';
 // models
 import { ScrollData } from './scroll-data.model';
 import { Scroll } from './scroll.model';
 // services
 import { HttpErrorHandler, HandleError } from './http-error-handler.service';
+import { Observable } from 'rxjs';
 
 const httpOptions = {
   headers: new HttpHeaders ({
@@ -63,9 +62,9 @@ export abstract class BaseRestService<Model> {
 
   // ===================== HTTP-Rest =============================\\
   /** GET Models from the server */
-  getAll(): Observable<Array<Model>> {
-    return this.http.get<Array<Model>>(this.baseUrl)
-      .pipe(catchError(this.handleError(this.serviceName + '/get all model.', new Array<Model>())));
+  getAll(): Observable<Model[] | any> {
+    return this.http.get<Model[]>(this.baseUrl)
+      .pipe(catchError(this.handleError(this.serviceName + '/get all model.', [])));
   }
   /** get one with key number */
   getOneKeyNumber(value: Model): Observable<Model> {
@@ -92,23 +91,23 @@ export abstract class BaseRestService<Model> {
   }
 
   /** get by master id */
-  getByMasterId(masterId: number, subAction: string = 'GetByMaster/'): Observable<Array<Model>> {
+  getByMasterId(masterId: number, subAction: string = 'GetByMaster/'): Observable<Model[] | any> {
     // Add safe, URL encoded search parameter if there is a search term
     const options = masterId ? { params: new HttpParams().set('key', masterId.toString()) } : {};
 
     const url: string = this.baseUrl + subAction;
-    return this.http.get<Array<Model>>(url, options)
-      .pipe(catchError(this.handleError(this.serviceName + '/get by master', new Array<Model>())));
+    return this.http.get<Model[]>(url, options)
+      .pipe(catchError(this.handleError(this.serviceName + '/get by master',  [])));
   }
 
   /** get by master id */
-  getByMasterCode(masterCode: string, subAction: string = 'GetByMaster/'): Observable<Array<Model>> {
+  getByMasterCode(masterCode: string, subAction: string = 'GetByMaster/'): Observable<Model[] | any> {
     // Add safe, URL encoded search parameter if there is a search term
     const options = masterCode ? { params: new HttpParams().set('key', masterCode) } : {};
 
     const url: string = this.baseUrl + subAction;
-    return this.http.get<Array<Model>>(url, options)
-      .pipe(catchError(this.handleError(this.serviceName + '/get by master', new Array<Model>())));
+    return this.http.get<Model[]>(url, options)
+      .pipe(catchError(this.handleError(this.serviceName + '/get by master', [])));
   }
 
   /** get all with scroll data */

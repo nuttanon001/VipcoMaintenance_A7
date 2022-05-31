@@ -13,7 +13,7 @@
 }
 
 @media print {
-  :host /deep/ body, html, .report-box {
+  :host   body, html, .report-box {
     width: 100%;
     height: 100%;
   }

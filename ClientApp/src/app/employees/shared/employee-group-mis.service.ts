@@ -6,9 +6,9 @@ import { HttpErrorHandler } from "../../shared/http-error-handler.service";
 import { EmployeeGroupMis } from "../../employees/shared/employee-group-mis.model";
 // component
 import { BaseRestService } from "../../shared/base-rest.service";
-// rxjs
-import { Observable } from "rxjs/Observable";
+import { Observable } from "rxjs";
 import { catchError } from "rxjs/operators";
+// rxjs
 
 @Injectable()
 export class EmployeeGroupMisService extends BaseRestService<EmployeeGroupMis> {

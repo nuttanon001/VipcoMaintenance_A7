@@ -8,8 +8,8 @@ import { RequisitionStock } from './requisition-stock.model';
 import { BaseRestService } from '../../shared/base-rest.service';
 import { BaseCommunicateService } from '../../shared/base-communicate.service';
 // rxjs
-import { Observable } from 'rxjs/Observable';
 import { catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 @Injectable()
 export class RequisitionStockService extends BaseRestService<RequisitionStock> {
   constructor(
@@ -27,10 +27,10 @@ export class RequisitionStockService extends BaseRestService<RequisitionStock> {
 
   // ===================== Requisition by Item Maintenance ===========================\\
   // action require maintenance
-  getRequisitionByItemMaintenance(ItemMaintenanceId: number): Observable<Array<RequisitionStock>> {
+  getRequisitionByItemMaintenance(ItemMaintenanceId: number): Observable<RequisitionStock[] | any> {
     const options = { params: new HttpParams().set('key', ItemMaintenanceId.toString()) };
-    return this.http.get<Array<RequisitionStock>>(this.baseUrl + 'GetRequisitionByItemMaintenance/', options)
-      .pipe(catchError(this.handleError(this.serviceName + '/get requisition by item maintenance model', Array<RequisitionStock>())));
+    return this.http.get<RequisitionStock[]>(this.baseUrl + 'GetRequisitionByItemMaintenance/', options)
+      .pipe(catchError(this.handleError(this.serviceName + '/get requisition by item maintenance model',<RequisitionStock[]> [])));
   }
 }
 

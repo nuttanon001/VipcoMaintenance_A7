@@ -3,8 +3,6 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material";
 // models
 import { Scroll } from "./scroll.model";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // 3rd party
 
 /** base-dialog component*/

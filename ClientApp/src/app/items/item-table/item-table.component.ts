@@ -18,6 +18,7 @@ import { ItemTypeService } from "../../item-types/shared/item-type.service";
 import { Scroll } from "../../shared/scroll.model";
 import { MatSelect } from "@angular/material";
 import { ItemType } from "../../item-types/shared/item-type.model";
+import { ScrollData } from "src/app/shared2/basemode/scroll-data.model";
 
 @Component({
   selector: 'app-item-table',
@@ -73,7 +74,7 @@ export class ItemTableComponent extends CustomMatTableComponent<Item, ItemServic
           };
           return this.service.getAllWithScroll(scroll);
         }),
-        map(data => {
+        map((data: ScrollData<Item>) => {
           // Flip flag to show that loading has finished.
           this.isLoadingResults = false;
           this.isRateLimitReached = false;
@@ -103,6 +104,6 @@ export class ItemTableComponent extends CustomMatTableComponent<Item, ItemServic
       }
     });
 
-   
+
   }
 }

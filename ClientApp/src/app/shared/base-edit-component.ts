@@ -1,8 +1,8 @@
 // angular core
 import { OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
 import { FormGroup } from "@angular/forms";
+import { Subscription } from "rxjs";
 // rxjs
-import { Subscription } from "rxjs/Subscription";
 
 export abstract class BaseEditComponent<Model, Service>
   implements OnInit, OnDestroy {

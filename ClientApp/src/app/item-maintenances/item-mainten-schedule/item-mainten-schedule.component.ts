@@ -142,9 +142,9 @@ export class ItemMaintenScheduleComponent implements OnInit, OnDestroy {
       CreatorName: [this.schedule.CreatorName],
     });
 
-    this.reportForm.valueChanges
-      .debounceTime(500)
-      .subscribe((data: any) => this.onValueChanged(data));
+    this.reportForm.valueChanges.pipe(
+      debounceTime(500)
+    ).subscribe((data: any) => this.onValueChanged(data));
 
     const ControlFilter: AbstractControl | undefined = this.reportForm.get('Filter');
     if (ControlFilter) {

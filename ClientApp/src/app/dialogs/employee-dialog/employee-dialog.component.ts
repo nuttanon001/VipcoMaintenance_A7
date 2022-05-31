@@ -6,8 +6,6 @@ import { Employee } from "../../employees/shared/employee.model";
 // service
 import { EmployeeService } from "../../employees/shared/employee.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // base-component
 import { BaseDialogComponent } from "../../shared/base-dialog.component";
 

@@ -32,14 +32,14 @@ export class ItemService extends BaseRestService<Item> {
     )
   }
 
-  getItemHistories2(itemId?: number): Observable<Array<ItemHistories>> {
+  getItemHistories2(itemId?: number): Observable<ItemHistories[] | any> {
     const options = itemId ? { params: new HttpParams().set("key", itemId.toString()) } : {};
     return this.http.get<Array<ItemHistories>>(this.baseUrl + "ItemHistories/", options)
       .pipe(catchError(this.handleError(this.serviceName + "get item histories", <Array<ItemHistories>>{})));
   }
 
   /** item histories maintenance */
-  getItemHistories(itemOption: ItemHistoriesOption): Observable<Array<ItemHistories>> {
+  getItemHistories(itemOption: ItemHistoriesOption): Observable<ItemHistories[] | any> {
     return this.http.post<Array<ItemHistories>>(this.baseUrl + "ItemHistories/", JSON.stringify(itemOption), {
       headers: new HttpHeaders({
         "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export class ItemService extends BaseRestService<Item> {
         "Content-Type": "application/json",
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }),
-      responseType: 'blob' // <-- changed to blob 
+      responseType: 'blob' // <-- changed to blob
     }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }
 
@@ -82,7 +82,7 @@ export class ItemService extends BaseRestService<Item> {
         "Content-Type": "application/json",
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }),
-      responseType: 'blob' // <-- changed to blob 
+      responseType: 'blob' // <-- changed to blob
     }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'export.xlsx')));
   }
 }

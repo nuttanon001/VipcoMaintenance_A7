@@ -9,7 +9,6 @@ import { DialogsService } from '../../dialogs/shared/dialogs.service';
 import { Item } from '../shared/item.model';
 import { ItemHistoriesOption } from '../shared/item-histories-option.model';
 import { ItemHistories } from '../shared/item-histories.model';
-import { concat } from 'rxjs/operator/concat';
 
 @Component({
   selector: 'app-item-histories',
@@ -111,7 +110,7 @@ export class ItemHistoriesComponent implements OnInit {
           if (dialogItem) {
             this.itemOptionForm.patchValue({
               ItemId: dialogItem.ItemId,
-              ItemName: `${dialogItem.ItemCode}/${dialogItem.Name}` 
+              ItemName: `${dialogItem.ItemCode}/${dialogItem.Name}`
             });
 
             this.service.getOneKeyNumber(dialogItem)

@@ -8,9 +8,9 @@ import { ItemMaintenanceHasEmp } from "./item-maintenance-has-emp.model";
 import { BaseRestService } from "../../shared/base-rest.service";
 import { BaseCommunicateService } from "../../shared/base-communicate.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
 import { catchError } from "rxjs/operators";
 import { ItemMaintenance } from "./item-maintenance.model";
+import { Observable } from "rxjs";
 
 @Injectable()
 export class ItemMaintenHasEmpService extends BaseRestService<ItemMaintenanceHasEmp> {
@@ -29,7 +29,7 @@ export class ItemMaintenHasEmpService extends BaseRestService<ItemMaintenanceHas
 
   // ===================== Action Item Maintenance has employee ===========================\\
   // action item maintenance has employee
-  actionItemMaintenanceHasEmployee(ItemMaintenanceId: number): Observable<Array<ItemMaintenanceHasEmp>> {
+  actionItemMaintenanceHasEmployee(ItemMaintenanceId: number): Observable<ItemMaintenanceHasEmp[] | any> {
     const options = {
       params: new HttpParams().set("key", ItemMaintenanceId.toString())
     };

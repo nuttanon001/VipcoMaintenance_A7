@@ -67,14 +67,14 @@ h4 {
   color: darkcyan;
 }
 
-:host /deep/ .time-col {
+:host   .time-col {
   padding: 2px;
   margin: 2px;
   background-color: lightsteelblue;
   min-width: 150px;
 }
 
-:host /deep/ .type-col {
+:host   .type-col {
   padding: 2px;
   margin: 2px;
   color: white;
@@ -82,7 +82,7 @@ h4 {
   min-width: 150px;
 }
 
-:host /deep/ .singleLine {
+:host   .singleLine {
   //width:150px;
   min-width: 105px;
   top: 0px !important;
@@ -151,7 +151,7 @@ $col-height: 20px;
   justify-content: center;
 }
 
-:host /deep/ .chart {
+:host   .chart {
   padding-left: 0;
   padding-right: 0;
   margin-left: auto;
@@ -161,11 +161,11 @@ $col-height: 20px;
   width: 700px;
 }
 
-:host /deep/ .ui-datatable-scrollable-header {
+:host   .ui-datatable-scrollable-header {
   font-size: small;
 }
 
-:host /deep/ .ui-datatable-scrollable-body {
+:host   .ui-datatable-scrollable-body {
   font-size: smaller;
 }
 

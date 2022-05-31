@@ -22,768 +22,823 @@ using VipcoMaintenance.ViewModels;
 
 namespace VipcoMaintenance.Controllers
 {
-    [Authorize]
-    [Produces("application/json")]
-    [Route("api/[controller]")]
-    public class ItemMaintenanceController : GenericController<ItemMaintenance>
+  [Authorize]
+  [Produces("application/json")]
+  [Route("api/[controller]")]
+  public class ItemMaintenanceController : GenericController<ItemMaintenance>
+  {
+    private readonly IRepositoryMaintenanceMk2<RequisitionStockSp> _repoRequisition;
+    private readonly IRepositoryMaintenanceMk2<MovementStockSp> _repoMovement;
+    private readonly IRepositoryMaintenanceMk2<ItemMainHasEmployee> _repoItemMainEmp;
+    private readonly IRepositoryMaintenanceMk2<RequireMaintenance> _repoRequire;
+    private readonly IRepositoryMachineMk2<ProjectCodeMaster> _repoProject;
+    private readonly IRepositoryMachineMk2<Employee> _repoEmp;
+    private readonly IRepositoryMachineMk2<EmployeeGroupMis> _repoGroup;
+
+    // Dapper
+    private readonly IRepositoryDapper<ItemMaintenance> _dapper;
+
+    // Other
+    private readonly IHostingEnvironment _hosting;
+
+    private readonly IEmailSender _email;
+    //Helper
+
+    // Controller
+    public ItemMaintenanceController(
+        IRepositoryMaintenanceMk2<ItemMaintenance> repo,
+        IRepositoryMaintenanceMk2<RequisitionStockSp> repoRequistion,
+        IRepositoryMaintenanceMk2<MovementStockSp> repoMovement,
+        IRepositoryMaintenanceMk2<ItemMainHasEmployee> repoItemMainEmp,
+        IRepositoryMaintenanceMk2<RequireMaintenance> repoRequire,
+        IRepositoryMachineMk2<ProjectCodeMaster> repoProject,
+        IRepositoryMachineMk2<Employee> repoEmp,
+        IRepositoryMachineMk2<EmployeeGroupMis> repoEmpGroup,
+        IRepositoryDapper<ItemMaintenance> dapper,
+        IEmailSender email,
+        IHostingEnvironment hosting,
+        IMapper map) : base(repo, map)
     {
-        private readonly IRepositoryMaintenanceMk2<RequisitionStockSp> _repoRequisition;
-        private readonly IRepositoryMaintenanceMk2<MovementStockSp> _repoMovement;
-        private readonly IRepositoryMaintenanceMk2<ItemMainHasEmployee> _repoItemMainEmp;
-        private readonly IRepositoryMaintenanceMk2<RequireMaintenance> _repoRequire;
-        private readonly IRepositoryMachineMk2<ProjectCodeMaster> _repoProject;
-        private readonly IRepositoryMachineMk2<Employee> _repoEmp;
-        private readonly IRepositoryMachineMk2<EmployeeGroupMis> _repoGroup;
-        // Dapper
-        private readonly IRepositoryDapper<ItemMaintenance> _dapper;
-        // Other
-        private readonly IHostingEnvironment _hosting;
-        private readonly IEmailSender _email;
-        //Helper
+      // Repositiory
+      _repoItemMainEmp = repoItemMainEmp;
+      _repoMovement = repoMovement;
+      _repoRequisition = repoRequistion;
+      _repoProject = repoProject;
+      _repoRequire = repoRequire;
+      _repoEmp = repoEmp;
+      _repoGroup = repoEmpGroup;
+      // Dapper
+      _dapper = dapper;
+      // Helpper
+      _email = email;
+      // Host
+      _hosting = hosting;
+    }
 
-        // Controller
-        public ItemMaintenanceController(
-            IRepositoryMaintenanceMk2<ItemMaintenance> repo,
-            IRepositoryMaintenanceMk2<RequisitionStockSp> repoRequistion,
-            IRepositoryMaintenanceMk2<MovementStockSp> repoMovement,
-            IRepositoryMaintenanceMk2<ItemMainHasEmployee> repoItemMainEmp,
-            IRepositoryMaintenanceMk2<RequireMaintenance> repoRequire,
-            IRepositoryMachineMk2<ProjectCodeMaster> repoProject,
-            IRepositoryMachineMk2<Employee> repoEmp,
-            IRepositoryMachineMk2<EmployeeGroupMis> repoEmpGroup,
-            IRepositoryDapper<ItemMaintenance> dapper,
-            IEmailSender email,
-            IHostingEnvironment hosting,
-            IMapper map) : base(repo, map)
+    /// <summary>
+    /// Change status of require maintenance and send email if not yet send.
+    /// </summary>
+    /// <param name="RequireMaintenanceId"></param>
+    /// <param name="ByEmp"></param>
+    /// <param name="status"></param>
+    /// <returns></returns>
+    private async Task<bool> UpdateRequireMaintenance(int RequireMaintenanceId,
+        string ByEmp, RequireStatus status = RequireStatus.InProcess)
+    {
+      var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
+      if (RequireData != null)
+      {
+        var SendMail = RequireData.MaintenanceApply == null;
+
+        RequireData.MaintenanceApply = RequireData.MaintenanceApply == null ? DateTime.Now : RequireData.MaintenanceApply;
+        RequireData.RequireStatus = status;
+        RequireData.ModifyDate = DateTime.Now;
+        RequireData.Modifyer = ByEmp;
+
+        var Complate = await this._repoRequire.UpdateAsync(RequireData, RequireData.RequireMaintenanceId);
+        if (SendMail && Complate != null)
         {
-            // Repositiory
-            _repoItemMainEmp = repoItemMainEmp;
-            _repoMovement = repoMovement;
-            _repoRequisition = repoRequistion;
-            _repoProject = repoProject;
-            _repoRequire = repoRequire;
-            _repoEmp = repoEmp;
-            _repoGroup = repoEmpGroup;
-            // Dapper
-            _dapper = dapper;
-            // Helpper
-            _email = email;
-            // Host
-            _hosting = hosting;
-        }
-       
-        /// <summary>
-        /// Change status of require maintenance and send email if not yet send.
-        /// </summary>
-        /// <param name="RequireMaintenanceId"></param>
-        /// <param name="ByEmp"></param>
-        /// <param name="status"></param>
-        /// <returns></returns>
-        private async Task<bool> UpdateRequireMaintenance(int RequireMaintenanceId,
-            string ByEmp, RequireStatus status = RequireStatus.InProcess)
-        {
-            var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
-            if (RequireData != null)
-            {
-                var SendMail = RequireData.MaintenanceApply == null;
+          var EmpName = (await this._repoEmp.GetAsync(Complate.RequireEmp)).NameThai ?? "ไม่ระบุ";
 
-                RequireData.MaintenanceApply = RequireData.MaintenanceApply == null ? DateTime.Now : RequireData.MaintenanceApply;
-                RequireData.RequireStatus = status;
-                RequireData.ModifyDate = DateTime.Now;
-                RequireData.Modifyer = ByEmp;
-
-                var Complate = await this._repoRequire.UpdateAsync(RequireData, RequireData.RequireMaintenanceId);
-                if (SendMail && Complate != null)
-                {
-                    var EmpName = (await this._repoEmp.GetAsync(Complate.RequireEmp)).NameThai ?? "ไม่ระบุ";
-
-                    if (this._email.IsValidEmail(Complate.MailApply))
-                    {
-                        var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
-                                        "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
-                                        $"เรียน คุณ{EmpName}" +
-                                        $"<p>เรื่อง การเปิดคำขอซ่อมบำรุงใบงานเลขที่ {Complate.RequireNo} </p>" +
-                                        $"<p style='color:blue;'><b>ณ.ขณะนี้ได้รับการตอบสนอง</b></p>" +
-                                        $"<p>จากทางหน่วยงานซ่อมบำรุง โปรดรอการดำเนินการจากทางหน่วยงาน</p>" +
-                                        $"<p>\"คุณ{EmpName}\" " +
-                                        $"สามารถเข้าไปตรวจติดตามข้อมูลได้ <a href='http://{Request.Host}/maintenance/maintenance/link-mail/{Complate.RequireMaintenanceId}'>ที่นี้</a> </p>" +
-                                        "<span style='color:steelblue;'>This mail auto generated by VIPCO Maintenance SYSTEM. Do not reply this email.</span>" +
-                                      "</body>";
-
-                        var mail = new EmailViewModel()
-                        {
-                            MailFrom = Complate.MailApply,
-                            MailTos = new List<string> { Complate.MailApply },
-                            Message = BodyMessage,
-                            NameFrom = EmpName,
-                            Subject = "Notification mail from VIPCO Maintenance SYSTEM."
-                        };
-
-                        return await this._email.SendMail(mail);
-                    }
-                }
-            }
-            
-             return false;
-        }
-
-        /// <summary>
-        /// Send mail to employee who require maintenance.
-        /// </summary>
-        /// <param name="RequireMaintenanceId"></param>
-        /// <returns></returns>
-        private async Task<bool> MaintenanceComplateEmail(int RequireMaintenanceId)
-        {
-            var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
-            if (RequireData != null)
-            {
-                var EmpName = (await this._repoEmp.GetAsync(RequireData.RequireEmp)).NameThai ?? "ไม่ระบุ";
-
-                if (this._email.IsValidEmail(RequireData.MailApply))
-                {
-                    var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
-                                    "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
-                                    $"เรียน คุณ{EmpName}" +
-                                    $"<p>เรื่อง การเปิดคำขอซ่อมบำรุงใบงานเลขที่ {RequireData.RequireNo} </p>" +
-                                    $"<p style='color:red;'><b>ณ.ขณะนี้ได้รับการซ่อมบำรุงแล้วเสร็จ</b></p>" +
-                                    $"<p>จากทางหน่วยงานซ่อมบำรุง โปรดเข้ารับอุปกรณ์คืนจากทางหน่วยงาน หากได้ทำการส่งเครื่องให้แก่หน่วยงาน</p>" +
-                                    $"<p>\"คุณ{EmpName}\" " +
-                                    $"สามารถเข้าไปตรวจสอบข้อมูล ผู้ซ่อมหรือค่าใช้จ่ายได้ <a href='http://{Request.Host}/maintenance/maintenance/link-mail/{RequireData.RequireMaintenanceId}'>ที่นี้</a> </p>" +
-                                    "<span style='color:steelblue;'>This mail auto generated by VIPCO Maintenance SYSTEM. Do not reply this email.</span>" +
-                                    "</body>";
-
-                    var mail = new EmailViewModel()
-                    {
-                        MailFrom = RequireData.MailApply,
-                        MailTos = new List<string> { RequireData.MailApply },
-                        Message = BodyMessage,
-                        NameFrom = EmpName,
-                        Subject = "Notification mail from VIPCO Maintenance SYSTEM."
-                    };
-
-                    return await this._email.SendMail(mail);
-                }
-            }
-
-            return false;
-        }
-
-        private StatusMaintenance ChangeStatus(ItemMaintenance itemMaintenance)
-        {
-            if (itemMaintenance != null)
-            {
-                if (itemMaintenance.StatusMaintenance == StatusMaintenance.TakeAction ||
-                    itemMaintenance.StatusMaintenance == StatusMaintenance.InProcess)
-                {
-                    // Actual start is set
-                    if (itemMaintenance.ActualStartDate.HasValue)
-                    {
-                        // Actual end is set
-                        if (itemMaintenance.ActualEndDate.HasValue)
-                            return StatusMaintenance.Complate;
-                        else // Actual end is not set
-                            return StatusMaintenance.InProcess;
-                    }
-                    else
-                        return StatusMaintenance.TakeAction;
-                }
-            }
-            else
-                return StatusMaintenance.TakeAction;
-
-            return itemMaintenance.StatusMaintenance.Value;
-        }
-
-        readonly Func<DateTime?, DateTime?, (string,double)> CalcBd = (DateTime? sDate, DateTime? eDate) => {
-            var result = ("",0D);
-            if (sDate != null && eDate != null)
-            {
-                TimeSpan BDTime = (eDate.Value - sDate.Value);
-                result = (string.Format("{0:00}:{1:00}", (int)BDTime.TotalHours, BDTime.Minutes), BDTime.TotalMinutes);
-
-            }
-            return result;
-        };
-
-        readonly Func<DateTime?, DateTime?, (string time,double timeValue)> CalcStd = (DateTime? sDate, DateTime? eDate) =>
+          if (this._email.IsValidEmail(Complate.MailApply))
           {
-              if (sDate != null && eDate != null)
-              {
-                  // If hour more then 21 add new day to sDate
-                  if (sDate.Value.Hour > 21)
-                      sDate = new DateTime(sDate.Value.Year, sDate.Value.Month, sDate.Value.Day + 1, 8, 0, 0);
+            var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
+                            "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
+                            $"เรียน คุณ{EmpName}" +
+                            $"<p>เรื่อง การเปิดคำขอซ่อมบำรุงใบงานเลขที่ {Complate.RequireNo} </p>" +
+                            $"<p style='color:blue;'><b>ณ.ขณะนี้ได้รับการตอบสนอง</b></p>" +
+                            $"<p>จากทางหน่วยงานซ่อมบำรุง โปรดรอการดำเนินการจากทางหน่วยงาน</p>" +
+                            $"<p>\"คุณ{EmpName}\" " +
+                            $"สามารถเข้าไปตรวจติดตามข้อมูลได้ <a href='http://{Request.Host}/maintenance/maintenance/link-mail/{Complate.RequireMaintenanceId}'>ที่นี้</a> </p>" +
+                            "<span style='color:steelblue;'>This mail auto generated by VIPCO Maintenance SYSTEM. Do not reply this email.</span>" +
+                          "</body>";
 
-                  var totalMinutes = (eDate.Value - sDate.Value).TotalMinutes;
-                  int weekend = 0;
-                  for (var i = sDate.Value; i < eDate.Value; i = i.AddDays(1))
-                  {
-                      if (i.DayOfWeek == DayOfWeek.Sunday)
-                          weekend++;
-                  }
-                  var workingDays = ((int)(eDate.Value.Date - sDate.Value.Date).TotalDays) - weekend;
-                  var afternon = sDate.Value.Hour < 12 && eDate.Value.Hour > 12 && workingDays == 0 ? 1 : 0;
-
-                  TimeSpan spWorkMin = TimeSpan.FromMinutes((totalMinutes - ((12 * workingDays) * 60)));
-                  return (string.Format("{0:00}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes),spWorkMin.TotalMinutes);
-              }
-              else
-              {
-                  return ("0:00",0);
-              }
-          };
-        
-        #region GetMethod
-
-        // GET: api/ItemMaintenance/5
-        [HttpGet("GetKeyNumber")]
-        public override async Task<IActionResult> Get(int key)
-        {
-            var HasItem = await this.repository.GetFirstOrDefaultAsync(
-                x => new ItemMaintenanceViewModel
-                {
-                    ActualEndDate = x.ActualEndDate,
-                    ActualEndDateTime = x.ActualEndDateTime,
-                    ActualStartDate = x.ActualStartDate,
-                    ActualStartDateTime = x.ActualStartDateTime,
-                    Description = x.Description,
-                    ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
-                    RequireMaintenanceId = x.RequireMaintenanceId,
-                    ItemMaintenanceId = x.ItemMaintenanceId,
-                    ItemMaintenanceNo = x.ItemMaintenanceNo,
-                    MaintenanceEmp = x.MaintenanceEmp,
-                    PlanEndDate = x.PlanEndDate,
-                    PlanStartDate = x.PlanStartDate,
-                    Remark = x.Remark,
-                    StatusMaintenance = x.StatusMaintenance,
-                    StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
-                    TypeMaintenanceId = x.TypeMaintenanceId,
-                    TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
-                    WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
-                    WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
-                    CreateDate = x.CreateDate,
-                    Creator = x.Creator,
-                    ModifyDate = x.ModifyDate,
-                    Modifyer = x.Modifyer,
-                },
-                x => x.ItemMaintenanceId == key, null,
-                x => x.Include(z => z.TypeMaintenance).Include(z => z.WorkGroupMaintenance));
-            if (HasItem != null)
+            var mail = new EmailViewModel()
             {
-                // var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(HasItem);
-                return new JsonResult(HasItem, this.DefaultJsonSettings);
-            }
-            return BadRequest();
+              MailFrom = Complate.MailApply,
+              MailTos = new List<string> { Complate.MailApply },
+              Message = BodyMessage,
+              NameFrom = EmpName,
+              Subject = "Notification mail from VIPCO Maintenance SYSTEM."
+            };
+
+            return await this._email.SendMail(mail);
+          }
         }
+      }
 
-        //GET: api/ItemMaintenance/EmployeeMaintenance
-        [HttpGet("GetEmpMaintenance")]
-        public async Task<IActionResult> EmployeeMaintenance()
+      return false;
+    }
+
+    /// <summary>
+    /// Send mail to employee who require maintenance.
+    /// </summary>
+    /// <param name="RequireMaintenanceId"></param>
+    /// <returns></returns>
+    private async Task<bool> MaintenanceComplateEmail(int RequireMaintenanceId)
+    {
+      var RequireData = await this._repoRequire.GetAsync(RequireMaintenanceId);
+      if (RequireData != null)
+      {
+        var EmpName = (await this._repoEmp.GetAsync(RequireData.RequireEmp)).NameThai ?? "ไม่ระบุ";
+
+        if (this._email.IsValidEmail(RequireData.MailApply))
         {
-            var hasData = await _dapper.GetListEntites<EmpMaintenance2Vm>(new SqlCommandViewModel()
-            {
-                SelectCommand = "e.EmpCode,e.NameThai AS EmpName",
-                FromCommand = $@"[dbo].[ItemMainHasEmployee] h
+          var BodyMessage = "<body style=font-size:11pt;font-family:Tahoma>" +
+                          "<h4 style='color:steelblue;'>เมล์ฉบับนี้เป็นแจ้งเตือนจากระบบงาน VIPCO Maintenance SYSTEM</h4>" +
+                          $"เรียน คุณ{EmpName}" +
+                          $"<p>เรื่อง การเปิดคำขอซ่อมบำรุงใบงานเลขที่ {RequireData.RequireNo} </p>" +
+                          $"<p style='color:red;'><b>ณ.ขณะนี้ได้รับการซ่อมบำรุงแล้วเสร็จ</b></p>" +
+                          $"<p>จากทางหน่วยงานซ่อมบำรุง โปรดเข้ารับอุปกรณ์คืนจากทางหน่วยงาน หากได้ทำการส่งเครื่องให้แก่หน่วยงาน</p>" +
+                          $"<p>\"คุณ{EmpName}\" " +
+                          $"สามารถเข้าไปตรวจสอบข้อมูล ผู้ซ่อมหรือค่าใช้จ่ายได้ <a href='http://{Request.Host}/maintenance/maintenance/link-mail/{RequireData.RequireMaintenanceId}'>ที่นี้</a> </p>" +
+                          "<span style='color:steelblue;'>This mail auto generated by VIPCO Maintenance SYSTEM. Do not reply this email.</span>" +
+                          "</body>";
+
+          var mail = new EmailViewModel()
+          {
+            MailFrom = RequireData.MailApply,
+            MailTos = new List<string> { RequireData.MailApply },
+            Message = BodyMessage,
+            NameFrom = EmpName,
+            Subject = "Notification mail from VIPCO Maintenance SYSTEM."
+          };
+
+          return await this._email.SendMail(mail);
+        }
+      }
+
+      return false;
+    }
+
+    private StatusMaintenance ChangeStatus(ItemMaintenance itemMaintenance)
+    {
+      if (itemMaintenance != null)
+      {
+        if (itemMaintenance.StatusMaintenance == StatusMaintenance.TakeAction ||
+            itemMaintenance.StatusMaintenance == StatusMaintenance.InProcess)
+        {
+          // Actual start is set
+          if (itemMaintenance.ActualStartDate.HasValue)
+          {
+            // Actual end is set
+            if (itemMaintenance.ActualEndDate.HasValue)
+              return StatusMaintenance.Complate;
+            else // Actual end is not set
+              return StatusMaintenance.InProcess;
+          }
+          else
+            return StatusMaintenance.TakeAction;
+        }
+      }
+      else
+        return StatusMaintenance.TakeAction;
+
+      return itemMaintenance.StatusMaintenance.Value;
+    }
+
+    private readonly Func<DateTime?, DateTime?, (string, double)> CalcBd = (DateTime? sDate, DateTime? eDate) =>
+      {
+        var result = ("", 0D);
+        if (sDate != null && eDate != null)
+        {
+          TimeSpan BDTime = (eDate.Value - sDate.Value);
+          result = (string.Format("{0:00}:{1:00}", (int)BDTime.TotalHours, BDTime.Minutes), BDTime.TotalMinutes);
+        }
+        return result;
+      };
+
+    private readonly Func<DateTime?, DateTime?, (string time, double timeValue)> CalcStd = (DateTime? sDate, DateTime? eDate) =>
+         {
+           if (sDate != null && eDate != null)
+           {
+           // If hour more then 21 add new day to sDate
+           if (sDate.Value.Hour > 21)
+               sDate = new DateTime(sDate.Value.Year, sDate.Value.Month, sDate.Value.Day + 1, 8, 0, 0);
+
+             var totalMinutes = (eDate.Value - sDate.Value).TotalMinutes;
+             int weekend = 0;
+             for (var i = sDate.Value; i < eDate.Value; i = i.AddDays(1))
+             {
+               if (i.DayOfWeek == DayOfWeek.Sunday)
+                 weekend++;
+             }
+             var workingDays = ((int)(eDate.Value.Date - sDate.Value.Date).TotalDays) - weekend;
+             var afternon = sDate.Value.Hour < 12 && eDate.Value.Hour > 12 && workingDays == 0 ? 1 : 0;
+
+             TimeSpan spWorkMin = TimeSpan.FromMinutes((totalMinutes - ((12 * workingDays) * 60)));
+             return (string.Format("{0:00}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes), spWorkMin.TotalMinutes);
+           }
+           else
+           {
+             return ("0:00", 0);
+           }
+         };
+
+    private SqlCommandViewModel CreateSqlMaintenanceStandardCommand(ScrollViewModel condition)
+    {
+      var sWhere = "m.StatusMaintenance != 6";
+
+      if (condition.WhereId.HasValue)
+      {
+        sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"t.ItemTypeId = {condition.WhereId}";
+      }
+
+      if (condition.Where2Id.HasValue)
+      {
+        sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"tm.TypeMaintenanceId = {condition.Where2Id}";
+      }
+
+      if (condition.SDate.HasValue)
+      {
+        sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"CAST(m.ActualStartDate AS Date) >= '{condition.SDate.Value.ToString("yyyy/MM/dd")}'";
+      }
+
+      if (condition.EDate.HasValue)
+      {
+        sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + 
+          $"(CAST(m.ActualEndDate AS Date) <= '{condition.EDate.Value.ToString("yyyy/MM/dd")}' OR " +
+          $"m.ActualEndDate IS NULL)";
+      }
+      
+      var sqlCommand = new SqlCommandViewModel()
+      {
+        SelectCommand = $"i.ItemCode " +
+		",t.[Name] AS ItemType " +
+		",i.[Name] AS ItemName " +
+		",tm.[Description] AS MainType " +
+		",tm.StandardTime AS StdTime " +
+		",IIF(CAST(r.RequireDate AS date) > '2019/02/13',DATEADD(Hour,7,r.RequireDate),r.RequireDate) AS ReqDate " +
+		",r.RequireDateTime AS ReqTime " +
+		",IIF(CAST(r.MaintenanceApply AS date) > '2019/02/13',DATEADD(Hour,7,r.MaintenanceApply),r.MaintenanceApply) AS MainApply " +
+		",m.ActualStartDate AS ActSDate " +
+		",m.ActualStartDateTime AS ActSTime " +
+		",m.ActualEndDate AS ActEDate " +
+    ",m.ActualEndDateTime AS ActETime " +
+    ",m.[Description] AS MainDesc",
+        FromCommand = "[dbo].ItemMaintenance m " +
+		" LEFT OUTER JOIN [dbo].RequireMaintenance r ON r.RequireMaintenanceId = m.RequireMaintenanceId " +
+		" LEFT OUTER JOIN [dbo].TypeMaintenance tm ON tm.TypeMaintenanceId = m.TypeMaintenanceId " +
+		" LEFT OUTER JOIN [dbo].Item i On i.ItemId = r.ItemId " +
+		" LEFT OUTER JOIN [dbo].ItemType t ON t.ItemTypeId = i.ItemTypeId",
+         WhereCommand = sWhere,
+         OrderCommand = "r.RequireDate"
+      };
+
+      return sqlCommand;
+    }
+
+    #region GetMethod
+
+    // GET: api/ItemMaintenance/5
+    [HttpGet("GetKeyNumber")]
+    public override async Task<IActionResult> Get(int key)
+    {
+      var HasItem = await this.repository.GetFirstOrDefaultAsync(
+          x => new ItemMaintenanceViewModel
+          {
+            ActualEndDate = x.ActualEndDate,
+            ActualEndDateTime = x.ActualEndDateTime,
+            ActualStartDate = x.ActualStartDate,
+            ActualStartDateTime = x.ActualStartDateTime,
+            Description = x.Description,
+            ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+            RequireMaintenanceId = x.RequireMaintenanceId,
+            ItemMaintenanceId = x.ItemMaintenanceId,
+            ItemMaintenanceNo = x.ItemMaintenanceNo,
+            MaintenanceEmp = x.MaintenanceEmp,
+            PlanEndDate = x.PlanEndDate,
+            PlanStartDate = x.PlanStartDate,
+            Remark = x.Remark,
+            StatusMaintenance = x.StatusMaintenance,
+            StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+            TypeMaintenanceId = x.TypeMaintenanceId,
+            TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
+            WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
+            WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
+            CreateDate = x.CreateDate,
+            Creator = x.Creator,
+            ModifyDate = x.ModifyDate,
+            Modifyer = x.Modifyer,
+          },
+          x => x.ItemMaintenanceId == key, null,
+          x => x.Include(z => z.TypeMaintenance).Include(z => z.WorkGroupMaintenance));
+      if (HasItem != null)
+      {
+        // var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(HasItem);
+        return new JsonResult(HasItem, this.DefaultJsonSettings);
+      }
+      return BadRequest();
+    }
+
+    //GET: api/ItemMaintenance/EmployeeMaintenance
+    [HttpGet("GetEmpMaintenance")]
+    public async Task<IActionResult> EmployeeMaintenance()
+    {
+      var hasData = await _dapper.GetListEntites<EmpMaintenance2Vm>(new SqlCommandViewModel()
+      {
+        SelectCommand = "e.EmpCode,e.NameThai AS EmpName",
+        FromCommand = $@"[dbo].[ItemMainHasEmployee] h
 LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] e
 	ON h.EmpCode = e.EmpCode
 LEFT OUTER JOIN [dbo].[ItemMaintenance] m
 	ON h.ItemMaintenanceId = m.ItemMaintenanceId",
-                WhereCommand = "m.StatusMaintenance != 6",
-                GroupCommand = "e.NameThai,e.EmpCode",
-                OrderCommand = "e.NameThai"
+        WhereCommand = "m.StatusMaintenance != 6",
+        GroupCommand = "e.NameThai,e.EmpCode",
+        OrderCommand = "e.NameThai"
+      });
+
+      if (hasData != null)
+        return new JsonResult(hasData, this.DefaultJsonSettings);
+      else
+        return NoContent();
+    }
+
+    // GET: api/ItemMaintenance/ItemMaintenanceReport
+    [HttpGet("ItemMaintenanceReport")]
+    public async Task<IActionResult> ItemMaintenanceReport(int key)
+    {
+      if (key > 0)
+      {
+        var ItemMain = await this.repository.GetFirstOrDefaultAsync(
+            x => x, x => x.ItemMaintenanceId == key, null,
+            z => z.Include(x => x.ItemMainHasEmployees)
+                .Include(x => x.RequireMaintenance.Item)
+                .Include(x => x.RequireMaintenance.Branch)
+                .Include(x => x.WorkGroupMaintenance)
+                .Include(x => x.RequisitionStockSps)
+                    .ThenInclude(x => x.SparePart));
+
+        if (ItemMain != null)
+        {
+          var WorkGroupName = (await this._repoGroup.GetAsync(ItemMain.RequireMaintenance.GroupMIS))?.GroupDesc ?? "";
+          var RequireMaintenBy = (await this._repoEmp.GetAsync(ItemMain.RequireMaintenance.RequireEmp))?.NameThai ?? "";
+          // Get ReportOverTimeMaster
+          var ReportItemMaintenance = new
+          {
+            RequireMaintenanceNo = ItemMain.RequireMaintenance.RequireNo,
+            RequireDate = ItemMain?.RequireMaintenance?.RequireDate.ToString("dd/MM/yyyy  HH:mm น."),
+            BranchName = ItemMain?.RequireMaintenance?.Branch?.Name ?? "-",
+            RequireMaintenBy,
+            WorkGroupName,
+            GroupMainten = ItemMain?.WorkGroupMaintenance.Name,
+            ItemName = $"{ItemMain?.RequireMaintenance?.Item?.ItemCode ?? "-" } / {ItemMain?.RequireMaintenance?.Item?.Name ?? "-" }",
+            DescRequireMainten = ItemMain?.RequireMaintenance.Description ?? "-",
+            // =========================================================== //
+            DescMainten = ItemMain.Description,
+            StartActual = ItemMain.ActualStartDate != null ? ItemMain.ActualStartDate.Value.ToString("dd/MM/yyyy  HH:mm น.") : "",
+            EndActual = ItemMain.ActualEndDate != null ? ItemMain.ActualEndDate.Value.ToString("dd/MM/yyyy  HH:mm น.") : "",
+            // Lists
+            MaintenBy = new[] { new { EmpCode = "", NameThai = "" } }.ToList(),
+            SparePartes = new[] { new { SpareName = "", Quantity = 0D } }.ToList(),
+          };
+
+          foreach (var MainBy in ItemMain.ItemMainHasEmployees)
+          {
+            var EmpString = (await this._repoEmp.GetAsync(MainBy.EmpCode)).NameThai;
+            ReportItemMaintenance.MaintenBy.Add(new
+            {
+              MainBy.EmpCode,
+              NameThai = EmpString
             });
+          }
 
-            if (hasData != null)
-                return new JsonResult(hasData, this.DefaultJsonSettings);
-            else 
-                return NoContent();
+          foreach (var Requisition in ItemMain.RequisitionStockSps)
+          {
+            ReportItemMaintenance.SparePartes.Add(new
+            {
+              SpareName = Requisition?.SparePart?.Name ?? "-",
+              Requisition.Quantity
+            });
+          }
+
+          // Get ReportOverTimeDetail
+          return new JsonResult(ReportItemMaintenance, this.DefaultJsonSettings);
         }
+      }
+      return BadRequest();
+    }
 
-        // GET: api/ItemMaintenance/ItemMaintenanceReport
-        [HttpGet("ItemMaintenanceReport")]
-        public async Task<IActionResult> ItemMaintenanceReport(int key)
+    #endregion GetMethod
+
+    #region PostMethod
+
+    // POST: api/ItemMaintenance/GetScroll
+    [HttpPost("GetScroll")]
+    public async Task<IActionResult> GetScroll([FromBody] ScrollViewModel Scroll)
+    {
+      if (Scroll == null)
+        return BadRequest();
+      // Filter
+      var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                          : Scroll.Filter.Split(null);
+
+      var predicate = PredicateBuilder.False<ItemMaintenance>();
+
+      foreach (string temp in filters)
+      {
+        string keyword = temp.Trim();
+        predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
+                                    x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
+                                    x.Remark.ToLower().Contains(keyword) ||
+                                    x.RequireMaintenance.Item.Name.ToLower().Contains(keyword) ||
+                                    x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
+                                    x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
+                                    x.TypeMaintenance.Description.ToLower().Contains(keyword));
+      }
+
+      if (!string.IsNullOrEmpty(Scroll.Where))
+        predicate = predicate.And(x => x.Creator == Scroll.Where);
+
+      if (Scroll.WhereId.HasValue)
+        predicate = predicate.And(x => x.RequireMaintenance.Item.ItemTypeId == Scroll.WhereId);
+
+      //Order by
+      Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
+      // Order
+      switch (Scroll.SortField)
+      {
+        case "ItemCode":
+          if (Scroll.SortOrder == -1)
+            order = o => o.OrderByDescending(x => x.RequireMaintenance.Item.ItemCode);
+          else
+            order = o => o.OrderBy(x => x.RequireMaintenance.Item.ItemCode);
+          break;
+
+        case "TypeMaintenanceString":
+          if (Scroll.SortOrder == -1)
+            order = o => o.OrderByDescending(x => x.TypeMaintenance.Name);
+          else
+            order = o => o.OrderBy(x => x.TypeMaintenance.Name);
+          break;
+
+        case "StatusMaintenanceString":
+          if (Scroll.SortOrder == -1)
+            order = o => o.OrderByDescending(x => x.StatusMaintenance);
+          else
+            order = o => o.OrderBy(x => x.StatusMaintenance);
+          break;
+
+        default:
+          order = o => o.OrderByDescending(x => x.CreateDate);
+          break;
+      }
+
+      var QueryData = await this.repository.GetToListAsync(
+                              selector: x => new ItemMaintenanceViewModel
+                              {
+                                ActualEndDate = x.ActualEndDate,
+                                ActualEndDateTime = x.ActualEndDateTime,
+                                ActualStartDate = x.ActualStartDate,
+                                ActualStartDateTime = x.ActualStartDateTime,
+                                Description = x.Description,
+                                ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+                                RequireMaintenanceId = x.RequireMaintenanceId,
+                                ItemMaintenanceId = x.ItemMaintenanceId,
+                                ItemMaintenanceNo = x.ItemMaintenanceNo,
+                                MaintenanceEmp = x.MaintenanceEmp,
+                                PlanEndDate = x.PlanEndDate,
+                                PlanStartDate = x.PlanStartDate,
+                                Remark = x.Remark,
+                                StatusMaintenance = x.StatusMaintenance,
+                                StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+                                TypeMaintenanceId = x.TypeMaintenanceId,
+                                TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
+                                WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
+                                WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
+                              },  // Selected
+                              predicate: predicate, // Where
+                              orderBy: order, // Order
+                              include: x => x.Include(z => z.RequireMaintenance.Item)
+                                             .Include(z => z.WorkGroupMaintenance)
+                                             .Include(z => z.TypeMaintenance), // Include
+                              skip: Scroll.Skip ?? 0, // Skip
+                              take: Scroll.Take ?? 50); // Take
+
+      // Get TotalRow
+      Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
+
+      //var mapDatas = new List<ItemMaintenanceViewModel>();
+      //foreach (var item in QueryData)
+      //{
+      //    var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(item);
+      //    mapDatas.Add(MapItem);
+      //}
+
+      return new JsonResult(new ScrollDataViewModel<ItemMaintenanceViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
+    }
+
+    [HttpPost("GetListMaintenance")]
+    public async Task<IActionResult> GetListMaintenance([FromBody] ScrollViewModel Scroll)
+    {
+      var message = "Data not been found.";
+      try
+      {
+        if (Scroll != null)
         {
-            if (key > 0)
-            {
-                var ItemMain = await this.repository.GetFirstOrDefaultAsync(
-                    x => x, x => x.ItemMaintenanceId == key, null,
-                    z => z.Include(x => x.ItemMainHasEmployees)
-                        .Include(x => x.RequireMaintenance.Item)
-                        .Include(x => x.RequireMaintenance.Branch)
-                        .Include(x => x.WorkGroupMaintenance)
-                        .Include(x => x.RequisitionStockSps)
-                            .ThenInclude(x => x.SparePart));
+          // Filter
+          var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
+                              : Scroll.Filter.Split(null);
 
-                if (ItemMain != null)
-                {
-                    var WorkGroupName = (await this._repoGroup.GetAsync(ItemMain.RequireMaintenance.GroupMIS))?.GroupDesc ?? "";
-                    var RequireMaintenBy = (await this._repoEmp.GetAsync(ItemMain.RequireMaintenance.RequireEmp))?.NameThai ?? "";
-                    // Get ReportOverTimeMaster
-                    var ReportItemMaintenance = new
-                    {
-                        RequireMaintenanceNo = ItemMain.RequireMaintenance.RequireNo,
-                        RequireDate = ItemMain?.RequireMaintenance?.RequireDate.ToString("dd/MM/yyyy  HH:mm น."),
-                        BranchName = ItemMain?.RequireMaintenance?.Branch?.Name ?? "-",
-                        RequireMaintenBy,
-                        WorkGroupName,
-                        GroupMainten = ItemMain?.WorkGroupMaintenance.Name,
-                        ItemName = $"{ItemMain?.RequireMaintenance?.Item?.ItemCode ?? "-" } / {ItemMain?.RequireMaintenance?.Item?.Name ?? "-" }",
-                        DescRequireMainten = ItemMain?.RequireMaintenance.Description ?? "-",
-                        // =========================================================== //
-                        DescMainten = ItemMain.Description,
-                        StartActual = ItemMain.ActualStartDate != null ? ItemMain.ActualStartDate.Value.ToString("dd/MM/yyyy  HH:mm น.") : "",
-                        EndActual = ItemMain.ActualEndDate != null ? ItemMain.ActualEndDate.Value.ToString("dd/MM/yyyy  HH:mm น.") : "",
-                        // Lists
-                        MaintenBy = new[] { new { EmpCode = "", NameThai = "" } }.ToList(),
-                        SparePartes = new[] { new { SpareName = "", Quantity = 0D } }.ToList(),
-                    };
+          var predicate = PredicateBuilder.False<ItemMaintenance>();
 
-                    foreach (var MainBy in ItemMain.ItemMainHasEmployees)
-                    {
-                        var EmpString = (await this._repoEmp.GetAsync(MainBy.EmpCode)).NameThai;
-                        ReportItemMaintenance.MaintenBy.Add(new
-                        {
-                            MainBy.EmpCode,
-                            NameThai = EmpString
-                        });
-                    }
+          foreach (string temp in filters)
+          {
+            string keyword = temp;
+            predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
+                                        x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
+                                        x.Remark.ToLower().Contains(keyword) ||
+                                        x.RequireMaintenance.Item.Name.ToLower().Contains(keyword) ||
+                                        x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
+                                        x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
+                                        x.TypeMaintenance.Description.ToLower().Contains(keyword));
+          }
 
-                    foreach (var Requisition in ItemMain.RequisitionStockSps)
-                    {
-                        ReportItemMaintenance.SparePartes.Add(new
-                        {
-                            SpareName = Requisition?.SparePart?.Name ?? "-",
-                            Requisition.Quantity
-                        });
-                    }
+          if (!string.IsNullOrEmpty(Scroll.Where))
+            predicate = predicate.And(x => x.Creator == Scroll.Where);
 
-                    // Get ReportOverTimeDetail
-                    return new JsonResult(ReportItemMaintenance, this.DefaultJsonSettings);
-                }
-            }
-            return BadRequest();
+          if (Scroll.WhereId.HasValue)
+            predicate = predicate.And(x => x.WorkGroupMaintenanceId == Scroll.WhereId);
+
+          if (Scroll.SDate.HasValue)
+          {
+            Scroll.SDate = Scroll.SDate.Value.AddHours(7);
+            predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date >= Scroll.SDate.Value.Date);
+          }
+
+          if (Scroll.EDate.HasValue)
+          {
+            Scroll.EDate = Scroll.EDate.Value.AddHours(7);
+            predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date <= Scroll.EDate.Value.Date);
+          }
+
+          //Order by
+          Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
+          // Order
+          switch (Scroll.SortField)
+          {
+            case "ItemCode":
+              if (Scroll.SortOrder == -1)
+                order = o => o.OrderByDescending(x => x.RequireMaintenance.Item.ItemCode);
+              else
+                order = o => o.OrderBy(x => x.RequireMaintenance.Item.ItemCode);
+              break;
+
+            case "MainGroupName":
+              if (Scroll.SortOrder == -1)
+                order = o => o.OrderByDescending(x => x.WorkGroupMaintenance.Name);
+              else
+                order = o => o.OrderBy(x => x.WorkGroupMaintenance.Name);
+              break;
+
+            case "RequireDateString":
+              if (Scroll.SortOrder == -1)
+                order = o => o.OrderByDescending(x => x.RequireMaintenance.RequireDate);
+              else
+                order = o => o.OrderBy(x => x.RequireMaintenance.RequireDate);
+              break;
+
+            case "MainTypeName":
+              if (Scroll.SortOrder == -1)
+                order = o => o.OrderByDescending(x => x.TypeMaintenance.Name);
+              else
+                order = o => o.OrderBy(x => x.TypeMaintenance.Name);
+              break;
+
+            default:
+              order = o => o.OrderByDescending(x => x.CreateDate);
+              break;
+          }
+
+          var QueryData = await this.repository.GetToListAsync(
+                                  selector: x => new ItemMainV2ViewModel
+                                  {
+                                    ItemCode = x.RequireMaintenance.Item.ItemCode,
+                                    ItemMaintenanceId = x.ItemMaintenanceId,
+                                    ItemName = x.RequireMaintenance.Item.Name,
+                                    MainGroupName = x.WorkGroupMaintenance.Name,
+                                    MainTypeName = x.TypeMaintenance.Name,
+                                    RequireDate = x.RequireMaintenance.RequireDate,
+                                    RequireEmpCode = x.RequireMaintenance.RequireEmp,
+                                  },  // Selected
+                                  predicate: predicate, // Where
+                                  orderBy: order, // Order
+                                  include: x => x.Include(z => z.RequireMaintenance.Item)
+                                                 .Include(z => z.WorkGroupMaintenance)
+                                                 .Include(z => z.TypeMaintenance), // Include
+                                  skip: Scroll.Skip ?? 0, // Skip
+                                  take: Scroll.Take ?? 50); // Take
+
+          // Get TotalRow
+          Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
+
+          var listEmps = QueryData.Select(z => z.RequireEmpCode).Distinct().ToList();
+          var emps = await this._repoEmp.GetToListAsync(x => new { x.EmpCode, x.NameThai }, x => listEmps.Contains(x.EmpCode));
+
+          foreach (var item in QueryData)
+          {
+            if (!string.IsNullOrEmpty(item.RequireEmpCode))
+              item.RequireEmpName = emps.FirstOrDefault(x => x.EmpCode == item.RequireEmpCode)?.NameThai ?? "-";
+          }
+
+          return new JsonResult(new ScrollDataViewModel<ItemMainV2ViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
         }
+      }
+      catch (Exception ex)
+      {
+        message = $"Has error {ex.ToString()}";
+      }
 
-        #endregion
+      return BadRequest(new { message });
+    }
 
-        #region PostMethod
-        // POST: api/ItemMaintenance/GetScroll
-        [HttpPost("GetScroll")]
-        public async Task<IActionResult> GetScroll([FromBody] ScrollViewModel Scroll)
+    // POST: api/ItemMaintenance/
+    [HttpPost]
+    public override async Task<IActionResult> Create([FromBody] ItemMaintenance record)
+    {
+      // Set date for CrateDate Entity
+      if (record == null)
+        return BadRequest();
+
+      record.CreateDate = DateTime.Now;
+      record.StatusMaintenance = this.ChangeStatus(record);
+      // +7 Hour
+      // record = this.helper.AddHourMethod(record);
+      var RunNumber = (await this.repository.GetLengthWithAsync(x => x.CreateDate.Value.Year == record.CreateDate.Value.Year)) + 1;
+      record.ItemMaintenanceNo = $"M/{record.CreateDate.Value.ToString("yy")}-{RunNumber.ToString("0000")}";
+      // Actual Start DateTime
+      if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
+      {
+        if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+          record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
+      }
+      // Actual End DateTime
+      if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
+      {
+        if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+          record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
+      }
+
+      // Set ItemMainHasEmployees
+      if (record.ItemMainHasEmployees != null)
+      {
+        foreach (var item in record.ItemMainHasEmployees)
         {
-            if (Scroll == null)
-                return BadRequest();
-            // Filter
-            var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
-                                : Scroll.Filter.Split(null);
+          if (item == null)
+            continue;
 
-            var predicate = PredicateBuilder.False<ItemMaintenance>();
-
-            foreach (string temp in filters)
-            {
-                string keyword = temp.Trim();
-                predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
-                                            x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
-                                            x.Remark.ToLower().Contains(keyword) ||
-                                            x.RequireMaintenance.Item.Name.ToLower().Contains(keyword) ||
-                                            x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
-                                            x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
-                                            x.TypeMaintenance.Description.ToLower().Contains(keyword));
-            }
-
-            if (!string.IsNullOrEmpty(Scroll.Where))
-                predicate = predicate.And(x => x.Creator == Scroll.Where);
-
-            if (Scroll.WhereId.HasValue)
-                predicate = predicate.And(x => x.RequireMaintenance.Item.ItemTypeId == Scroll.WhereId);
-
-            //Order by
-            Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
-            // Order
-            switch (Scroll.SortField)
-            {
-                case "ItemCode":
-                    if (Scroll.SortOrder == -1)
-                        order = o => o.OrderByDescending(x => x.RequireMaintenance.Item.ItemCode);
-                    else
-                        order = o => o.OrderBy(x => x.RequireMaintenance.Item.ItemCode);
-                    break;
-
-                case "TypeMaintenanceString":
-                    if (Scroll.SortOrder == -1)
-                        order = o => o.OrderByDescending(x => x.TypeMaintenance.Name);
-                    else
-                        order = o => o.OrderBy(x => x.TypeMaintenance.Name);
-                    break;
-
-                case "StatusMaintenanceString":
-                    if (Scroll.SortOrder == -1)
-                        order = o => o.OrderByDescending(x => x.StatusMaintenance);
-                    else
-                        order = o => o.OrderBy(x => x.StatusMaintenance);
-                    break;
-
-                default:
-                    order = o => o.OrderByDescending(x => x.CreateDate);
-                    break;
-            }
-
-            var QueryData = await this.repository.GetToListAsync(
-                                    selector: x => new ItemMaintenanceViewModel
-                                    {
-                                        ActualEndDate = x.ActualEndDate,
-                                        ActualEndDateTime = x.ActualEndDateTime,
-                                        ActualStartDate = x.ActualStartDate,
-                                        ActualStartDateTime = x.ActualStartDateTime,
-                                        Description = x.Description,
-                                        ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
-                                        RequireMaintenanceId = x.RequireMaintenanceId,
-                                        ItemMaintenanceId = x.ItemMaintenanceId,
-                                        ItemMaintenanceNo = x.ItemMaintenanceNo,
-                                        MaintenanceEmp = x.MaintenanceEmp,
-                                        PlanEndDate = x.PlanEndDate,
-                                        PlanStartDate = x.PlanStartDate,
-                                        Remark = x.Remark,
-                                        StatusMaintenance = x.StatusMaintenance,
-                                        StatusMaintenanceString = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
-                                        TypeMaintenanceId = x.TypeMaintenanceId,
-                                        TypeMaintenanceString = x.TypeMaintenance == null ? "ไม่ระบุ" : x.TypeMaintenance.Name,
-                                        WorkGroupMaintenanceId = x.WorkGroupMaintenanceId,
-                                        WorkGroupMaintenanceString = x.WorkGroupMaintenance == null ? "ไม่ระบุ" : x.WorkGroupMaintenance.Name,
-                                    },  // Selected
-                                    predicate: predicate, // Where
-                                    orderBy: order, // Order
-                                    include: x => x.Include(z => z.RequireMaintenance.Item)
-                                                   .Include(z => z.WorkGroupMaintenance)
-                                                   .Include(z => z.TypeMaintenance), // Include
-                                    skip: Scroll.Skip ?? 0, // Skip
-                                    take: Scroll.Take ?? 50); // Take
-
-            // Get TotalRow
-            Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
-
-            //var mapDatas = new List<ItemMaintenanceViewModel>();
-            //foreach (var item in QueryData)
-            //{
-            //    var MapItem = this.mapper.Map<ItemMaintenance, ItemMaintenanceViewModel>(item);
-            //    mapDatas.Add(MapItem);
-            //}
-
-            return new JsonResult(new ScrollDataViewModel<ItemMaintenanceViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
+          item.CreateDate = record.CreateDate;
+          item.Creator = record.Creator;
         }
-
-        [HttpPost("GetListMaintenance")]
-        public async Task<IActionResult> GetListMaintenance([FromBody] ScrollViewModel Scroll)
+      }
+      // Set RequisitionStockSps
+      if (record.RequisitionStockSps != null)
+      {
+        foreach (var item in record.RequisitionStockSps)
         {
-            var message = "Data not been found.";
-            try
+          if (item == null)
+            continue;
+
+          item.CreateDate = record.CreateDate;
+          item.Creator = record.Creator;
+          item.RequisitionEmp = record.MaintenanceEmp;
+          item.PaperNo = record.ItemMaintenanceNo;
+
+          if (item.MovementStockSp == null)
+          {
+            item.MovementStockSp = new MovementStockSp()
             {
-                if (Scroll != null)
-                {
-                    // Filter
-                    var filters = string.IsNullOrEmpty(Scroll.Filter) ? new string[] { "" }
-                                        : Scroll.Filter.Split(null);
-
-                    var predicate = PredicateBuilder.False<ItemMaintenance>();
-
-                    foreach (string temp in filters)
-                    {
-                        string keyword = temp;
-                        predicate = predicate.Or(x => x.Description.ToLower().Contains(keyword) ||
-                                                    x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
-                                                    x.Remark.ToLower().Contains(keyword) ||
-                                                    x.RequireMaintenance.Item.Name.ToLower().Contains(keyword) ||
-                                                    x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
-                                                    x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
-                                                    x.TypeMaintenance.Description.ToLower().Contains(keyword));
-                    }
-
-                    if (!string.IsNullOrEmpty(Scroll.Where))
-                        predicate = predicate.And(x => x.Creator == Scroll.Where);
-
-                    if (Scroll.WhereId.HasValue)
-                        predicate = predicate.And(x => x.WorkGroupMaintenanceId == Scroll.WhereId);
-
-                    if (Scroll.SDate.HasValue)
-                    {
-                        Scroll.SDate = Scroll.SDate.Value.AddHours(7);
-                        predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date >= Scroll.SDate.Value.Date);
-                    }
-
-                    if (Scroll.EDate.HasValue)
-                    {
-                        Scroll.EDate = Scroll.EDate.Value.AddHours(7);
-                        predicate = predicate.And(x => x.RequireMaintenance.RequireDate.Date <= Scroll.EDate.Value.Date);
-
-                    }
-
-                    //Order by
-                    Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
-                    // Order
-                    switch (Scroll.SortField)
-                    {
-                        case "ItemCode":
-                            if (Scroll.SortOrder == -1)
-                                order = o => o.OrderByDescending(x => x.RequireMaintenance.Item.ItemCode);
-                            else
-                                order = o => o.OrderBy(x => x.RequireMaintenance.Item.ItemCode);
-                            break;
-
-                        case "MainGroupName":
-                            if (Scroll.SortOrder == -1)
-                                order = o => o.OrderByDescending(x => x.WorkGroupMaintenance.Name);
-                            else
-                                order = o => o.OrderBy(x => x.WorkGroupMaintenance.Name);
-                            break;
-
-                        case "RequireDateString":
-                            if (Scroll.SortOrder == -1)
-                                order = o => o.OrderByDescending(x => x.RequireMaintenance.RequireDate);
-                            else
-                                order = o => o.OrderBy(x => x.RequireMaintenance.RequireDate);
-                            break;
-
-                        case "MainTypeName":
-                            if (Scroll.SortOrder == -1)
-                                order = o => o.OrderByDescending(x => x.TypeMaintenance.Name);
-                            else
-                                order = o => o.OrderBy(x => x.TypeMaintenance.Name);
-                            break;
-
-                        default:
-                            order = o => o.OrderByDescending(x => x.CreateDate);
-                            break;
-                    }
-
-                    var QueryData = await this.repository.GetToListAsync(
-                                            selector: x => new ItemMainV2ViewModel
-                                            {
-                                                ItemCode = x.RequireMaintenance.Item.ItemCode,
-                                                ItemMaintenanceId = x.ItemMaintenanceId,
-                                                ItemName = x.RequireMaintenance.Item.Name,
-                                                MainGroupName = x.WorkGroupMaintenance.Name,
-                                                MainTypeName = x.TypeMaintenance.Name,
-                                                RequireDate = x.RequireMaintenance.RequireDate,
-                                                RequireEmpCode = x.RequireMaintenance.RequireEmp,
-                                            },  // Selected
-                                            predicate: predicate, // Where
-                                            orderBy: order, // Order
-                                            include: x => x.Include(z => z.RequireMaintenance.Item)
-                                                           .Include(z => z.WorkGroupMaintenance)
-                                                           .Include(z => z.TypeMaintenance), // Include
-                                            skip: Scroll.Skip ?? 0, // Skip
-                                            take: Scroll.Take ?? 50); // Take
-
-                    // Get TotalRow
-                    Scroll.TotalRow = await this.repository.GetLengthWithAsync(predicate: predicate);
-
-                    var listEmps = QueryData.Select(z => z.RequireEmpCode).Distinct().ToList();
-                    var emps = await this._repoEmp.GetToListAsync(x => new { x.EmpCode, x.NameThai }, x => listEmps.Contains(x.EmpCode));
-
-                    foreach (var item in QueryData)
-                    {
-                        if (!string.IsNullOrEmpty(item.RequireEmpCode))
-                            item.RequireEmpName = emps.FirstOrDefault(x => x.EmpCode == item.RequireEmpCode)?.NameThai ?? "-";
-                    }
-
-                    return new JsonResult(new ScrollDataViewModel<ItemMainV2ViewModel>(Scroll, QueryData), this.DefaultJsonSettings);
-                }
-            }
-            catch (Exception ex)
-            {
-                message = $"Has error {ex.ToString()}";
-            }
-
-            return BadRequest(new { message });
+              CreateDate = item.CreateDate,
+              Creator = item.Creator,
+              MovementDate = item.RequisitionDate,
+              MovementStatus = MovementStatus.ReceiveStock,
+              Quantity = item.Quantity,
+              SparePartId = item.SparePartId,
+            };
+          }
         }
+      }
 
-        // POST: api/ItemMaintenance/
-        [HttpPost]
-        public override async Task<IActionResult> Create([FromBody] ItemMaintenance record)
+      if (await this.repository.AddAsync(record) == null)
+        return BadRequest();
+
+      // Update Status RequireMaintenance
+      RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
+          (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
+      // Update Status RequireMaintenance
+      await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
+
+      if (record.StatusMaintenance == StatusMaintenance.Complate &&
+          record.RequireMaintenanceId != null)
+        await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
+
+      if (record.RequireMaintenance != null)
+        record.RequireMaintenance = null;
+      if (record.ItemMainHasEmployees != null)
+        record.ItemMainHasEmployees = null;
+      if (record.RequisitionStockSps != null)
+        record.RequisitionStockSps = null;
+
+      return new JsonResult(record, this.DefaultJsonSettings);
+    }
+
+    // POST: api/ItemMaintenance/Schedule
+    [HttpPost("Schedule")]
+    public async Task<IActionResult> Schedule([FromBody] OptionItemMaintananceSchedule Schedule)
+    {
+      var message = "Data not been found.";
+      try
+      {
+        Expression<Func<ItemMaintenance, bool>> expression = x =>
+                          x.PlanStartDate != null &&
+                          x.PlanEndDate != null &&
+                          x.StatusMaintenance != StatusMaintenance.Cancel;
+        int TotalRow;
+
+        if (Schedule != null)
         {
-            // Set date for CrateDate Entity
-            if (record == null)
-                return BadRequest();
-
-            record.CreateDate = DateTime.Now;
-            record.StatusMaintenance = this.ChangeStatus(record);
-            // +7 Hour
-            // record = this.helper.AddHourMethod(record);
-            var RunNumber = (await this.repository.GetLengthWithAsync(x => x.CreateDate.Value.Year == record.CreateDate.Value.Year)) + 1;
-            record.ItemMaintenanceNo = $"M/{record.CreateDate.Value.ToString("yy")}-{RunNumber.ToString("0000")}";
-            // Actual Start DateTime
-            if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
+          // Option Filter
+          if (!string.IsNullOrEmpty(Schedule.Filter))
+          {
+            var filters = string.IsNullOrEmpty(Schedule.Filter) ? new string[] { "" }
+                       : Schedule.Filter.ToLower().Split(null);
+            foreach (var keyword in filters)
             {
-                if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
+              expression = expression.And(x => x.Description.ToLower().Contains(keyword) ||
+                                               x.Remark.ToLower().Contains(keyword) ||
+                                               x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
+                                               x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
+                                               x.WorkGroupMaintenance.Name.ToLower().Contains(keyword) ||
+                                               x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
+                                               x.RequireMaintenance.Item.Name.ToLower().Contains(keyword));
             }
-            // Actual End DateTime
-            if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
+          }
+          //Order by
+          Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
+          // Option Mode
+          if (Schedule.Mode.HasValue)
+          {
+            if (Schedule.Mode == 1)
+              order = o => o.OrderByDescending(x => x.PlanStartDate);
+            else
             {
-                if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
+              order = o => o.OrderBy(x => x.PlanStartDate);
+              expression = expression.And(x => x.StatusMaintenance == StatusMaintenance.InProcess ||
+                                               x.StatusMaintenance == StatusMaintenance.TakeAction);
             }
+          }
+          // Option ProjectMasterId
+          if (Schedule.ProjectMasterId.HasValue)
+            expression = expression.And(x => x.RequireMaintenance.ProjectCodeMasterId == Schedule.ProjectMasterId);
+          // Option Create
+          if (!string.IsNullOrEmpty(Schedule.Creator))
+            expression = expression.And(x => x.RequireMaintenance.RequireEmp == Schedule.Creator);
+          // Option ItemMaintenance
+          if (Schedule.ItemMaintenanceId.HasValue)
+            expression = expression.And(x => x.ItemMaintenanceId == Schedule.ItemMaintenanceId);
+          // Option RequireMaintenance
+          if (Schedule.RequireMaintenanceId.HasValue)
+            expression = expression.And(x => x.RequireMaintenanceId == Schedule.RequireMaintenanceId);
+          // Option WorkGroupMaintenance
+          if (Schedule.GroupMaintenanceId.HasValue)
+            expression = expression.And(x => x.WorkGroupMaintenanceId == Schedule.GroupMaintenanceId);
+          // Option TypeMaintenance
+          if (Schedule.TypeMaintenanceId.HasValue)
+            expression = expression.And(x => x.TypeMaintenanceId == Schedule.TypeMaintenanceId);
 
-            // Set ItemMainHasEmployees
-            if (record.ItemMainHasEmployees != null)
-            {
-                foreach (var item in record.ItemMainHasEmployees)
-                {
-                    if (item == null)
-                        continue;
-
-                    item.CreateDate = record.CreateDate;
-                    item.Creator = record.Creator;
-                }
-            }
-            // Set RequisitionStockSps
-            if (record.RequisitionStockSps != null)
-            {
-                foreach (var item in record.RequisitionStockSps)
-                {
-                    if (item == null)
-                        continue;
-
-                    item.CreateDate = record.CreateDate;
-                    item.Creator = record.Creator;
-                    item.RequisitionEmp = record.MaintenanceEmp;
-                    item.PaperNo = record.ItemMaintenanceNo;
-
-                    if (item.MovementStockSp == null)
-                    {
-                        item.MovementStockSp = new MovementStockSp()
-                        {
-                            CreateDate = item.CreateDate,
-                            Creator = item.Creator,
-                            MovementDate = item.RequisitionDate,
-                            MovementStatus = MovementStatus.ReceiveStock,
-                            Quantity = item.Quantity,
-                            SparePartId = item.SparePartId,
-                        };
-                    }
-                }
-            }
-
-            if (await this.repository.AddAsync(record) == null)
-                return BadRequest();
-
-            // Update Status RequireMaintenance
-            RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
-                (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
-            // Update Status RequireMaintenance
-            await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
-
-            if (record.StatusMaintenance == StatusMaintenance.Complate &&
-                record.RequireMaintenanceId != null)
-                await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
-
-            if (record.RequireMaintenance != null)
-                record.RequireMaintenance = null;
-            if (record.ItemMainHasEmployees != null)
-                record.ItemMainHasEmployees = null;
-            if (record.RequisitionStockSps != null)
-                record.RequisitionStockSps = null;
-
-            return new JsonResult(record, this.DefaultJsonSettings);
+          TotalRow = await this.repository.GetLengthWithAsync(expression);
         }
+        else
+          TotalRow = await this.repository.GetLengthWithAsync();
 
+        var GetDataTemp = await this.repository.GetToListAsync(
+                  x => new
+                  {
+                    x.PlanEndDate,
+                    x.PlanStartDate,
+                    x.ActualEndDate,
+                    x.ActualStartDate,
+                    MaintenanceApply = x.RequireMaintenance == null ? null : x.RequireMaintenance.MaintenanceApply,
+                    StatusMaintenance = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
+                    ProjectCodeMasterId = x.RequireMaintenance == null ? null : x.RequireMaintenance.ProjectCodeMasterId,
+                    GroupMaintenance = x.WorkGroupMaintenance == null ? "-" : $"{(x.WorkGroupMaintenance.Name ?? "-")}/{(x.WorkGroupMaintenance.Description ?? "-")}",
+                    ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
+                    x.ItemMaintenanceId
+                  },
+                  expression, null,
+                  z => z.Include(x => x.RequireMaintenance.Item)
+                        .Include(x => x.TypeMaintenance)
+                        .Include(x => x.WorkGroupMaintenance),
+                  Schedule.Skip ?? 0, Schedule.Take ?? 20);
 
-        // POST: api/ItemMaintenance/Schedule
-        [HttpPost("Schedule")]
-        public async Task<IActionResult> Schedule([FromBody] OptionItemMaintananceSchedule Schedule)
+        if (GetDataTemp.Any())
         {
-            var message = "Data not been found.";
-            try
-            {
-                Expression<Func<ItemMaintenance, bool>> expression = x =>
-                                  x.PlanStartDate != null &&
-                                  x.PlanEndDate != null &&
-                                  x.StatusMaintenance != StatusMaintenance.Cancel;
-                int TotalRow;
-
-                if (Schedule != null)
-                {
-                    // Option Filter
-                    if (!string.IsNullOrEmpty(Schedule.Filter))
-                    {
-                        var filters = string.IsNullOrEmpty(Schedule.Filter) ? new string[] { "" }
-                                   : Schedule.Filter.ToLower().Split(null);
-                        foreach (var keyword in filters)
-                        {
-                            expression = expression.And(x => x.Description.ToLower().Contains(keyword) ||
-                                                             x.Remark.ToLower().Contains(keyword) ||
-                                                             x.ItemMaintenanceNo.ToLower().Contains(keyword) ||
-                                                             x.TypeMaintenance.Name.ToLower().Contains(keyword) ||
-                                                             x.WorkGroupMaintenance.Name.ToLower().Contains(keyword) ||
-                                                             x.RequireMaintenance.Item.ItemCode.ToLower().Contains(keyword) ||
-                                                             x.RequireMaintenance.Item.Name.ToLower().Contains(keyword));
-                        }
-                    }
-                    //Order by
-                    Func<IQueryable<ItemMaintenance>, IOrderedQueryable<ItemMaintenance>> order;
-                    // Option Mode
-                    if (Schedule.Mode.HasValue)
-                    {
-                        if (Schedule.Mode == 1)
-                            order = o => o.OrderByDescending(x => x.PlanStartDate);
-                        else
-                        {
-                            order = o => o.OrderBy(x => x.PlanStartDate);
-                            expression = expression.And(x => x.StatusMaintenance == StatusMaintenance.InProcess ||
-                                                             x.StatusMaintenance == StatusMaintenance.TakeAction);
-                        }
-                    }
-                    // Option ProjectMasterId
-                    if (Schedule.ProjectMasterId.HasValue)
-                        expression = expression.And(x => x.RequireMaintenance.ProjectCodeMasterId == Schedule.ProjectMasterId);
-                    // Option Create
-                    if (!string.IsNullOrEmpty(Schedule.Creator))
-                        expression = expression.And(x => x.RequireMaintenance.RequireEmp == Schedule.Creator);
-                    // Option ItemMaintenance
-                    if (Schedule.ItemMaintenanceId.HasValue)
-                        expression = expression.And(x => x.ItemMaintenanceId == Schedule.ItemMaintenanceId);
-                    // Option RequireMaintenance
-                    if (Schedule.RequireMaintenanceId.HasValue)
-                        expression = expression.And(x => x.RequireMaintenanceId == Schedule.RequireMaintenanceId);
-                    // Option WorkGroupMaintenance
-                    if (Schedule.GroupMaintenanceId.HasValue)
-                        expression = expression.And(x => x.WorkGroupMaintenanceId == Schedule.GroupMaintenanceId);
-                    // Option TypeMaintenance
-                    if (Schedule.TypeMaintenanceId.HasValue)
-                        expression = expression.And(x => x.TypeMaintenanceId == Schedule.TypeMaintenanceId);
-
-                    TotalRow = await this.repository.GetLengthWithAsync(expression);
-                }
-                else
-                    TotalRow = await this.repository.GetLengthWithAsync();
-
-                var GetDataTemp = await this.repository.GetToListAsync(
-                          x => new
-                          {
-                              x.PlanEndDate,
-                              x.PlanStartDate,
-                              x.ActualEndDate,
-                              x.ActualStartDate,
-                              MaintenanceApply = x.RequireMaintenance == null ? null : x.RequireMaintenance.MaintenanceApply,
-                              StatusMaintenance = System.Enum.GetName(typeof(StatusMaintenance), x.StatusMaintenance),
-                              ProjectCodeMasterId = x.RequireMaintenance == null ? null : x.RequireMaintenance.ProjectCodeMasterId,
-                              GroupMaintenance = x.WorkGroupMaintenance == null ? "-" : $"{(x.WorkGroupMaintenance.Name ?? "-")}/{(x.WorkGroupMaintenance.Description ?? "-")}",
-                              ItemCode = x.RequireMaintenance == null ? "-" : $"{x.RequireMaintenance.Item.ItemCode}/{x.RequireMaintenance.Item.Name}",
-                              x.ItemMaintenanceId
-                          },
-                          expression, null,
-                          z => z.Include(x => x.RequireMaintenance.Item)
-                                .Include(x => x.TypeMaintenance)
-                                .Include(x => x.WorkGroupMaintenance),
-                          Schedule.Skip ?? 0, Schedule.Take ?? 20);
-
-                if (GetDataTemp.Any())
-                {
-                    var GetData = GetDataTemp.ToList();
-                    IDictionary<string, int> ColumnGroupTop = new Dictionary<string, int>();
-                    IDictionary<DateTime, string> ColumnGroupBtm = new Dictionary<DateTime, string>();
-                    List<string> ColumnsAll = new List<string>();
-                    // PlanDate
-                    List<DateTime?> ListDate = new List<DateTime?>()
+          var GetData = GetDataTemp.ToList();
+          IDictionary<string, int> ColumnGroupTop = new Dictionary<string, int>();
+          IDictionary<DateTime, string> ColumnGroupBtm = new Dictionary<DateTime, string>();
+          List<string> ColumnsAll = new List<string>();
+          // PlanDate
+          List<DateTime?> ListDate = new List<DateTime?>()
                     {
                         //START Date
                         GetData.Min(x => x.PlanStartDate),
@@ -795,402 +850,405 @@ LEFT OUTER JOIN [dbo].[ItemMaintenance] m
                         GetData.Max(x => x.MaintenanceApply) ?? null,
                     };
 
-                    DateTime? MinDate = ListDate.Min();
-                    DateTime? MaxDate = ListDate.Max();
+          DateTime? MinDate = ListDate.Min();
+          DateTime? MaxDate = ListDate.Max();
 
-                    if (MinDate == null && MaxDate == null)
-                        return NotFound(new { Error = "Data not found" });
+          if (MinDate == null && MaxDate == null)
+            return NotFound(new { Error = "Data not found" });
 
-                    int countCol = 1;
-                    // add Date to max
-                    MaxDate = MaxDate.Value.AddDays(2);
-                    MinDate = MinDate.Value.AddDays(-2);
+          int countCol = 1;
+          // add Date to max
+          MaxDate = MaxDate.Value.AddDays(2);
+          MinDate = MinDate.Value.AddDays(-2);
 
-                    // If Range of date below then 15 day add more
-                    var RangeDay = (MaxDate.Value - MinDate.Value).Days;
-                    if (RangeDay < 15)
-                    {
-                        MaxDate = MaxDate.Value.AddDays((15 - RangeDay) / 2);
-                        MinDate = MinDate.Value.AddDays((((15 - RangeDay) / 2) * -1));
-                    }
+          // If Range of date below then 15 day add more
+          var RangeDay = (MaxDate.Value - MinDate.Value).Days;
+          if (RangeDay < 15)
+          {
+            MaxDate = MaxDate.Value.AddDays((15 - RangeDay) / 2);
+            MinDate = MinDate.Value.AddDays((((15 - RangeDay) / 2) * -1));
+          }
 
-                    // EachDay
-                    var EachDate = new Helper.LoopEachDate();
-                    // Foreach Date
-                    foreach (DateTime day in EachDate.EachDate(MinDate.Value, MaxDate.Value))
-                    {
-                        // Get Month
-                        if (ColumnGroupTop.Any(x => x.Key == day.ToString("MMMM")))
-                            ColumnGroupTop[day.ToString("MMMM")] += 1;
-                        else
-                            ColumnGroupTop.Add(day.ToString("MMMM"), 1);
-
-                        ColumnGroupBtm.Add(day.Date, $"Col{countCol.ToString("00")}");
-                        countCol++;
-                    }
-
-                    var DataTable = new List<IDictionary<string, object>>();
-                    // OrderBy(x => x.Machine.TypeMachineId).ThenBy(x => x.Machine.MachineCode)
-                    foreach (var Data in GetData.OrderBy(x => x.PlanStartDate).ThenBy(x => x.PlanEndDate))
-                    {
-                        IDictionary<string, object> rowData = new ExpandoObject();
-                        var Progress = Data.StatusMaintenance;
-                        var ProjectMaster = "NoData";
-                        if (Data?.ProjectCodeMasterId != null)
-                        {
-                            var ProjectData = await this._repoProject.
-                                        GetAsync(Data.ProjectCodeMasterId ?? 0);
-                            ProjectMaster = ProjectData != null ? $"{ProjectData.ProjectCode}/{ProjectData.ProjectName}" : "-";
-                        }
-
-                        // add column time
-                        rowData.Add("ProjectMaster", ProjectMaster);
-                        rowData.Add("GroupMaintenance", Data.GroupMaintenance);
-                        rowData.Add("Item", Data.ItemCode);
-                        rowData.Add("Progress", Progress);
-                        rowData.Add("ItemMainStatus", Data.StatusMaintenance);
-                        rowData.Add("ItemMaintenanceId", Data.ItemMaintenanceId);
-                        // Add new
-                        if (Data.MaintenanceApply.HasValue)
-                        {
-                            if (ColumnGroupBtm.Any(x => x.Key == Data.MaintenanceApply.Value.Date))
-                                rowData.Add("Response", ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.MaintenanceApply.Value.Date).Value);
-                        }
-                        // End new
-
-                        // Data is 1:Plan,2:Actual,3:PlanAndActual
-                        // For Plan1
-                        if (Data.PlanStartDate != null && Data.PlanEndDate != null)
-                        {
-                            // If Same Date can't loop
-                            if (Data.PlanStartDate.Date == Data.PlanEndDate.Date)
-                            {
-                                if (ColumnGroupBtm.Any(x => x.Key == Data.PlanStartDate.Date))
-                                    rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.PlanStartDate.Date).Value, 1);
-                            }
-                            else
-                            {
-                                foreach (DateTime day in EachDate.EachDate(Data.PlanStartDate, Data.PlanEndDate))
-                                {
-                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
-                                        rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date).Value, 1);
-                                }
-                            }
-                        }
-
-                        //For Actual
-                        if (Data.ActualStartDate != null)
-                        {
-                            var EndDate = Data.ActualEndDate ?? (MaxDate > DateTime.Today ? DateTime.Today : MaxDate);
-                            if (Data.ActualStartDate.Value.Date > EndDate.Value.Date)
-                                EndDate = Data.ActualStartDate;
-                            // If Same Date can't loop
-                            if (Data.ActualStartDate.Value.Date == EndDate.Value.Date)
-                            {
-                                if (ColumnGroupBtm.Any(x => x.Key == Data.ActualStartDate.Value.Date))
-                                {
-                                    var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.ActualStartDate.Value.Date);
-                                    // if Have Plan change value to 3
-                                    if (rowData.Keys.Any(x => x == Col.Value))
-                                        rowData[Col.Value] = 3;
-                                    else // else Don't have plan value is 2
-                                        rowData.Add(Col.Value, 2);
-                                }
-                            }
-                            else
-                            {
-                                foreach (DateTime day in EachDate.EachDate(Data.ActualStartDate.Value, EndDate.Value))
-                                {
-                                    if (ColumnGroupBtm.Any(x => x.Key == day.Date))
-                                    {
-                                        var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date);
-
-                                        // if Have Plan change value to 3
-                                        if (rowData.Keys.Any(x => x == Col.Value))
-                                            rowData[Col.Value] = 3;
-                                        else // else Don't have plan value is 2
-                                            rowData.Add(Col.Value, 2);
-                                    }
-                                }
-                            }
-                        }
-
-                        DataTable.Add(rowData);
-                    }
-
-                    if (DataTable.Any())
-                        ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Value)
-                            .ToList().ForEach(item => ColumnsAll.Add(item));
-
-                    return new JsonResult(new
-                    {
-                        TotalRow,
-                        ColumnsTop = ColumnGroupTop.Select(x => new
-                        {
-                            Name = x.Key,
-                            x.Value
-                        }),
-                        ColumnsLow = ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Key.Day),
-                        ColumnsAll,
-                        DataTable
-                    }, this.DefaultJsonSettings);
-                }
-            }
-            catch (Exception ex)
-            {
-                message = $"Has error with message has {ex.ToString()}.";
-            }
-            return BadRequest(new { Error = message });
-        }
-        #endregion
-
-        #region PutMethod
-        // PUT: api/ItemMaintenance/
-        [HttpPut]
-        public override async Task<IActionResult> Update(int key, [FromBody] ItemMaintenance record)
-        {
-            if (key < 1)
-                return BadRequest();
-            if (record == null)
-                return BadRequest();
-
-            // Set date for CrateDate Entity
-            record.ModifyDate = DateTime.Now;
-            record.StatusMaintenance = this.ChangeStatus(record);
-            // +7 Hour
-            //record = this.helper.AddHourMethod(record);
-            // Actual Start DateTime
-            if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
-            {
-                if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
-            }
-            // Actual End DateTime
-            if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
-            {
-                if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
-                    record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
-            }
-
-            foreach (var item in record.ItemMainHasEmployees)
-            {
-                if (item == null)
-                    continue;
-
-                if (item.ItemMainHasEmployeeId > 0)
-                {
-                    item.ModifyDate = record.ModifyDate;
-                    item.Modifyer = record.Modifyer;
-                }
-                else
-                {
-                    item.CreateDate = record.ModifyDate;
-                    item.Creator = record.Modifyer;
-                }
-            }
-            // Update Requisiton
-            foreach (var item in record.RequisitionStockSps)
-            {
-                if (item == null)
-                    continue;
-                // If Already have in database
-                if (item.RequisitionStockSpId > 0)
-                {
-                    item.ModifyDate = record.ModifyDate;
-                    item.Modifyer = record.Modifyer;
-                    item.RequisitionEmp = record.MaintenanceEmp;
-                }
-                else // if do't have add new to database
-                {
-                    item.CreateDate = item.ModifyDate;
-                    item.Creator = item.Modifyer;
-                    item.RequisitionEmp = record.MaintenanceEmp;
-                    item.PaperNo = record.ItemMaintenanceNo;
-                }
-            }
-
-            if (await this.repository.UpdateAsync(record, key) == null)
-                return BadRequest();
+          // EachDay
+          var EachDate = new Helper.LoopEachDate();
+          // Foreach Date
+          foreach (DateTime day in EachDate.EachDate(MinDate.Value, MaxDate.Value))
+          {
+            // Get Month
+            if (ColumnGroupTop.Any(x => x.Key == day.ToString("MMMM")))
+              ColumnGroupTop[day.ToString("MMMM")] += 1;
             else
+              ColumnGroupTop.Add(day.ToString("MMMM"), 1);
+
+            ColumnGroupBtm.Add(day.Date, $"Col{countCol.ToString("00")}");
+            countCol++;
+          }
+
+          var DataTable = new List<IDictionary<string, object>>();
+          // OrderBy(x => x.Machine.TypeMachineId).ThenBy(x => x.Machine.MachineCode)
+          foreach (var Data in GetData.OrderBy(x => x.PlanStartDate).ThenBy(x => x.PlanEndDate))
+          {
+            IDictionary<string, object> rowData = new ExpandoObject();
+            var Progress = Data.StatusMaintenance;
+            var ProjectMaster = "NoData";
+            if (Data?.ProjectCodeMasterId != null)
             {
-                // Find requisition of item maintenance
-                var dbRequisition = await this._repoRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
-                var dbItemMainHasEmp = await this._repoItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
-
-                //Remove requisition if edit remove it
-                foreach (var item in dbRequisition)
-                {
-                    if (!record.RequisitionStockSps.Any(x => x.RequisitionStockSpId == item.RequisitionStockSpId))
-                    {
-                        if (item.MovementStockSpId.HasValue)
-                        {
-                            var hasMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
-                            if (hasMovement != null)
-                            {
-                                // Cancel Status
-                                hasMovement.MovementStatus = MovementStatus.Cancel;
-                                hasMovement.ModifyDate = record.ModifyDate;
-                                hasMovement.Modifyer = record.Modifyer;
-                                // Update
-                                await this._repoMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
-                            }
-                        }
-                        await this._repoRequisition.DeleteAsync(item.RequisitionStockSpId);
-                    }
-                }
-
-                foreach (var item in dbItemMainHasEmp)
-                {
-                    if (!record.ItemMainHasEmployees.Any(x => x.ItemMainHasEmployeeId == item.ItemMainHasEmployeeId))
-                        await this._repoItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
-                }
-
-                //Update ItemMainHasEmployee or New ItemMainHasEmployee
-                foreach (var item in record.ItemMainHasEmployees)
-                {
-                    if (item == null)
-                        continue;
-
-                    if (item.ItemMainHasEmployeeId > 0)
-                        await this._repoItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
-                    else
-                    {
-                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
-                            item.ItemMaintenanceId = record.ItemMaintenanceId;
-
-                        await this._repoItemMainEmp.AddAsync(item);
-                    }
-                }
-
-                //Update RequisitionStockSps or New RequisitionStockSps
-                foreach (var item in record.RequisitionStockSps)
-                {
-                    if (item == null)
-                        continue;
-
-                    if (item.RequisitionStockSpId > 0)
-                    {
-                        // Update movement
-                        var editMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
-                        if (editMovement != null)
-                        {
-                            editMovement.ModifyDate = item.ModifyDate;
-                            editMovement.Modifyer = item.Modifyer;
-                            editMovement.MovementDate = item.RequisitionDate;
-                            editMovement.Quantity = item.Quantity;
-                            editMovement.SparePartId = item.SparePartId;
-
-                            await this._repoMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
-                        }
-                        await this._repoRequisition.UpdateAsync(item, item.RequisitionStockSpId);
-                    }
-                    else
-                    {
-                        if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
-                            item.ItemMaintenanceId = record.ItemMaintenanceId;
-
-                        item.MovementStockSp = new MovementStockSp()
-                        {
-                            CreateDate = item.CreateDate,
-                            Creator = item.Creator,
-                            MovementDate = item.RequisitionDate,
-                            MovementStatus = MovementStatus.RequisitionStock,
-                            Quantity = item.Quantity,
-                            SparePartId = item.SparePartId,
-                        };
-                        await this._repoRequisition.AddAsync(item);
-                    }
-                }
+              var ProjectData = await this._repoProject.
+                          GetAsync(Data.ProjectCodeMasterId ?? 0);
+              ProjectMaster = ProjectData != null ? $"{ProjectData.ProjectCode}/{ProjectData.ProjectName}" : "-";
             }
 
-            // Update Status RequireMaintenance
-            RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
-                (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
-
-            await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
-
-            if (record.StatusMaintenance == StatusMaintenance.Complate &&
-                record.RequireMaintenanceId != null)
-                await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
-
-            if (record.RequireMaintenance != null)
-                record.RequireMaintenance = null;
-            if (record.ItemMainHasEmployees != null)
-                record.ItemMainHasEmployees = null;
-            if (record.RequisitionStockSps != null)
-                record.RequisitionStockSps = null;
-
-            return new JsonResult(record, this.DefaultJsonSettings);
-        }
-        #endregion
-
-        #region Report
-
-        // POST: api/ItemMaintenance/ReportList
-        [HttpPost("ReportList")]
-        public async Task<IActionResult> ReportList([FromBody] ScrollViewModel option, string mode = "")
-        {
-            var Message = "";
-
-            try
+            // add column time
+            rowData.Add("ProjectMaster", ProjectMaster);
+            rowData.Add("GroupMaintenance", Data.GroupMaintenance);
+            rowData.Add("Item", Data.ItemCode);
+            rowData.Add("Progress", Progress);
+            rowData.Add("ItemMainStatus", Data.StatusMaintenance);
+            rowData.Add("ItemMaintenanceId", Data.ItemMaintenanceId);
+            // Add new
+            if (Data.MaintenanceApply.HasValue)
             {
-                Expression<Func<ItemMaintenance, bool>> expression = e => e.StatusMaintenance != StatusMaintenance.Cancel;
+              if (ColumnGroupBtm.Any(x => x.Key == Data.MaintenanceApply.Value.Date))
+                rowData.Add("Response", ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.MaintenanceApply.Value.Date).Value);
+            }
+            // End new
 
-                if (option.WhereId.HasValue)
-                    expression = expression.And(x => x.RequireMaintenance.Item.ItemTypeId.Equals(option.WhereId));
-
-                if (option.Where2Id.HasValue)
-                    expression = expression.And(x => x.TypeMaintenanceId.Equals(option.Where2Id));
-
-                if (option.SDate.HasValue)
-                    expression = expression.And(x => x.ActualStartDate.Value.Date >= option.SDate.Value.Date);
-
-                if (option.EDate.HasValue)
-                    expression = expression.And(x => x.ActualEndDate.Value.Date <= option.EDate.Value.Date || x.ActualEndDate == null);
-
-                // debug here
-                // expression = expression.And(x => x.RequireMaintenance.Item.ItemCode == "CR-007");
-
-                // bug time
-                var addHour = new DateTime(2019, 2, 14);
-                var HasData = await this.repository.GetToListAsync(
-                    item => new HistoryMaintenanceViewModel
-                    {
-                        ItemCode = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemCode ?? "-",
-                        ItemType = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemType.Name ?? "-",
-                        ItemName = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.Name ?? "-",
-                        Description = item.Description ?? "-",
-                        RequestDate = item.RequireMaintenance.RequireDate,
-                        RequestDateString2 = string.IsNullOrEmpty(item.RequireMaintenance.RequireDateTime) ? item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy HH:mm") :
-                                             item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy") + " " + item.RequireMaintenance.RequireDateTime,
-                        ApplyRequireDate = item.RequireMaintenance.MaintenanceApply.HasValue ?
-                            (item.RequireMaintenance.MaintenanceApply.Value >= addHour ? item.RequireMaintenance.MaintenanceApply.Value.AddHours(8) : item.RequireMaintenance.MaintenanceApply)
-                            : item.RequireMaintenance.MaintenanceApply,
-                        ActualSDate = item.ActualStartDate,
-                        ActualSTime = item.ActualStartDateTime,
-                        ActualEDate = item.ActualEndDate,
-                        ActialETime = item.ActualEndDateTime,
-                        BdTime = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item1 : "0:00",
-                        BdTimeValue = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item2 : 0,
-                        StdTime = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item1 : "0:00",
-                        StdTimeValue = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item2 : 0,
-                        FinishDate = item.ActualEndDate,
-                        FinishDateString2 = item.ActualEndDate.HasValue ? (string.IsNullOrEmpty(item.ActualEndDateTime) ? item.ActualEndDate.Value.ToString("dd/MM/yyyy HH:mm") : item.ActualEndDate.Value.ToString("dd/MM/yyyy") + " " + item.ActualEndDateTime) : ""
-                    },
-                    expression, x => x.OrderBy(z => z.RequireMaintenance.Item.ItemTypeId).ThenBy(z => z.RequireMaintenance.Item.ItemCode),
-                    x => x.Include(z => z.RequireMaintenance.Item.ItemType));
-
-                if (HasData != null)
+            // Data is 1:Plan,2:Actual,3:PlanAndActual
+            // For Plan1
+            if (Data.PlanStartDate != null && Data.PlanEndDate != null)
+            {
+              // If Same Date can't loop
+              if (Data.PlanStartDate.Date == Data.PlanEndDate.Date)
+              {
+                if (ColumnGroupBtm.Any(x => x.Key == Data.PlanStartDate.Date))
+                  rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.PlanStartDate.Date).Value, 1);
+              }
+              else
+              {
+                foreach (DateTime day in EachDate.EachDate(Data.PlanStartDate, Data.PlanEndDate))
                 {
-                    var ReportList = HasData.ToList();
-                    if (ReportList.Any())
-                    {
-                        if (mode.IndexOf("Export") != -1)
-                        {
-                            var table = new DataTable();
-                            //Adding the Columns
-                            table.Columns.AddRange(new DataColumn[]
-                            {
+                  if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                    rowData.Add(ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date).Value, 1);
+                }
+              }
+            }
+
+            //For Actual
+            if (Data.ActualStartDate != null)
+            {
+              var EndDate = Data.ActualEndDate ?? (MaxDate > DateTime.Today ? DateTime.Today : MaxDate);
+              if (Data.ActualStartDate.Value.Date > EndDate.Value.Date)
+                EndDate = Data.ActualStartDate;
+              // If Same Date can't loop
+              if (Data.ActualStartDate.Value.Date == EndDate.Value.Date)
+              {
+                if (ColumnGroupBtm.Any(x => x.Key == Data.ActualStartDate.Value.Date))
+                {
+                  var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == Data.ActualStartDate.Value.Date);
+                  // if Have Plan change value to 3
+                  if (rowData.Keys.Any(x => x == Col.Value))
+                    rowData[Col.Value] = 3;
+                  else // else Don't have plan value is 2
+                    rowData.Add(Col.Value, 2);
+                }
+              }
+              else
+              {
+                foreach (DateTime day in EachDate.EachDate(Data.ActualStartDate.Value, EndDate.Value))
+                {
+                  if (ColumnGroupBtm.Any(x => x.Key == day.Date))
+                  {
+                    var Col = ColumnGroupBtm.FirstOrDefault(x => x.Key == day.Date);
+
+                    // if Have Plan change value to 3
+                    if (rowData.Keys.Any(x => x == Col.Value))
+                      rowData[Col.Value] = 3;
+                    else // else Don't have plan value is 2
+                      rowData.Add(Col.Value, 2);
+                  }
+                }
+              }
+            }
+
+            DataTable.Add(rowData);
+          }
+
+          if (DataTable.Any())
+            ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Value)
+                .ToList().ForEach(item => ColumnsAll.Add(item));
+
+          return new JsonResult(new
+          {
+            TotalRow,
+            ColumnsTop = ColumnGroupTop.Select(x => new
+            {
+              Name = x.Key,
+              x.Value
+            }),
+            ColumnsLow = ColumnGroupBtm.OrderBy(x => x.Key.Date).Select(x => x.Key.Day),
+            ColumnsAll,
+            DataTable
+          }, this.DefaultJsonSettings);
+        }
+      }
+      catch (Exception ex)
+      {
+        message = $"Has error with message has {ex.ToString()}.";
+      }
+      return BadRequest(new { Error = message });
+    }
+
+    #endregion PostMethod
+
+    #region PutMethod
+
+    // PUT: api/ItemMaintenance/
+    [HttpPut]
+    public override async Task<IActionResult> Update(int key, [FromBody] ItemMaintenance record)
+    {
+      if (key < 1)
+        return BadRequest();
+      if (record == null)
+        return BadRequest();
+
+      // Set date for CrateDate Entity
+      record.ModifyDate = DateTime.Now;
+      record.StatusMaintenance = this.ChangeStatus(record);
+      // +7 Hour
+      //record = this.helper.AddHourMethod(record);
+      // Actual Start DateTime
+      if (!string.IsNullOrEmpty(record.ActualStartDateTime) && record.ActualStartDate != null)
+      {
+        if (DateTime.TryParseExact(record.ActualStartDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+          record.ActualStartDate = new DateTime(record.ActualStartDate.Value.Year, record.ActualStartDate.Value.Month, record.ActualStartDate.Value.Day, dt.Hour, dt.Minute, 0);
+      }
+      // Actual End DateTime
+      if (!string.IsNullOrEmpty(record.ActualEndDateTime) && record.ActualEndDate != null)
+      {
+        if (DateTime.TryParseExact(record.ActualEndDateTime, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+          record.ActualEndDate = new DateTime(record.ActualEndDate.Value.Year, record.ActualEndDate.Value.Month, record.ActualEndDate.Value.Day, dt.Hour, dt.Minute, 0);
+      }
+
+      foreach (var item in record.ItemMainHasEmployees)
+      {
+        if (item == null)
+          continue;
+
+        if (item.ItemMainHasEmployeeId > 0)
+        {
+          item.ModifyDate = record.ModifyDate;
+          item.Modifyer = record.Modifyer;
+        }
+        else
+        {
+          item.CreateDate = record.ModifyDate;
+          item.Creator = record.Modifyer;
+        }
+      }
+      // Update Requisiton
+      foreach (var item in record.RequisitionStockSps)
+      {
+        if (item == null)
+          continue;
+        // If Already have in database
+        if (item.RequisitionStockSpId > 0)
+        {
+          item.ModifyDate = record.ModifyDate;
+          item.Modifyer = record.Modifyer;
+          item.RequisitionEmp = record.MaintenanceEmp;
+        }
+        else // if do't have add new to database
+        {
+          item.CreateDate = item.ModifyDate;
+          item.Creator = item.Modifyer;
+          item.RequisitionEmp = record.MaintenanceEmp;
+          item.PaperNo = record.ItemMaintenanceNo;
+        }
+      }
+
+      if (await this.repository.UpdateAsync(record, key) == null)
+        return BadRequest();
+      else
+      {
+        // Find requisition of item maintenance
+        var dbRequisition = await this._repoRequisition.GetToListAsync(x => x, r => r.ItemMaintenanceId == key);
+        var dbItemMainHasEmp = await this._repoItemMainEmp.GetToListAsync(x => x, e => e.ItemMaintenanceId == key);
+
+        //Remove requisition if edit remove it
+        foreach (var item in dbRequisition)
+        {
+          if (!record.RequisitionStockSps.Any(x => x.RequisitionStockSpId == item.RequisitionStockSpId))
+          {
+            if (item.MovementStockSpId.HasValue)
+            {
+              var hasMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
+              if (hasMovement != null)
+              {
+                // Cancel Status
+                hasMovement.MovementStatus = MovementStatus.Cancel;
+                hasMovement.ModifyDate = record.ModifyDate;
+                hasMovement.Modifyer = record.Modifyer;
+                // Update
+                await this._repoMovement.UpdateAsync(hasMovement, hasMovement.MovementStockSpId);
+              }
+            }
+            await this._repoRequisition.DeleteAsync(item.RequisitionStockSpId);
+          }
+        }
+
+        foreach (var item in dbItemMainHasEmp)
+        {
+          if (!record.ItemMainHasEmployees.Any(x => x.ItemMainHasEmployeeId == item.ItemMainHasEmployeeId))
+            await this._repoItemMainEmp.DeleteAsync(item.ItemMainHasEmployeeId);
+        }
+
+        //Update ItemMainHasEmployee or New ItemMainHasEmployee
+        foreach (var item in record.ItemMainHasEmployees)
+        {
+          if (item == null)
+            continue;
+
+          if (item.ItemMainHasEmployeeId > 0)
+            await this._repoItemMainEmp.UpdateAsync(item, item.ItemMainHasEmployeeId);
+          else
+          {
+            if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
+              item.ItemMaintenanceId = record.ItemMaintenanceId;
+
+            await this._repoItemMainEmp.AddAsync(item);
+          }
+        }
+
+        //Update RequisitionStockSps or New RequisitionStockSps
+        foreach (var item in record.RequisitionStockSps)
+        {
+          if (item == null)
+            continue;
+
+          if (item.RequisitionStockSpId > 0)
+          {
+            // Update movement
+            var editMovement = await this._repoMovement.GetAsync(item.MovementStockSpId.Value);
+            if (editMovement != null)
+            {
+              editMovement.ModifyDate = item.ModifyDate;
+              editMovement.Modifyer = item.Modifyer;
+              editMovement.MovementDate = item.RequisitionDate;
+              editMovement.Quantity = item.Quantity;
+              editMovement.SparePartId = item.SparePartId;
+
+              await this._repoMovement.UpdateAsync(editMovement, editMovement.MovementStockSpId);
+            }
+            await this._repoRequisition.UpdateAsync(item, item.RequisitionStockSpId);
+          }
+          else
+          {
+            if (item.ItemMaintenanceId is null || item.ItemMaintenanceId < 1)
+              item.ItemMaintenanceId = record.ItemMaintenanceId;
+
+            item.MovementStockSp = new MovementStockSp()
+            {
+              CreateDate = item.CreateDate,
+              Creator = item.Creator,
+              MovementDate = item.RequisitionDate,
+              MovementStatus = MovementStatus.RequisitionStock,
+              Quantity = item.Quantity,
+              SparePartId = item.SparePartId,
+            };
+            await this._repoRequisition.AddAsync(item);
+          }
+        }
+      }
+
+      // Update Status RequireMaintenance
+      RequireStatus status = record.StatusMaintenance == StatusMaintenance.Cancel ? RequireStatus.Waiting :
+          (record.StatusMaintenance == StatusMaintenance.Complate ? RequireStatus.Complate : RequireStatus.InProcess);
+
+      await this.UpdateRequireMaintenance(record.RequireMaintenanceId.Value, record.Creator, status);
+
+      if (record.StatusMaintenance == StatusMaintenance.Complate &&
+          record.RequireMaintenanceId != null)
+        await this.MaintenanceComplateEmail(record.RequireMaintenanceId.Value);
+
+      if (record.RequireMaintenance != null)
+        record.RequireMaintenance = null;
+      if (record.ItemMainHasEmployees != null)
+        record.ItemMainHasEmployees = null;
+      if (record.RequisitionStockSps != null)
+        record.RequisitionStockSps = null;
+
+      return new JsonResult(record, this.DefaultJsonSettings);
+    }
+
+    #endregion PutMethod
+
+    #region Report
+
+    // POST: api/ItemMaintenance/ReportList
+    [HttpPost("ReportList")]
+    public async Task<IActionResult> ReportList([FromBody] ScrollViewModel option, string mode = "")
+    {
+      var Message = "";
+
+      try
+      {
+        Expression<Func<ItemMaintenance, bool>> expression = e => e.StatusMaintenance != StatusMaintenance.Cancel;
+
+        if (option.WhereId.HasValue)
+          expression = expression.And(x => x.RequireMaintenance.Item.ItemTypeId.Equals(option.WhereId));
+
+        if (option.Where2Id.HasValue)
+          expression = expression.And(x => x.TypeMaintenanceId.Equals(option.Where2Id));
+
+        if (option.SDate.HasValue)
+          expression = expression.And(x => x.ActualStartDate.Value.Date >= option.SDate.Value.Date);
+
+        if (option.EDate.HasValue)
+          expression = expression.And(x => x.ActualEndDate.Value.Date <= option.EDate.Value.Date || x.ActualEndDate == null);
+
+        // debug here
+        // expression = expression.And(x => x.RequireMaintenance.Item.ItemCode == "CR-007");
+
+        // bug time
+        var addHour = new DateTime(2019, 2, 14);
+        var HasData = await this.repository.GetToListAsync(
+            item => new HistoryMaintenanceViewModel
+            {
+              ItemCode = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemCode ?? "-",
+              ItemType = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.ItemType.Name ?? "-",
+              ItemName = item.RequireMaintenance == null ? "-" : item.RequireMaintenance.Item.Name ?? "-",
+              Description = item.Description ?? "-",
+              RequestDate = item.RequireMaintenance.RequireDate,
+              RequestDateString2 = string.IsNullOrEmpty(item.RequireMaintenance.RequireDateTime) ? item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy HH:mm") :
+                                     item.RequireMaintenance.RequireDate.ToString("dd/MM/yyyy") + " " + item.RequireMaintenance.RequireDateTime,
+              ApplyRequireDate = item.RequireMaintenance.MaintenanceApply.HasValue ?
+                    (item.RequireMaintenance.MaintenanceApply.Value >= addHour ? item.RequireMaintenance.MaintenanceApply.Value.AddHours(8) : item.RequireMaintenance.MaintenanceApply)
+                    : item.RequireMaintenance.MaintenanceApply,
+              ActualSDate = item.ActualStartDate,
+              ActualSTime = item.ActualStartDateTime,
+              ActualEDate = item.ActualEndDate,
+              ActialETime = item.ActualEndDateTime,
+              BdTime = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item1 : "0:00",
+              BdTimeValue = item.RequireMaintenance.RequireDate != null && item.ActualEndDate != null ? this.CalcBd(item.RequireMaintenance.RequireDate, item.ActualEndDate).Item2 : 0,
+              StdTime = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item1 : "0:00",
+              StdTimeValue = item.ActualStartDate != null && item.ActualEndDate != null ? this.CalcStd(item.ActualStartDate, item.ActualEndDate).Item2 : 0,
+              FinishDate = item.ActualEndDate,
+              FinishDateString2 = item.ActualEndDate.HasValue ? (string.IsNullOrEmpty(item.ActualEndDateTime) ? item.ActualEndDate.Value.ToString("dd/MM/yyyy HH:mm") : item.ActualEndDate.Value.ToString("dd/MM/yyyy") + " " + item.ActualEndDateTime) : ""
+            },
+            expression, x => x.OrderBy(z => z.RequireMaintenance.Item.ItemTypeId).ThenBy(z => z.RequireMaintenance.Item.ItemCode),
+            x => x.Include(z => z.RequireMaintenance.Item.ItemType));
+
+        if (HasData != null)
+        {
+          var ReportList = HasData.ToList();
+          if (ReportList.Any())
+          {
+            if (mode.IndexOf("Export") != -1)
+            {
+              var table = new DataTable();
+              //Adding the Columns
+              table.Columns.AddRange(new DataColumn[]
+              {
                                 new DataColumn("ItemCode", typeof(string)),
                                 new DataColumn("ItemType", typeof(string)),
                                 new DataColumn("ItemName",typeof(string)),
@@ -1201,103 +1259,241 @@ LEFT OUTER JOIN [dbo].[ItemMaintenance] m
                                 new DataColumn("BdTime",typeof(string)),
                                 new DataColumn("StdTime",typeof(string)),
                                 new DataColumn("Description",typeof(string)),
-                            });
+              });
 
-                            //Adding the Rows
-                            foreach (var item in ReportList)
-                            {
-                                table.Rows.Add(
-                                    item.ItemCode,
-                                    item.ItemType,
-                                    item.ItemName,
-                                    (string.IsNullOrEmpty(item.RequestDateString2) ? item.RequestDateString : item.RequestDateString2),
-                                    item.ApplyRequireDateString,
-                                    item.ActualSDate,
-                                    item.ActualEDate,
-                                    item.BdTime,
-                                    item.StdTime,
-                                    item.Description
-                                );
-                            }
+              //Adding the Rows
+              foreach (var item in ReportList)
+              {
+                table.Rows.Add(
+                    item.ItemCode,
+                    item.ItemType,
+                    item.ItemName,
+                    item.ApplyRequireDateString,
+                    (string.IsNullOrEmpty(item.RequestDateString2) ? item.RequestDateString : item.RequestDateString2),
+                    item.ActualSDate,
+                    item.ActualEDate,
+                    item.BdTime,
+                    item.StdTime,
+                    item.Description
+                );
+              }
 
-                            var templateFolder = this._hosting.WebRootPath + "/files/";
-                            var fileExcel = templateFolder + $"export.xlsx";
+              var templateFolder = this._hosting.WebRootPath + "/files/";
+              var fileExcel = templateFolder + $"export.xlsx";
 
-                            using (XLWorkbook wb = new XLWorkbook())
-                            {
-                                var wsFreeze = wb.Worksheets.Add("MaintenanceHistory");
-                                var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
+              using (XLWorkbook wb = new XLWorkbook())
+              {
+                var wsFreeze = wb.Worksheets.Add("MaintenanceHistory");
+                var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
 
-                                // set table total
-                                tableSource.Theme = XLTableTheme.TableStyleMedium9;
-                                tableSource.ShowTotalsRow = true;
-                                // Set Horizontal
-                                tableSource.Field(7).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                tableSource.Field(8).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                                // Set summary
-                                TimeSpan spWorkMin = TimeSpan.FromMinutes(ReportList.Sum(x => x.BdTimeValue));
-                                tableSource.Field(7).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
-                                spWorkMin = TimeSpan.FromMinutes(ReportList.Sum(x => x.StdTimeValue));
-                                tableSource.Field(8).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
+                // set table total
+                tableSource.Theme = XLTableTheme.TableStyleMedium9;
+                tableSource.ShowTotalsRow = true;
+                // Set Horizontal
+                tableSource.Field(7).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                tableSource.Field(8).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                // Set summary
+                TimeSpan spWorkMin = TimeSpan.FromMinutes(ReportList.Sum(x => x.BdTimeValue));
+                tableSource.Field(7).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
+                spWorkMin = TimeSpan.FromMinutes(ReportList.Sum(x => x.StdTimeValue));
+                tableSource.Field(8).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
 
-                                wsFreeze.Columns().AdjustToContents();
-                                wsFreeze.SheetView.FreezeRows(1);
-                                wb.SaveAs(fileExcel);
-                            }
+                wsFreeze.Columns().AdjustToContents();
+                wsFreeze.SheetView.FreezeRows(1);
+                wb.SaveAs(fileExcel);
+              }
 
-                            var memory = new MemoryStream();
-                            using (var stream = new FileStream(fileExcel, FileMode.Open))
-                            {
-                                await stream.CopyToAsync(memory);
-                            }
-                            memory.Position = 0;
+              var memory = new MemoryStream();
+              using (var stream = new FileStream(fileExcel, FileMode.Open))
+              {
+                await stream.CopyToAsync(memory);
+              }
+              memory.Position = 0;
 
-                            return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
-                        }
-                        else
-                        {
-                            return new JsonResult(new ScrollDataViewModel<HistoryMaintenanceViewModel>(option, ReportList), this.DefaultJsonSettings);
-                        }
-                    }
-                }
+              return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
             }
-            catch (Exception ex)
+            else
             {
-                Message = $"Has error {ex.ToString()}";
+              return new JsonResult(new ScrollDataViewModel<HistoryMaintenanceViewModel>(option, ReportList), this.DefaultJsonSettings);
             }
-
-            return BadRequest(new { Error = Message });
+          }
         }
+      }
+      catch (Exception ex)
+      {
+        Message = $"Has error {ex.ToString()}";
+      }
 
-        [HttpPost("ReportManhour")]
-        public async Task<IActionResult> ReportManhour([FromBody] ScrollViewModel option, string mode = "")
+      return BadRequest(new { Error = Message });
+    }
+
+    [HttpPost("MaintenanceStandardScroll")]
+    public async Task<IActionResult> MaintenanceStandardScroll([FromBody] ScrollViewModel option)
+    {
+      var message = "";
+
+      try
+      {
+        if (option == null)
+          return NotFound();
+
+        var sqlCommand = this.CreateSqlMaintenanceStandardCommand(option);
+        var hasData = await _dapper.GetEntitiesAndTotal<ScrollViewModel, MaintenanceHisMk2>(sqlCommand,
+          new ScrollViewModel() { Skip = option.Skip ?? 0, Take = option.Take ?? 50 });
+        if (hasData.Entities != null)
         {
-            var message = "";
-            try
+          option.TotalRow = hasData.TotalRow;
+          return new JsonResult(new ScrollDataViewModel<MaintenanceHisMk2>(option, hasData.Entities), this.DefaultJsonSettings);
+        }
+      }
+      catch (Exception ex)
+      {
+        message = $"Has error {ex.ToString()}";
+      }
+      return BadRequest(new { error = message });
+    }
+
+    [HttpPost("MaintenanceStandardReport")]
+    public async Task<IActionResult> MaintenanceStandardReport([FromBody] ScrollViewModel option)
+    {
+      var message = "";
+
+      try
+      {
+        if (option == null)
+          return NotFound();
+
+        var hasData = await _dapper.GetListEntites<MaintenanceHisMk2>(this.CreateSqlMaintenanceStandardCommand(option));
+        if (hasData != null)
+        {
+
+          var table = new DataTable();
+          //Adding the Columns
+          table.Columns.AddRange(new DataColumn[]
+          {
+            new DataColumn("Item Code", typeof(string)),
+            new DataColumn("Item Type", typeof(string)),
+            new DataColumn("Type Maintenance", typeof(string)),
+            new DataColumn("Std. (Hr)", typeof(double)),
+            new DataColumn("Item Name",typeof(string)),
+            new DataColumn("Request Date",typeof(DateTime)),
+            new DataColumn("ApplyRequire Date",typeof(DateTime)),
+            new DataColumn("Start Date",typeof(DateTime)),
+            new DataColumn("Finish Date",typeof(DateTime)),
+            new DataColumn("MIS Std. (Hr)", typeof(double)),
+            new DataColumn("MTN Std. (Hr)",typeof(string)),
+            new DataColumn("StdTime (%)",typeof(double)),
+            new DataColumn("Description",typeof(string)),
+          });
+
+          //Adding the Rows
+          foreach (var item in hasData)
+          {
+            var calcBd = item.ReqDate != null && item.ActEDate != null ? this.CalcBd(item.ReqDate, item.ActEDate) : ("0:00",0);
+
+            table.Rows.Add(
+                item.ItemCode,
+                item.ItemType,
+                item.MainType,
+                item.StdTime ?? 0,
+                item.ItemName,
+                item.ReqDate,
+                item.MainApply,
+                item.ActSDate,
+                item.ActEDate,
+                (item.StdTime ?? 0),
+                calcBd.Item1,
+                item.StdTime != null ? ((item.StdTime * 60) - calcBd.Item2) / (item.StdTime * 60) : 0,
+                item.MainDesc
+            );
+          }
+
+          var templateFolder = this._hosting.WebRootPath + "/files/";
+          var fileExcel = templateFolder + $"export.xlsx";
+
+          using (XLWorkbook wb = new XLWorkbook())
+          {
+            var wsFreeze = wb.Worksheets.Add("MaintenanceHistory");
+            var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
+
+            // set table total
+            tableSource.Theme = XLTableTheme.TableStyleMedium9;
+            tableSource.ShowTotalsRow = true;
+
+            foreach (var field in tableSource.Fields)
             {
-                var sWhere = "StatusMaintenance != 6 AND h.ItemMainHasEmployeeId IS NOT NULL ";
+              if (new int[] { 5, 6, 7, 8 }.Contains(field.Index))
+                field.DataCells.Style.DateFormat.SetNumberFormatId((int)XLPredefinedFormat.DateTime.MonthDayYear4WithDashesHour24Minutes);
+              else if (new int[] { 3,9}.Contains(field.Index))
+              {
+                field.DataCells.Style.NumberFormat.Format = "_(* #,##0.00_);[RED]_(* -#,##0.00;_(* \" - \"??_);_(@_)";
+                field.TotalsRowFunction = XLTotalsRowFunction.Sum;
+              }
+              else if (field.Index == 11)
+                field.DataCells.Style.NumberFormat.Format = "0.00%;[RED]-0.00%;\" - \"";
+            }
 
-                if (!string.IsNullOrEmpty(option.Where))
-                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"h.EmpCode = '{option.Where}'";
-                /*
-                if (option.Where2Id.HasValue)
-                    sWhere = string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"m.TypeMaintenanceId = {option.Where2Id}";
-                */
-                if (option.SDate.HasValue)
-                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"CAST(m.ActualStartDate AS date) >= '{option.SDate.Value.ToString("yyyy-MM-dd")}'";
+            // Set Horizontal
+            tableSource.Field(9).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            tableSource.Field(10).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            // Set summary
+            // TimeSpan spWorkMin = TimeSpan.FromMinutes(hasData.Sum(x => x.StdTime ?? 0));
+            // tableSource.Field(9).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
 
-                if (option.EDate.HasValue)
-                    sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"(CAST(m.ActualEndDate AS date) <= '{option.EDate.Value.ToString("yyyy-MM-dd")}' OR m.ActualEndDate IS NULL)";
+            TimeSpan spWorkMin2 = TimeSpan.FromMinutes(hasData.Sum(x => x.ReqDate != null && x.ActEDate != null ? this.CalcBd(x.ReqDate, x.ActEDate).Item2 : 0));
+            tableSource.Field(10).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin2.TotalHours, spWorkMin2.Minutes)}";
 
-                var sqlCommand = new SqlCommandViewModel()
-                {
-                    SelectCommand = $@"e.NameThai AS EmployeeName,
+            wsFreeze.Columns().AdjustToContents();
+            wsFreeze.SheetView.FreezeRows(1);
+            wb.SaveAs(fileExcel);
+          }
+
+          var memory = new MemoryStream();
+          using (var stream = new FileStream(fileExcel, FileMode.Open))
+          {
+            await stream.CopyToAsync(memory);
+          }
+          memory.Position = 0;
+
+          return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
+        }
+      }
+      catch (Exception ex)
+      {
+        message = $"Has error {ex.ToString()}";
+      }
+      return BadRequest(new { error = message });
+    }
+
+    [HttpPost("ReportManhour")]
+    public async Task<IActionResult> ReportManhour([FromBody] ScrollViewModel option, string mode = "")
+    {
+      var message = "";
+      try
+      {
+        var sWhere = "StatusMaintenance != 6 AND h.ItemMainHasEmployeeId IS NOT NULL ";
+
+        if (!string.IsNullOrEmpty(option.Where))
+          sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"h.EmpCode = '{option.Where}'";
+        /*
+        if (option.Where2Id.HasValue)
+            sWhere = string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"m.TypeMaintenanceId = {option.Where2Id}";
+        */
+        if (option.SDate.HasValue)
+          sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"CAST(m.ActualStartDate AS date) >= '{option.SDate.Value.ToString("yyyy-MM-dd")}'";
+
+        if (option.EDate.HasValue)
+          sWhere += string.IsNullOrEmpty(sWhere) ? "" : " AND " + $"(CAST(m.ActualEndDate AS date) <= '{option.EDate.Value.ToString("yyyy-MM-dd")}' OR m.ActualEndDate IS NULL)";
+
+        var sqlCommand = new SqlCommandViewModel()
+        {
+          SelectCommand = $@"e.NameThai AS EmployeeName,
 i.[Name] AS ItemName,
 i.ItemCode,
 t.[Name] AS ItemType,
 m.ActualStartDate AS SDate,
 m.ActualEndDate AS EDate",
-                    FromCommand = $@"[dbo].[ItemMaintenance] m
+          FromCommand = $@"[dbo].[ItemMaintenance] m
 LEFT OUTER JOIN [dbo].[RequireMaintenance] r
 	ON m.RequireMaintenanceId = r.RequireMaintenanceId
 LEFT OUTER JOIN [dbo].[Item] i
@@ -1308,16 +1504,16 @@ LEFT OUTER JOIN [dbo].[ItemMainHasEmployee] h
 	ON h.ItemMaintenanceId = m.ItemMaintenanceId
 LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] e
 	ON e.EmpCode = h.EmpCode",
-                    WhereCommand = sWhere,
-                };
+          WhereCommand = sWhere,
+        };
 
-                if (mode.IndexOf("Export") != -1)
-                {
-                    var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
-                    var table = new DataTable();
-                    //Adding the Columns
-                    table.Columns.AddRange(new DataColumn[]
-                    {
+        if (mode.IndexOf("Export") != -1)
+        {
+          var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
+          var table = new DataTable();
+          //Adding the Columns
+          table.Columns.AddRange(new DataColumn[]
+          {
                             new DataColumn("EmployeeName", typeof(string)),
                             new DataColumn("ItemName", typeof(string)),
                             new DataColumn("ItemCode",typeof(string)),
@@ -1325,63 +1521,61 @@ LEFT OUTER JOIN [VipcoMachineDataBase].[dbo].[Employee] e
                             new DataColumn("StartDate",typeof(DateTime)),
                             new DataColumn("FinishDate",typeof(DateTime)),
                             new DataColumn("StdTime",typeof(string)),
-                    });
+          });
 
-                    //Adding the Rows
-                    foreach (var item in hasData)
-                    {
-                        item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0);
-                        table.Rows.Add(
-                            item.EmployeeName,
-                            item.ItemName,
-                            item.ItemCode,
-                            item.ItemType,
-                            item.SDate,
-                            item.EDate,
-                            item.StdHour?.time ?? "0:00"
-                        );
-                    }
+          //Adding the Rows
+          foreach (var item in hasData)
+          {
+            item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0);
+            table.Rows.Add(
+                item.EmployeeName,
+                item.ItemName,
+                item.ItemCode,
+                item.ItemType,
+                item.SDate,
+                item.EDate,
+                item.StdHour?.time ?? "0:00"
+            );
+          }
 
-                    var memory = new MemoryStream();
-                    using (XLWorkbook wb = new XLWorkbook())
-                    {
-                        var wsFreeze = wb.Worksheets.Add("EmployeeStandard");
-                        var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
+          var memory = new MemoryStream();
+          using (XLWorkbook wb = new XLWorkbook())
+          {
+            var wsFreeze = wb.Worksheets.Add("EmployeeStandard");
+            var tableSource = wsFreeze.Cell(1, 1).InsertTable(table);
 
-                        // set table total
-                        tableSource.Theme = XLTableTheme.TableStyleMedium9;
-                        tableSource.ShowTotalsRow = true;
-                        // Set Horizontal
-                        tableSource.Field(6).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                        // Set summary
-                        var spWorkMin = TimeSpan.FromMinutes(hasData.Sum(x => x.StdHour?.timeValue ?? 0));
-                        tableSource.Field(6).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
+            // set table total
+            tableSource.Theme = XLTableTheme.TableStyleMedium9;
+            tableSource.ShowTotalsRow = true;
+            // Set Horizontal
+            tableSource.Field(6).Column.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            // Set summary
+            var spWorkMin = TimeSpan.FromMinutes(hasData.Sum(x => x.StdHour?.timeValue ?? 0));
+            tableSource.Field(6).TotalsRowLabel = $"{string.Format("{0:#,#}:{1:00}", (int)spWorkMin.TotalHours, spWorkMin.Minutes)}";
 
-                        wsFreeze.Columns().AdjustToContents();
-                        wsFreeze.SheetView.FreezeRows(1);
-                        wb.SaveAs(memory);
-                    }
-                    memory.Position = 0;
+            wsFreeze.Columns().AdjustToContents();
+            wsFreeze.SheetView.FreezeRows(1);
+            wb.SaveAs(memory);
+          }
+          memory.Position = 0;
 
-                    return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
-                }
-                else
-                {
-                    var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
-                    hasData.ForEach(item => item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0));
-                    return new JsonResult(new ScrollDataViewModel<EmpMaintenanceVm>(option, hasData), this.DefaultJsonSettings);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                message = $"Has error {ex.ToString()}";
-            }
-
-            return BadRequest(new { error = message });
+          return File(memory, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "export.xlsx");
         }
+        else
+        {
+          var hasData = await _dapper.GetListEntites<EmpMaintenanceVm>(sqlCommand);
+          hasData.ForEach(item => item.StdHour = item.SDate != null && item.EDate != null ? this.CalcStd(item.SDate, item.EDate) : ("0:00", 0));
+          return new JsonResult(new ScrollDataViewModel<EmpMaintenanceVm>(option, hasData), this.DefaultJsonSettings);
+        }
+      }
+      catch (Exception ex)
+      {
+        message = $"Has error {ex.ToString()}";
+      }
 
-        #endregion
-
+      return BadRequest(new { error = message });
     }
+
+    #endregion Report
+  }
 }

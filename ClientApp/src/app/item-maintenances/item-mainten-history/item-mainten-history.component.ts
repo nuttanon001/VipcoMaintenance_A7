@@ -11,6 +11,8 @@ import { ScrollData } from '../../shared/scroll-data.model';
 import { ColumnType, Format } from '../../shared/column.model';
 import { ItemType } from '../../item-types/shared/item-type.model';
 import { debounceFunc } from 'src/app/items/item-master-list/item-master-list.component';
+import { catchError, map } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-item-mainten-history',
@@ -48,51 +50,55 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
 
   // get request data
   onGetData(schedule: Scroll): void {
-    this.service.getExportData(schedule)
-      .subscribe((dbData: ScrollData<ItemMaintenExport>) => {
-        if (!dbData && !dbData.Data) {
-          this.totalRecords = 0;
+    this.service.getExportData(schedule,'MaintenanceStandardScroll/')
+      .pipe(
+        catchError(() => of(({ Data: [], Scroll :{} } as ScrollData<ItemMaintenExport>))),
+        map((dbData: ScrollData<ItemMaintenExport>) => {
+          if (!dbData && !dbData.Data) {
+            this.totalRecords = 0;
+            this.columns = new Array;
+            this.datasource = new Array;
+            this.reloadData();
+            this.loading = false;
+            return;
+          }
+
+          if (dbData.Scroll) {
+            this.totalRecords = dbData.Scroll.TotalRow || 0;
+          } else {
+            this.totalRecords = 0;
+          }
+
+          // new Column Array
           this.columns = new Array;
-          this.datasource = new Array;
+          this.columns = [
+            { field: 'ItemCode', header: 'ItemCode', width: 100, type: ColumnType.Show },
+            { field: 'ItemType', header: 'Item Type', width: 100, type: ColumnType.Show },
+            { field: 'MainType', header: 'Maintenance Type', width: 150, type: ColumnType.Show },
+            { field: 'StdTime', header: 'Std (Hr)', width: 100, type: ColumnType.Show },
+            { field: 'ItemName', header: 'Item Name', width: 250, type: ColumnType.Show },
+            { field: 'ReqDate', header: 'Request Date', width: 125, type: ColumnType.Show , format: Format.Date},
+            { field: 'MainApply', header: 'Apply Date', width: 125, type: ColumnType.Show , format: Format.Date},
+            { field: 'ActSDate', header: 'Start Date', width: 125, type: ColumnType.Show, format: Format.Date },
+            { field: 'ActEDate', header: 'Finish Date', width: 125, type: ColumnType.Show, format: Format.Date },
+            { field: 'MainDesc', header: 'Description', width: 250, type: ColumnType.Show },
+          ];
+
+          if (dbData.Data) {
+            this.datasource = dbData.Data.slice();
+          } else {
+            this.datasource = new Array;
+          }
+
+          if (this.needReset) {
+            this.first = 0;
+            this.needReset = false;
+          }
+
           this.reloadData();
-          this.loading = false;
-          return;
-        }
-
-        if (dbData.Scroll) {
-          this.totalRecords = dbData.Scroll.TotalRow || 0;
-        } else {
-          this.totalRecords = 0;
-        }
-
-        // new Column Array
-        this.columns = new Array;
-        this.columns = [
-          { field: 'ItemCode', header: 'ItemCode', width: 100, type: ColumnType.Show },
-          { field: 'ItemType', header: 'ItemType', width: 100, type: ColumnType.Show },
-          { field: 'ItemName', header: 'ItemName', width: 250, type: ColumnType.Show },
-          { field: 'RequestDateString2', header: 'RequestDate', width: 125, type: ColumnType.Show },
-          { field: 'ApplyRequireDateString', header: 'ApplyDate', width: 125, type: ColumnType.Show },
-          { field: 'ActualSDate', header: 'StartDate', width: 125, type: ColumnType.Show, format: Format.Date },
-          { field: 'ActualEDate', header: 'FinishDate', width: 125, type: ColumnType.Show, format: Format.Date },
-          { field: 'BdTime', header: 'BdTime', width: 125, type: ColumnType.Show },
-          { field: 'StdTime', header: 'StdTime', width: 125, type: ColumnType.Show },
-          { field: 'Description', header: 'Description', width: 250, type: ColumnType.Show },
-        ];
-
-        if (dbData.Data) {
-          this.datasource = dbData.Data.slice();
-        } else {
-          this.datasource = new Array;
-        }
-
-        if (this.needReset) {
-          this.first = 0;
-          this.needReset = false;
-        }
-
-        this.reloadData();
-      }, error => {
+        })
+      )
+      .subscribe(() => {}, error => {
         this.totalRecords = 0;
         this.columns = new Array;
         this.datasource = new Array;
@@ -130,7 +136,7 @@ export class ItemMaintenHistoryComponent extends BaseScheduleComponent<ItemMaint
     if (this.reportForm) {
       this.loading = true;
       const scorll = this.reportForm.getRawValue() as Scroll;
-      this.service.getExportXlsx(scorll).subscribe(data => {
+      this.service.getExportXlsx(scorll,'MaintenanceStandardReport/').subscribe(data => {
         // console.log(data);
         this.loading = false;
       }, () => { }, () => this.loading = false);

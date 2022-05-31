@@ -94,7 +94,7 @@ export class ItemMaintenService extends BaseRestService<ItemMaintenance> {
         'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }),
       responseType: 'blob' // <-- changed to blob
-    }).map(res => this.downloadFile(res, 'application/xlsx', 'MaintenHistories.xlsx'));
+    }).pipe(map(res => this.downloadFile(res, 'application/xlsx', 'MaintenHistories.xlsx')));
   }
 
   getXlsxScroll(scroll: Scroll): Observable<any> {

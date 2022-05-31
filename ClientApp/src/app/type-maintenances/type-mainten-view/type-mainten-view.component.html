@@ -28,6 +28,13 @@
           <div class="my-value">
             {{displayValue.ItemTypeString || "-"}}
           </div>
+
+          <div class="my-label">
+            Standard Time:
+          </div>
+          <div class="my-value">
+            {{displayValue.StandardTime | number : '1.0-3'}}
+          </div>
         </div>
       </div>
     </mat-tab>

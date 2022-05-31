@@ -8,8 +8,6 @@ import { MovementStock } from "./movement-stock.model";
 import { BaseRestService } from "../../shared/base-rest.service";
 import { BaseCommunicateService } from "../../shared/base-communicate.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { catchError } from "rxjs/operators";
 
 @Injectable()
 export class MovementStockService extends BaseRestService<MovementStock> {

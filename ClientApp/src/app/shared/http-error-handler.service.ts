@@ -1,10 +1,9 @@
 import { Injectable } from "@angular/core";
 import { HttpErrorResponse } from "@angular/common/http";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { of } from "rxjs/observable/of"
 // services
 import { MessageService } from "./message.service";
+import { Observable, of } from "rxjs";
 
 /** Type of the handleError function returned by HttpErrorHandler.createHandleError */
 export type HandleError = <T> (operation?: string, result?: T) => (error: HttpErrorResponse) => Observable<T>;

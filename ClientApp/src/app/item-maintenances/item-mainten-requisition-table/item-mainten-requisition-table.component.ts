@@ -3,13 +3,7 @@ import { Component, OnInit, ViewChild, Input, Output, EventEmitter, AfterViewIni
 import { MatPaginator, MatSort, MatTableDataSource, MatCheckbox } from "@angular/material";
 import { SelectionModel } from '@angular/cdk/collections';
 // Rxjs
-import { map } from "rxjs/operators/map";
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { startWith } from "rxjs/operators/startWith";
-import { switchMap } from "rxjs/operators/switchMap";
-import { catchError } from "rxjs/operators/catchError";
-import { of as observableOf } from "rxjs/observable/of";
+
 // Module
 import { RequisitionStock } from "../../inventories/shared/requisition-stock.model";
 

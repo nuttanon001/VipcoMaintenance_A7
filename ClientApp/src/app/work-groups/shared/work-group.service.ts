@@ -8,7 +8,6 @@ import { Workgroup } from "../shared/workgroup.model";
 import { BaseRestService } from "../../shared/base-rest.service";
 import { BaseCommunicateService } from "../../shared/base-communicate.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
 import { catchError } from "rxjs/operators";
 
 @Injectable()

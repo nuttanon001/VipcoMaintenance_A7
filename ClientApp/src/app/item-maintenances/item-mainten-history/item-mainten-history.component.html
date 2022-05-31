@@ -33,7 +33,8 @@
         <mat-icon>clear</mat-icon>
       </button>
       <button mat-mini-fab color="accent" (click)="onGetExportToFile()"
-              matTooltipPosition="left" matTooltip="Export" style="margin-left:10px;">
+              matTooltipPosition="left" matTooltip="Export" style="margin-left:10px;"
+              [disabled]="loading">
         <mat-icon>file_download</mat-icon>
       </button>
     </div>
@@ -44,7 +45,8 @@
   <div class="detail">
     <table *ngIf="!needReset" id="table1">
       <p-table [first]="first" [columns]="columns" [value]="datasource" [lazy]="true" (onLazyLoad)="loadDataLazy($event)"
-               [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
+      [paginator]="true" [rows]="pageRow" [rowsPerPageOptions]="[15,25,50]"
+      [totalRecords]="totalRecords" [loading]="loading" [scrollable]="true" [scrollHeight]="scrollHeight" [style]="{width:'98vw'}">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
             <col *ngFor="let col of columns" [ngStyle]="{'width.px':col.width}">

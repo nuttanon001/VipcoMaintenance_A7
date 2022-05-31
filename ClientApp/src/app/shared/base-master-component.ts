@@ -4,8 +4,6 @@ import {
   ElementRef, ViewChild, ViewContainerRef
 } from '@angular/core';
 // rxjs
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
 // classes
 import { BaseModel } from './base-model.model';
 import { ScrollData } from './scroll-data.model';
@@ -14,6 +12,7 @@ import { BaseRestService } from './base-rest.service';
 // services
 import { DialogsService } from '../dialogs/shared/dialogs.service';
 import { AuthService } from '../core/auth/auth.service';
+import { Subscription } from 'rxjs';
 
 export abstract class BaseMasterComponent<Model extends BaseModel, Service extends BaseRestService<Model>>
   implements OnInit, OnDestroy {

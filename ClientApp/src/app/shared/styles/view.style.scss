@@ -38,19 +38,19 @@
     max-width: 400px;
 }
 
-:host /deep/ .disabled-row {
+:host   .disabled-row {
     /* TODO: first try this without '!important', but you might need it */
     color:white;
     background-color: red !important;
 }
 
-:host /deep/ .enabled-row {
+:host   .enabled-row {
     /* TODO: first try this without '!important', but you might need it */
     color: white;
     background-color: steelblue !important;
 }
 
-:host /deep/ .wait-row {
+:host   .wait-row {
     /* TODO: first try this without '!important', but you might need it */
     color: black;
     background-color: goldenrod !important;
@@ -68,7 +68,7 @@
     @extend .small;
 }
 
-/*:host /deep/ .ngx-datatable.material .datatable-header .datatable-header-cell {
+/*:host   .ngx-datatable.material .datatable-header .datatable-header-cell {
     text-align: left;
     padding: .9rem 1.2rem;
     color: rgba(0, 0, 0, 0.54);
@@ -77,7 +77,7 @@
     font-weight: bold;
 }
 
-:host /deep/ .ngx-datatable.material .datatable-body-row .datatable-body-cell {
+:host   .ngx-datatable.material .datatable-body-row .datatable-body-cell {
     text-align: left;
     padding: .9rem 1.2rem;
     color: rgba(0, 0, 0, 0.54);
@@ -89,14 +89,14 @@
     height: calc(100vh - 190px);
 }
 
-:host /deep/ .is-cancel {
+:host   .is-cancel {
     background-color: red;
 }
 
-:host /deep/ .is-wait {
+:host   .is-wait {
     background-color: gold;
 }
 
-:host /deep/ .is-complate {
+:host   .is-complate {
     background-color: lightgreen;
 }

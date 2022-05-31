@@ -9,17 +9,12 @@ import { AuthService } from "../../core/auth/auth.service";
 import { SparePartService } from "../shared/spare-part.service";
 
 // Rxjs
-import { map } from "rxjs/operators/map";
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { startWith } from "rxjs/operators/startWith";
-import { switchMap } from "rxjs/operators/switchMap";
-import { catchError } from "rxjs/operators/catchError";
-import { of as observableOf } from "rxjs/observable/of";
+
 import { Scroll } from 'src/app/shared2/basemode/scroll.model';
 import { FormControl } from '@angular/forms';
 import { SelectionModel } from '@angular/cdk/collections';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { merge, of } from "rxjs";
 
 @Component({
   selector: 'app-spare-part-table',
@@ -74,7 +69,7 @@ export class SparePartTableComponent extends CustomMatTableComponent<SparePart, 
           this.isLoadingResults = false;
           // Catch if the GitHub API has reached its rate limit. Return empty data.
           this.isRateLimitReached = true;
-          return observableOf([]);
+          return of([]);
         })
       ).subscribe(data => this.dataSource.data = data);
     // Selection

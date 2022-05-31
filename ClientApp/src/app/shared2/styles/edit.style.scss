@@ -218,7 +218,7 @@ label {
   margin: 5px 0 5px 0;
 }
 
-/*:host /deep/ .ngx-datatable.material .datatable-header .datatable-header-cell {
+/*:host   .ngx-datatable.material .datatable-header .datatable-header-cell {
     text-align: center;
     padding: .9rem 1.2rem;
     color: rgba(0, 0, 0, 0.54);
@@ -227,7 +227,7 @@ label {
     font-weight: bold;
 }
 
-:host /deep/ .ngx-datatable.material .datatable-body-row .datatable-body-cell {
+:host   .ngx-datatable.material .datatable-body-row .datatable-body-cell {
     text-align: center;
     padding: .9rem 1.2rem;
     color: rgba(0, 0, 0, 0.54);
@@ -240,17 +240,17 @@ label {
   @extend .m-1;
 }
 
-:host /deep/ .is-cancel {
+:host   .is-cancel {
   background-color: red;
   // color: red !important;
 }
 
-:host /deep/ .is-wait {
+:host   .is-wait {
   background-color: gold;
   // color: gold !important;
 }
 
-:host /deep/ .is-complate {
+:host   .is-complate {
   background-color: lightgreen;
   // color: lightgreen !important;
 }

@@ -7,8 +7,6 @@ import { ProjectMaster } from "../../projects/shared/project-master.model";
 // service
 import { ProjectMasterService } from "../../projects/shared/project-master.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
-import { Subscription } from "rxjs/Subscription";
 // base-component
 import { BaseDialogComponent } from "../../shared/base-dialog.component";
 

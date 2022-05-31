@@ -7,7 +7,6 @@ import { ProjectSub } from "./project-sub.model";
 // component
 import { BaseRestService } from "../../shared/base-rest.service";
 // rxjs
-import { Observable } from "rxjs/Observable";
 
 @Injectable()
 export class ProjectSubService extends BaseRestService<ProjectSub> {

@@ -12,7 +12,7 @@
                 <input matInput placeholder="Enter name of work group"
                        required maxlength="50"
                        id="Name" formControlName="Name">
-                <mat-hint [align]="end">{{editValueForm.controls.Name.value?.length || 0}}/50</mat-hint>
+                <mat-hint [align]="'end'">{{editValueForm.controls.Name.value?.length || 0}}/50</mat-hint>
                 <mat-error *ngIf="editValueForm.controls.Name.hasError('required')">
                   Name is <strong>required</strong>
                 </mat-error>
@@ -24,7 +24,7 @@
                 <input matInput placeholder="Description of work group"
                        maxlength="200"
                        id="Description" formControlName="Description">
-                <mat-hint [align]="end">{{editValueForm.controls.Description.value?.length || 0}}/200</mat-hint>
+                <mat-hint [align]="'end'">{{editValueForm.controls.Description.value?.length || 0}}/200</mat-hint>
               </mat-form-field>
             </div>
           </div>
@@ -45,7 +45,16 @@
             </div>
 
             <div class="right-content">
-              &nbsp;
+              <mat-form-field>
+                <input matInput placeholder="Standard Time" type="number"
+                       min="0" id="StandardTime" formControlName="StandardTime">
+                <mat-error *ngIf="editValueForm.controls.StandardTime.hasError('required')">
+                  StandardTime is <strong>required</strong>
+                </mat-error>
+                <mat-error *ngIf="editValueForm.controls.StandardTime.hasError('min')">
+                  StandardTime minimum is <strong>0</strong>
+                </mat-error>
+              </mat-form-field>
             </div>
 
           </div>

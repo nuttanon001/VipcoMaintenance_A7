@@ -32,7 +32,7 @@ export class ItemMaintenViewComponent extends BaseViewComponent<ItemMaintenance>
   requisitionStockes: Array<RequisitionStock>;
   // load more data
   onLoadMoreData(value: ItemMaintenance) {
-    if (value) {
+    if (value && value.ItemMaintenanceId) {
       this.serviceRequireMainten.getOneKeyNumber({RequireMaintenanceId: value.RequireMaintenanceId})
         .pipe(switchMap((dbRequire?: RequireMaintenance) => {
           if (dbRequire) {
@@ -40,13 +40,13 @@ export class ItemMaintenViewComponent extends BaseViewComponent<ItemMaintenance>
           }
           // Get ItemMaintenance Employee
           return this.serviceItemMainHasEmp.actionItemMaintenanceHasEmployee(value.ItemMaintenanceId);
-        }), switchMap((dbEmp => {
+        }), switchMap((dbEmp : ItemMaintenanceHasEmp[]) => {
           if (dbEmp) {
             this.itemMainHasEmployees = dbEmp.slice();
           }
           // Stock
           return  this.serviceRequistionStock.getRequisitionByItemMaintenance(value.ItemMaintenanceId);
-        })), map((dbStock) => {
+        }), map((dbStock: RequisitionStock[]) => {
           if (dbStock) {
             this.requisitionStockes = dbStock.slice();
           }

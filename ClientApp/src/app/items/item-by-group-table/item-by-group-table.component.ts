@@ -10,14 +10,11 @@ import { Scroll } from "../../shared/scroll.model";
 // Services
 import { AuthService } from "../../core/auth/auth.service";
 import { ItemService } from "../shared/item.service";
+import { merge, of } from "rxjs";
+import { catchError, map, startWith, switchMap } from "rxjs/operators";
+import { ScrollData } from "src/app/shared2/basemode/scroll-data.model";
 // Rxjs
-import { map } from "rxjs/operators/map";
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { startWith } from "rxjs/operators/startWith";
-import { switchMap } from "rxjs/operators/switchMap";
-import { catchError } from "rxjs/operators/catchError";
-import { of as observableOf } from "rxjs/observable/of";
+
 
 @Component({
   selector: 'app-item-by-group-table',
@@ -54,7 +51,7 @@ export class ItemByGroupTableComponent extends CustomMatTableComponent<ItemByGro
           };
           return this.service.getAllWithScroll(scroll,"ItemByGroupWithScroll/");
         }),
-        map(data => {
+        map((data : ScrollData<ItemByGroup>) => {
           // Flip flag to show that loading has finished.
           this.isLoadingResults = false;
           this.isRateLimitReached = false;
@@ -65,7 +62,7 @@ export class ItemByGroupTableComponent extends CustomMatTableComponent<ItemByGro
           this.isLoadingResults = false;
           // Catch if the GitHub API has reached its rate limit. Return empty data.
           this.isRateLimitReached = true;
-          return observableOf([]);
+          return of([])
         })
       ).subscribe(data => this.dataSource.data = data);
     // Selection

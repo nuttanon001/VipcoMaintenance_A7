@@ -27,6 +27,7 @@ export abstract class BaseScheduleComponent<Model, Service extends BaseRestServi
   message = 0;
   count = 0;
   time = 300;
+  pageRow = 15;
   // ScrollData
   scroll: Scroll;
   reportForm: FormGroup;

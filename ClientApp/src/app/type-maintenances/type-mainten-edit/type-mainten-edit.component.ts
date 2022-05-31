@@ -90,6 +90,12 @@ export class TypeMaintenEditComponent
           Validators.required
         ]
       ],
+      StandardTime: [this.editValue.StandardTime,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
       Creator: [this.editValue.Creator],
       CreateDate: [this.editValue.CreateDate],
       Modifyer: [this.editValue.Modifyer],

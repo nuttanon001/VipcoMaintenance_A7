@@ -3,13 +3,7 @@ import { OnInit, ViewChild, Input, Output,EventEmitter } from "@angular/core";
 import { MatPaginator, MatSort, MatTableDataSource, MatCheckbox } from "@angular/material";
 import { SelectionModel } from '@angular/cdk/collections';
 // Rxjs
-import { map } from "rxjs/operators/map";
-import { Observable } from "rxjs/Observable";
-import { merge } from "rxjs/observable/merge";
-import { startWith } from "rxjs/operators/startWith";
-import { switchMap } from "rxjs/operators/switchMap";
-import { catchError } from "rxjs/operators/catchError";
-import { of as observableOf } from "rxjs/observable/of";
+
 // Models
 import { Scroll } from "../scroll.model";
 // Component
@@ -17,8 +11,8 @@ import { SearchBoxComponent } from "../search-box/search-box.component";
 // Services
 import { BaseRestService } from "../base-rest.service";
 import { AuthService } from "../../core/auth/auth.service";
-import { debounce } from "rxjs/operators";
-import { debounceTime } from "rxjs/operator/debounceTime";
+import { catchError, debounce, map, startWith, switchMap } from "rxjs/operators";
+import { merge, of } from "rxjs";
 
 //@Component({
 //  selector: "app-custom-mat-table",
@@ -87,7 +81,7 @@ export class CustomMatTableComponent<Model,Service extends BaseRestService<Model
         this.isLoadingResults = false;
         // Catch if the GitHub API has reached its rate limit. Return empty data.
         this.isRateLimitReached = true;
-        return observableOf([]);
+        return of([]);
       })
     ).subscribe(data => this.dataSource.data = data);
     // Selection

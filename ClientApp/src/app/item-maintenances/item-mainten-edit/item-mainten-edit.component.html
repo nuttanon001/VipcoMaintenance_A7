@@ -166,7 +166,7 @@
               <mat-form-field>
                 <textarea matInput placeholder="Maintenance description " rows="3"
                           id="Description" formControlName="Description" required></textarea>
-                <mat-hint [align]="end">{{editValueForm.controls.Description.value?.length || 0}}/500</mat-hint>
+                <mat-hint [align]="'end'">{{editValueForm.controls.Description.value?.length || 0}}/500</mat-hint>
                 <mat-error *ngIf="editValueForm.controls.Description.hasError('required')">
                   Description is <strong>required</strong>
                 </mat-error>
@@ -178,7 +178,7 @@
                 <textarea matInput placeholder="Maintenance remark"
                           rows="3"
                           id="Remark" formControlName="Remark"></textarea>
-                <mat-hint [align]="end">{{editValueForm.controls.Remark.value?.length || 0}}/200</mat-hint>
+                <mat-hint [align]="'end'">{{editValueForm.controls.Remark.value?.length || 0}}/200</mat-hint>
               </mat-form-field>
             </div>
           </div>
@@ -188,7 +188,7 @@
       <div class="left-content">
         <mat-form-field>
           <input matInput placeholder="Maintenance by" class="click-input"
-                 (click)="openDialog('Employee')" readonly required
+                 (click)="op'end'ialog('Employee')" readonly required
                  id="MaintenanceEmpString" formControlName="MaintenanceEmpString">
           <mat-error *ngIf="editValueForm.controls.MaintenanceEmpString.hasError('required')">
             Maintenance by is <strong>required</strong>

@@ -6,8 +6,6 @@ import { HttpErrorHandler } from "../../shared/http-error-handler.service";
 import { Employee } from "../../employees/shared/employee.model";
 // component
 import { BaseRestService } from "../../shared/base-rest.service";
-// rxjs
-import { Observable } from "rxjs/Observable";
 
 @Injectable()
 export class EmployeeService extends BaseRestService<Employee> {
