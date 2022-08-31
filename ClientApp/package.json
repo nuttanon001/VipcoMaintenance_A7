@@ -35,7 +35,7 @@
     "jquery": "3.3.1",
     "material-design-icons": "^3.0.1",
     "moment": "^2.23.0",
-    "moment-timezone": "^0.5.23",
+    "moment-timezone": "^0.5.35",
     "popper.js": "^1.14.6",
     "primeicons": "^1.0.0",
     "primeng": "^7.0.3",
